@@ -2714,7 +2714,7 @@ sample_params_additive = function(y,
                      forwardsolve(t(ch_Q_j), ell_theta_j) +
                        rnorm(Lj))
 
-    # f_j functions: combine linear and nonlinear pieces
+    # f_j functions: combine linear and nonlinear components
     coefficients$f_j[,j] = X_nonlin[,j]*beta[pL+j] + B_all[[j]]%*%theta_j[[j]]
 
     # And sample the SD parameter as well:
