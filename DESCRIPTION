@@ -1,0 +1,26 @@
+Package: rSTAR
+Type: Package
+Title: MCMC and EM algorithms for Simultaneous Transformation and Rounding (STAR) Models
+Version: 0.1.0
+Author: Daniel R. Kowal
+Maintainer: Daniel R. Kowal <daniel.kowal@rice.edu>
+Description: For Bayesian and classical inference and prediction with integer-valued data,
+    Simultaneous Transformation and Rounding (STAR) Models provide a flexible, interpretable,
+    and easy-to-use approach. STAR models the observed count data using a rounded 
+    continuous data model and incorporates a transformation for greater flexibility.
+    Implicitly, STAR formalizes the commonly-applied yet incoherent procedure of 
+    (i) transforming integer-valued data and subsequently 
+    (ii) modeling the transformed data using Gaussian models. 
+    STAR is well-defined for integer-valued data, 
+    which is reflected in predictive accuracy, and is designed to account for 
+    zero-inflation, bounded or censored data, and over- or underdispersion. 
+    Importantly, STAR is easy to combine with existing MCMC or point estimation
+    methods for continuous data, which allows seamless adaptation of continuous data
+    models (such as linear regressions, additive models, BART, random forests,
+    and gradient boosting machines) for integer-valued data. 
+License: GPL-2
+Encoding: UTF-8
+LazyData: true
+LinkingTo: Rcpp, RcppArmadillo
+Imports: coda, dbarts, gbm, graphics, grDevices, gtools, Matrix, splines2, randomForest, Rcpp, RcppArmadillo, truncdist
+RoxygenNote: 6.1.1
