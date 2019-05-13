@@ -1,3 +1,5 @@
+# Note: to update, use "git push -u origin2 master" (C******7)
+
 #' MCMC Algorithm for STAR
 #'
 #' Run the MCMC algorithm for STAR given
