@@ -2,7 +2,7 @@
 title: "STAR: Simultaneous Transformation and Rounding for Modeling Integer-Valued Data"
 author: "Daniel R. Kowal"
 date: "5/11/2019"
-output: html_document
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
@@ -78,6 +78,13 @@ Outline:
 1. Plot some count data; show why Gaussian does not make sense
 
 2. Introduce STAR (definition, inference, properties, estimation?)
+
+* Note: we set $y_{min} = 0$ WLOG and specify $y_{max} = \infty$ by default. 
+
+* Importantly, we need
+$$
+g(y_{min}) = -\infty, \quad g(y_{max}) = \infty
+$$
 
 3. Introduce the rSTAR package
 

@@ -432,7 +432,7 @@ star_np_MCMC = function(y,
   a_y = a_j(y); a_yp1 = a_j(y + 1)
 
   # Unique observation points for the (rounded) counts:
-  t_g = 0:max(a_yp1) # useful for g()
+  t_g = 0:min(y_max, max(a_yp1)) # useful for g()
 
   # g evaluated at t_g: begin with Box-Cox function
   g_eval = g_bc(t_g, lambda = lambda_prior)
@@ -445,6 +445,7 @@ star_np_MCMC = function(y,
 
   # Random initialization for z_star:
   z_star = g_eval_ayp1 + abs(rnorm(n=n))
+  z_star[is.infinite(z_star)] = g_eval_ay[is.infinite(z_star)] + abs(rnorm(n=sum(is.infinite(z_star))))
 
   # Initialize:
   params = init_params(z_star)
@@ -464,8 +465,9 @@ star_np_MCMC = function(y,
   # Define the I-Spline components:
 
   # Grid for later (including t_g):
-  t_grid = seq(0, 2*max(y), by = 0.25)
-  #t_grid = seq(0, max(y) + 1, by = 0.25)
+  t_grid = seq(0,
+               min(2*max(y), y_max),
+               by = 0.25)
 
   # Number and location of interior knots:
   #num_int_knots_g = 4
@@ -657,7 +659,7 @@ star_np_MCMC = function(y,
         Jmax[Jmax > 2*max(y)] = 2*max(y) # To avoid excessive computation times, cap at 2*max(y)
         Jmaxmax = max(Jmax)
         g_a_j_0J = g_grid[match(a_j(0:Jmaxmax), t_grid)]; g_a_j_0J[1] = -Inf
-        g_a_j_1Jp1 = g_grid[match(a_j(1:(Jmaxmax + 1)), t_grid)]
+        g_a_j_1Jp1 = g_grid[match(a_j(1:(Jmaxmax + 1)), t_grid)]; g_a_j_1Jp1[length(g_a_j_1Jp1)] = Inf
         post.fitted.values[isave,] = expectation_gRcpp(g_a_j = g_a_j_0J,
                                                        g_a_jp1 = g_a_j_1Jp1,
                                                        mu = params$mu, sigma = rep(params$sigma, n),
@@ -798,7 +800,7 @@ star_np_MCMC2 = function(y,
   a_y = a_j(y); a_yp1 = a_j(y + 1)
 
   # Unique observation points for the (rounded) counts:
-  t_g = 0:max(a_yp1) # useful for g()
+  t_g = 0:min(y_max, max(a_yp1)) # useful for g()
 
   # One-time cost:
   ind_t_a_y = match(a_y, t_g); ind_t_a_yp1 = match(a_yp1, t_g)
@@ -814,6 +816,7 @@ star_np_MCMC2 = function(y,
 
   # Random initialization for z_star:
   z_star = g_eval_ayp1 + abs(rnorm(n=n))
+  z_star[is.infinite(z_star)] = g_eval_ay[is.infinite(z_star)] + abs(rnorm(n=sum(is.infinite(z_star))))
 
   # Initialize:
   params = init_params(z_star)
@@ -833,8 +836,9 @@ star_np_MCMC2 = function(y,
   # Define the I-Spline components:
 
   # Grid for later (including t_g):
-  t_grid = seq(0, 2*max(y), by = 0.25)
-  #t_grid = seq(0, max(y) + 1, by = 0.25)
+  t_grid = seq(0,
+               min(2*max(y), y_max),
+               by = 0.25)
 
   # Number and location of interior knots:
   #num_int_knots_g = 4
@@ -991,7 +995,7 @@ star_np_MCMC2 = function(y,
         Jmax[Jmax > 2*max(y)] = 2*max(y) # To avoid excessive computation times, cap at 2*max(y)
         Jmaxmax = max(Jmax)
         g_a_j_0J = g_grid[match(a_j(0:Jmaxmax), t_grid)]; g_a_j_0J[1] = -Inf
-        g_a_j_1Jp1 = g_grid[match(a_j(1:(Jmaxmax + 1)), t_grid)]
+        g_a_j_1Jp1 = g_grid[match(a_j(1:(Jmaxmax + 1)), t_grid)]; g_a_j_1Jp1[length(g_a_j_1Jp1)] = Inf
         post.fitted.values[isave,] = expectation_gRcpp(g_a_j = g_a_j_0J,
                                                        g_a_jp1 = g_a_j_1Jp1,
                                                        mu = params$mu, sigma = rep(params$sigma, n),
@@ -1517,7 +1521,7 @@ bart_star_np_MCMC = function(y,
   a_y = a_j(y); a_yp1 = a_j(y + 1)
 
   # Unique observation points for the (rounded) counts:
-  t_g = 0:max(a_yp1) # useful for g()
+  t_g = 0:min(y_max, max(a_yp1)) # useful for g()
 
   # g evaluated at t_g: begin with Box-Cox function
   g_eval = g_bc(t_g, lambda = lambda_prior)
@@ -1530,6 +1534,7 @@ bart_star_np_MCMC = function(y,
 
   # Random initialization for z_star:
   z_star = g_eval_ayp1 + abs(rnorm(n=n))
+  z_star[is.infinite(z_star)] = g_eval_ay[is.infinite(z_star)] + abs(rnorm(n=sum(is.infinite(z_star))))
   #----------------------------------------------------------------------------
   # Now initialize the model: BART!
 
@@ -1568,8 +1573,9 @@ bart_star_np_MCMC = function(y,
   # Define the I-Spline components:
 
   # Grid for later (including t_g):
-  t_grid = seq(0, 2*max(y), by = 0.25)
-  #t_grid = seq(0, max(y) + 1, by = 0.25)
+  t_grid = seq(0,
+               min(2*max(y), y_max),
+               by = 0.25)
 
   # Number and location of interior knots:
   #num_int_knots_g = 4
@@ -1756,7 +1762,7 @@ bart_star_np_MCMC = function(y,
         Jmax[Jmax > 2*max(y)] = 2*max(y) # To avoid excessive computation times, cap at 2*max(y)
         Jmaxmax = max(Jmax)
         g_a_j_0J = g_grid[match(a_j(0:Jmaxmax), t_grid)]; g_a_j_0J[1] = -Inf
-        g_a_j_1Jp1 = g_grid[match(a_j(1:(Jmaxmax + 1)), t_grid)]
+        g_a_j_1Jp1 = g_grid[match(a_j(1:(Jmaxmax + 1)), t_grid)]; g_a_j_1Jp1[length(g_a_j_1Jp1)] = Inf
         post.fitted.values[isave,] = expectation_gRcpp(g_a_j = g_a_j_0J,
                                                        g_a_jp1 = g_a_j_1Jp1,
                                                        mu = params$mu, sigma = rep(params$sigma, n),
@@ -1776,7 +1782,7 @@ bart_star_np_MCMC = function(y,
           Jmax[Jmax > 2*max(y)] = 2*max(y) # To avoid excessive computation times, cap at 2*max(y)
           Jmaxmax = max(Jmax)
           g_a_j_0J = g_grid[match(a_j(0:Jmaxmax), t_grid)]; g_a_j_0J[1] = -Inf
-          g_a_j_1Jp1 = g_grid[match(a_j(1:(Jmaxmax + 1)), t_grid)]
+          g_a_j_1Jp1 = g_grid[match(a_j(1:(Jmaxmax + 1)), t_grid)]; g_a_j_1Jp1[length(g_a_j_1Jp1)] = Inf
           post.fitted.values.test[isave,] = expectation_gRcpp(g_a_j = g_a_j_0J,
                                                               g_a_jp1 = g_a_j_1Jp1,
                                                               mu = samp$test, sigma = rep(params$sigma, n0),
