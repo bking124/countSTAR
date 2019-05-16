@@ -4,8 +4,8 @@
 \alias{sample_params_additive}
 \title{Sample the parameters for an additive model}
 \usage{
-sample_params_additive(y, X_lin, X_nonlin, params, B_all = NULL,
-  BtB_all = NULL, XtX = NULL)
+sample_params_additive(y, X_lin, X_nonlin, params, A = 10^4,
+  B_all = NULL, BtB_all = NULL, XtX = NULL)
 }
 \arguments{
 \item{y}{\code{n x 1} vector of data}
@@ -20,6 +20,8 @@ sample_params_additive(y, X_lin, X_nonlin, params, B_all = NULL,
 \item \code{sigma}: the conditional standard deviation
 \item \code{coefficients}: a named list of parameters that determine \code{mu}
 }}
+
+\item{A}{the prior scale for \code{sigma_beta}, which we assume follows a Uniform(0, A) prior.}
 
 \item{B_all}{optional \code{pNL}-dimensional list of \code{n x L[j]} dimensional
 basis matrices for each nonlinear term j=1,...,pNL; if NULL, compute internally}
@@ -47,16 +49,8 @@ The parameters in \code{coefficients} are:
 \item \code{beta}: the \code{p x 1} linear coefficients, including the linear terms from \code{X_nonlin}
 \item \code{f_j}: the \code{n x pNL} matrix of fitted values for each nonlinear function
 \item \code{theta_j}: the \code{pNL}-dimensional of nonlinear basis coefficients
-\item \code{sigma_beta}: \code{p x 1} vector of regression coefficient standard deviations
-(local scale parameters)
-\item \code{xi_sigma_beta}: \code{p x 1} vector of parameter-expansion variables for \code{sigma_beta}
-\item \code{lambda_beta}: the global scale parameter
-\item \code{xi_lambda_beta}: parameter-expansion variable for \code{lambda_beta}
+\item \code{sigma_beta}: \code{p x 1} vector of linear regression coefficient standard deviations
 \item \code{sigma_theta_j}: \code{pNL x 1} vector of nonlinear coefficient standard deviations
-(local scale parameters)
-\item \code{xi_sigma_theta_j}: \code{pNL x 1} vector of parameter-expansion variables for \code{sigma_theta_j}
-\item \code{lambda_theta}: the global scale parameter
-\item \code{xi_lambda_theta}: parameter-expansion variable for \code{lambda_theta}
 }
 }
 \examples{

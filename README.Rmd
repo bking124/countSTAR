@@ -24,15 +24,22 @@ data(roaches)
 # Roaches:
 y = roaches$y
 
-# Histogram:
-hist(y, breaks = 'scott')
+# Function to plot the point mass function:
+stickplot = function(y, ...){
+  js = 0:max(y); 
+  plot(js, 
+       sapply(js, function(js) mean(js == y)), 
+       type='h', lwd=2, ...)
+}
+stickplot(y, main = 'PMF: Roaches Data',
+          xlab = 'Roaches', ylab = 'Probability mass')
 ```
 
 There are several notable features in the data:
 
-1. Zero-inflation: $\#\{y_i = 0\} = `r sum(y==0)`$, which accounts for `r round(100*mean(y==0), 0)`\% of the observations.
+1. Zero-inflation: `r round(100*mean(y==0), 0)`\% of the observations are zeros. 
 2. (Right-) Skewness, which is clear from the histogram and common for (zero-inflated) count data.
-3. Overdispersion: the sample mean is $\bar y = `r round(mean(y),0)`$ and the sample variance is $\hat s^2 = `r round(var(y),0)`$. 
+3. Overdispersion: the sample mean is `r round(mean(y),0)` and the sample variance is `r round(var(y),0)`. 
 
 A pest management treatment was applied to a subset of 158 apartments, with the remaining 104 apartments receiving a control. Additional data are available on the pre-treatment number of roaches, whether the apartment building is restricted to elderly residents, and the number of days for which the traps were exposed. We are interested in modeling how the roach incidence varies with these predictors.
 
@@ -50,6 +57,7 @@ n = nrow(X); p = ncol(X)
 ```
 
 Consider the Gaussian linear regression model:
+
 $$
 g(y_i) = x_i'\beta + \epsilon_i, \quad \epsilon_i \stackrel{iid}{\sim}N(0, \sigma^2)
 $$

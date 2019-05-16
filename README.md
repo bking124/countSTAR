@@ -33,12 +33,11 @@ hist(y, breaks = 'scott')
 
 There are several notable features in the data:
 
-1.  Zero-inflation: \(\#\{y_i = 0\} = 94\), which accounts for 36% of
-    the observations.
+1.  Zero-inflation: 36% of the observations are zeros.
 2.  (Right-) Skewness, which is clear from the histogram and common for
     (zero-inflated) count data.
-3.  Overdispersion: the sample mean is \(\bar y = 26\) and the sample
-    variance is \(\hat s^2 = 2585\).
+3.  Overdispersion: the sample mean is 26 and the sample variance is
+    2585.
 
 A pest management treatment was applied to a subset of 158 apartments,
 with the remaining 104 apartments receiving a control. Additional data
@@ -59,7 +58,9 @@ colnames(X)[2]= 'Pre-treat #Roaches'
 n = nrow(X); p = ncol(X)
 ```
 
-Consider the Gaussian linear regression model: \[
+Consider the Gaussian linear regression model:
+
+\[
 g(y_i) = x_i'\beta + \epsilon_i, \quad \epsilon_i \stackrel{iid}{\sim}N(0, \sigma^2)
 \]
 

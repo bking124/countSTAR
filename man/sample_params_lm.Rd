@@ -18,7 +18,7 @@ sample_params_lm(y, X, params, A = 10^4, XtX = NULL)
 \item \code{coefficients}: a named list of parameters that determine \code{mu}
 }}
 
-\item{A}{the prior scale for \code{sigma}, which we assume follows a Uniform(0, A) prior.}
+\item{A}{the prior scale for \code{sigma_beta}, which we assume follows a Uniform(0, A) prior.}
 
 \item{XtX}{the \code{p x p} matrix of \code{crossprod(X)} (one-time cost);
 if NULL, compute within the function}

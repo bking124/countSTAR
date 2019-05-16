@@ -2119,7 +2119,7 @@ init_params_lm = function(y, X){
 
   # Prior SD on (non-intercept) regression coefficients:
   sigma_beta = c(10^3, # Intercept
-                 rep(mean(abs(beta)), p - 1))
+                 rep(mean(abs(beta[-1])), p - 1))
 
   # Named list of coefficients:
   coefficients = list(beta = beta,
@@ -2141,7 +2141,7 @@ init_params_lm = function(y, X){
 #' \item \code{sigma}: the conditional standard deviation
 #' \item \code{coefficients}: a named list of parameters that determine \code{mu}
 #' }
-#' @param A the prior scale for \code{sigma}, which we assume follows a Uniform(0, A) prior.
+#' @param A the prior scale for \code{sigma_beta}, which we assume follows a Uniform(0, A) prior.
 #' @param XtX the \code{p x p} matrix of \code{crossprod(X)} (one-time cost);
 #' if NULL, compute within the function
 #'
@@ -2436,16 +2436,8 @@ sample_params_lm_hs = function(y, X, params, XtX = NULL){
 #' \item \code{beta}: the \code{p x 1} linear coefficients, including the linear terms from \code{X_nonlin}
 #' \item \code{f_j}: the \code{n x pNL} matrix of fitted values for each nonlinear function
 #' \item \code{theta_j}: the \code{pNL}-dimensional of nonlinear basis coefficients
-#' \item \code{sigma_beta}: \code{p x 1} vector of regression coefficient standard deviations
-#' (local scale parameters)
-#' \item \code{xi_sigma_beta}: \code{p x 1} vector of parameter-expansion variables for \code{sigma_beta}
-#' \item \code{lambda_beta}: the global scale parameter
-#' \item \code{xi_lambda_beta}: parameter-expansion variable for \code{lambda_beta}
+#' \item \code{sigma_beta}: \code{p x 1} vector of linear regression coefficient standard deviations
 #' \item \code{sigma_theta_j}: \code{pNL x 1} vector of nonlinear coefficient standard deviations
-#' (local scale parameters)
-#' \item \code{xi_sigma_theta_j}: \code{pNL x 1} vector of parameter-expansion variables for \code{sigma_theta_j}
-#' \item \code{lambda_theta}: the global scale parameter
-#' \item \code{xi_lambda_theta}: parameter-expansion variable for \code{lambda_theta}
 #' }
 #'
 #' @examples
@@ -2522,22 +2514,12 @@ init_params_additive = function(y,
   # Standard deviation:
   sigma = sd(y - mu)
 
-  # Shrinkage parameters for linear terms with parameter expansions (PX):
-  # Local:
+  # SD parameters for linear terms:
   sigma_beta = c(10^3, # Intercept
-                 abs(beta[-1]))
-  xi_sigma_beta = rep(1, p-1) # PX-term
-  # Global:
-  lambda_beta = mean(sigma_beta[-1]);
-  xi_lambda_beta = 1; # PX-term
+                 rep(mean(abs(beta[-1])), p - 1))
 
-  # Shrinkage parameters for nonlinear terms with parameter expansions (PX):
-  # Local:
+  # SD parameters for nonlinear terms:
   sigma_theta_j = unlist(lapply(theta_j, sd))
-  xi_sigma_theta_j = rep(1, pNL) # PX-term
-  # Global:
-  lambda_theta = mean(sigma_theta_j);
-  xi_lambda_theta = 1; # PX-term
 
   # f_j functions: combine linear and nonlinear pieces
   f_j = matrix(0, nrow = n, ncol = pNL)
@@ -2550,13 +2532,7 @@ init_params_additive = function(y,
     f_j = f_j, # n x pNL
     theta_j = theta_j, # pNL-dimensional list
     sigma_beta = sigma_beta, # p x 1
-    xi_sigma_beta = xi_sigma_beta, # p x 1
-    lambda_beta = lambda_beta, # scalar
-    xi_lambda_beta = xi_lambda_beta, # scalar
-    sigma_theta_j = sigma_theta_j, # pNL x 1
-    xi_sigma_theta_j = xi_sigma_theta_j, # pNL x 1
-    lambda_theta = lambda_theta, # scalar
-    xi_lambda_theta = xi_lambda_theta # scalar
+    sigma_theta_j = sigma_theta_j # pNL x 1
   )
 
   list(mu = mu, sigma = sigma, coefficients = coefficients)
@@ -2578,6 +2554,7 @@ init_params_additive = function(y,
 #' \item \code{sigma}: the conditional standard deviation
 #' \item \code{coefficients}: a named list of parameters that determine \code{mu}
 #' }
+#' @param A the prior scale for \code{sigma_beta}, which we assume follows a Uniform(0, A) prior.
 #' @param B_all optional \code{pNL}-dimensional list of \code{n x L[j]} dimensional
 #' basis matrices for each nonlinear term j=1,...,pNL; if NULL, compute internally
 #' @param BtB_all optional \code{pNL}-dimensional list of \code{crossprod(B_all[[j]])};
@@ -2593,16 +2570,8 @@ init_params_additive = function(y,
 #' \item \code{beta}: the \code{p x 1} linear coefficients, including the linear terms from \code{X_nonlin}
 #' \item \code{f_j}: the \code{n x pNL} matrix of fitted values for each nonlinear function
 #' \item \code{theta_j}: the \code{pNL}-dimensional of nonlinear basis coefficients
-#' \item \code{sigma_beta}: \code{p x 1} vector of regression coefficient standard deviations
-#' (local scale parameters)
-#' \item \code{xi_sigma_beta}: \code{p x 1} vector of parameter-expansion variables for \code{sigma_beta}
-#' \item \code{lambda_beta}: the global scale parameter
-#' \item \code{xi_lambda_beta}: parameter-expansion variable for \code{lambda_beta}
+#' \item \code{sigma_beta}: \code{p x 1} vector of linear regression coefficient standard deviations
 #' \item \code{sigma_theta_j}: \code{pNL x 1} vector of nonlinear coefficient standard deviations
-#' (local scale parameters)
-#' \item \code{xi_sigma_theta_j}: \code{pNL x 1} vector of parameter-expansion variables for \code{sigma_theta_j}
-#' \item \code{lambda_theta}: the global scale parameter
-#' \item \code{xi_lambda_theta}: parameter-expansion variable for \code{lambda_theta}
 #' }
 #'
 #' @examples
@@ -2633,6 +2602,7 @@ sample_params_additive = function(y,
                                   X_lin,
                                   X_nonlin,
                                   params,
+                                  A = 10^4,
                                   B_all = NULL,
                                   BtB_all = NULL,
                                   XtX = NULL){
@@ -2742,28 +2712,14 @@ sample_params_additive = function(y,
                          rate = .001 + sum((y - mu)^2)/2))
 
   # Sample the prior SD for the (non-intercept) regression coefficients
-
-  # Numerical adjustment:
-  beta2 = beta[-1]^2; beta2 = beta2 + (beta2 < 10^-16)*10^-8
-
-  # Local shrinkage:
   sigma_beta = c(10^3,  # Flat prior for the intercept
-                 1/sqrt(rgamma(n = p-1,
-                               shape = 1/2 + 1/2,
-                               rate = coefficients$xi_sigma_beta + beta2/2)))
-  # Parameter expansion:
-  coefficients$xi_sigma_beta = rgamma(n = p-1,
-                                      shape = 1/2 + 1/2,
-                                      rate = 1/sigma_beta^2 + 1/coefficients$lambda_beta^2)
-
-  # Global shrinkage:
-  coefficients$lambda_beta = 1/sqrt(rgamma(n = 1,
-                                           shape = (p-1)/2 + 1/2,
-                                           rate = sum(coefficients$xi_sigma_beta)) + coefficients$xi_lambda_beta)
-  # Parameter expansion:
-  coefficients$xi_lambda_beta = rgamma(n = 1,
-                                       shape = 1/2 + 1/2,
-                                       rate = 1 + 1/coefficients$lambda_beta^2)
+                 rep(1/sqrt(rtrunc(n = 1,
+                                   'gamma',   # Family of distribution
+                                   a = 1/A^2, # Lower interval
+                                   b = Inf,   # Upper interval
+                                   shape = (p-1)/2 - 1/2,
+                                   rate =  sum(beta[-1]^2)/2)),
+                     p - 1))
 
   # Update the coefficients:
   coefficients$beta = beta
