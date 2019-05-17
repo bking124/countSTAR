@@ -51,8 +51,7 @@
 #' # EM algorithm for STAR (using the log-link)
 #' fit_em = star_EM(y = y,
 #'                  estimator = function(y) lm(y ~ X - 1),
-#'                  transformation = 'box-cox',
-#'                  lambda = 0)
+#'                  transformation = 'log')
 #'
 #' # Fitted coefficients:
 #' coef(fit_em)
@@ -71,8 +70,7 @@
 #' # p-value for the slope (likelihood ratio test):
 #' fit_em_0 = star_EM(y = y,
 #'                    estimator = function(y) lm(y ~ 1), # no x-variable
-#'                    transformation = fit_em$transformation,
-#'                    lambda = fit_em$lambda)
+#'                    transformation = 'log')
 #' pchisq(-2*(fit_em_0$logLik - fit_em$logLik),
 #'        df = 1, lower.tail = FALSE)
 #'
@@ -304,8 +302,7 @@ star_EM = function(y,
 #'
 #' # EM algorithm for STAR (using the log-link)
 #' fit_em = randomForest_star(y = y, X = X,
-#'                  transformation = 'box-cox',
-#'                  lambda = 0,
+#'                  transformation = 'log',
 #'                  max_iters = 100)
 #'
 #' # Fitted values (out-of-bag)
@@ -564,8 +561,7 @@ randomForest_star = function(y, X, X.test = NULL,
 #'
 #' # EM algorithm for STAR (using the log-link)
 #' fit_em = gbm_star(y = y, X = X,
-#'                  transformation = 'box-cox',
-#'                  lambda = 0)
+#'                  transformation = 'log')
 #'
 #' # Evaluate convergence:
 #' plot(fit_em$logLik_all, type='l', main = 'GBM-STAR-log', xlab = 'Iteration', ylab = 'log-lik')
@@ -803,24 +799,16 @@ gbm_star = function(y, X, X.test = NULL,
 #' sim_dat = simulate_nb_lm(n = 100, p = 2)
 #' y = sim_dat$y; X = sim_dat$X
 #'
-#' # EM algorithm for STAR (using the log-link)
-#' fit_em = star_EM(y = y,
-#'                  estimator = function(y) lm(y ~ X - 1),
-#'                  transformation = 'box-cox',
-#'                  lambda = 0)
-#'
 #' # Confidence interval for the intercept:
 #' ci_beta_0 = star_CI(y = y, X = X,
 #'                    j = 1,
-#'                    transformation = fit_em$transformation,
-#'                    lambda = fit_em$lambda)
+#'                    transformation = 'log')
 #' ci_beta_0
 #'
 #' # Confidence interval for the slope:
 #' ci_beta_1 = star_CI(y = y, X = X,
 #'                    j = 2,
-#'                    transformation = fit_em$transformation,
-#'                    lambda = fit_em$lambda)
+#'                    transformation = 'log')
 #' ci_beta_1
 #'
 #' @importFrom stats splinefun
@@ -839,6 +827,9 @@ star_CI = function(y, X, j,
   fit_em = star_EM(y = y,
                    estimator = function(y) lm(y ~ X-1),
                    transformation = transformation, lambda = lambda, y_max = y_max)
+
+  # Update lambda, in case it was estimated:
+  lambda = fit_em$lambda
 
   # Use Box-Cox transformation for all transformations, as special case:
   if(transformation == 'identity') lambda = 1

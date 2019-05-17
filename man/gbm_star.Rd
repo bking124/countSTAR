@@ -83,8 +83,7 @@ y = sim_dat$y; X = sim_dat$X
 
 # EM algorithm for STAR (using the log-link)
 fit_em = gbm_star(y = y, X = X,
-                 transformation = 'box-cox',
-                 lambda = 0)
+                 transformation = 'log')
 
 # Evaluate convergence:
 plot(fit_em$logLik_all, type='l', main = 'GBM-STAR-log', xlab = 'Iteration', ylab = 'log-lik')

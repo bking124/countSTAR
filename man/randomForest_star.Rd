@@ -85,8 +85,7 @@ y = sim_dat$y; X = sim_dat$X
 
 # EM algorithm for STAR (using the log-link)
 fit_em = randomForest_star(y = y, X = X,
-                 transformation = 'box-cox',
-                 lambda = 0,
+                 transformation = 'log',
                  max_iters = 100)
 
 # Fitted values (out-of-bag)

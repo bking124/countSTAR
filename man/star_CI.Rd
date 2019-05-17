@@ -52,24 +52,16 @@ The design matrix \code{X} should include an intercept.
 sim_dat = simulate_nb_lm(n = 100, p = 2)
 y = sim_dat$y; X = sim_dat$X
 
-# EM algorithm for STAR (using the log-link)
-fit_em = star_EM(y = y,
-                 estimator = function(y) lm(y ~ X - 1),
-                 transformation = 'box-cox',
-                 lambda = 0)
-
 # Confidence interval for the intercept:
 ci_beta_0 = star_CI(y = y, X = X,
                    j = 1,
-                   transformation = fit_em$transformation,
-                   lambda = fit_em$lambda)
+                   transformation = 'log')
 ci_beta_0
 
 # Confidence interval for the slope:
 ci_beta_1 = star_CI(y = y, X = X,
                    j = 2,
-                   transformation = fit_em$transformation,
-                   lambda = fit_em$lambda)
+                   transformation = 'log')
 ci_beta_1
 
 }

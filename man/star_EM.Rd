@@ -67,8 +67,7 @@ y = sim_dat$y; X = sim_dat$X
 # EM algorithm for STAR (using the log-link)
 fit_em = star_EM(y = y,
                  estimator = function(y) lm(y ~ X - 1),
-                 transformation = 'box-cox',
-                 lambda = 0)
+                 transformation = 'log')
 
 # Fitted coefficients:
 coef(fit_em)
@@ -87,8 +86,7 @@ fit_em$logLik
 # p-value for the slope (likelihood ratio test):
 fit_em_0 = star_EM(y = y,
                    estimator = function(y) lm(y ~ 1), # no x-variable
-                   transformation = fit_em$transformation,
-                   lambda = fit_em$lambda)
+                   transformation = 'log')
 pchisq(-2*(fit_em_0$logLik - fit_em$logLik),
        df = 1, lower.tail = FALSE)
 
