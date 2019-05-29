@@ -970,27 +970,20 @@ star_CI = function(y, X, j,
   # Interval:
   range(ci_all)
 }
-#' Compute confidence and prediction intervals for the count response
+#' Compute prediction intervals for the integer-valued response
 #'
-#' Given confidence intervals for \code{mu} and/or prediction intervals for \code{z_star},
-#' compute confidence intervals for the expected counts and prediction intervals for the counts.
+#' Given prediction intervals for \code{z_star}, compute prediction intervals for the counts.
 #'
 #' @details
-#' Since the model for \code{z_star} is Gaussian, confidence and prediction intervals are readily available
+#' Since the model for \code{z_star} is Gaussian, prediction intervals are readily available
 #' in a variety of settings, such as linear regression, spline regression, and additive regression models.
 #' The coverage for these intervals will propagate to the STAR intervals; similarly, simultaneous
 #' bands may be provided with the same result.
 #'
-#' @param CI_mu \code{n x 2} matrix of confidence intervals/bands for \code{mu}
 #' @param PI_z  \code{n x 2} matrix of prediction intervals/bands for \code{z_star}
 #' @param fit_star the fitted object from a STAR model; must contain the values of
 #' \code{mu.hat}, \code{sigma.hat}, and \code{lambda} from the MLEs.
-#' @return a named list containing
-#' \enumerate{
-#' \item \code{CI_y_hat}: the \code{n x 2} matrix of confidence intervals/bands for the expected counts
-#' \item \code{PI_y}: the \code{n x 2} matrix of prediction intervals/bands for the counts
-#' }
-#'
+#' @return  \code{PI_y}: the \code{n x 2} matrix of prediction intervals/bands
 #' @examples
 #' # Simulate data with count-valued response y:
 #' x = seq(0, 1, length.out = 100)
@@ -1008,35 +1001,25 @@ star_CI = function(y, X, j,
 #' # Latent Gaussian variables at the MLEs:
 #' z_hat = fit_em$z.hat
 #'
-#' # Compute confidence intervals for mu:
-#' CI_mu = predict(lm(z_hat ~ X - 1),
-#'                 newdata = data.frame(X = X),
-#'                 interval = 'confidence',
-#'                 level = 0.95)[,-1]
-#'
 #' # Compute prediction intervals for z_star:
 #' PI_z = predict(lm(z_hat ~ X - 1),
 #'                newdata = data.frame(X = X),
 #'                interval = 'prediction',
 #'                level = 0.95)[,-1]
 #'
-#' # Using these, compute confidence and prediction intervals for STAR:
-#' ci_pi_star = star_intervals(CI_mu, PI_z, fit_em)
+#' # Using these, compute prediction intervals for STAR:
+#' PI_y = star_intervals(PI_z, fit_em)
 #'
 #' # Plot the results: PIs and CIs
-#' plot(x, y, ylim = range(y, ci_pi_star$PI_y), main = 'STAR: CI and PI')
-#' lines(x, ci_pi_star$PI_y[,1], col='darkgray', type='s', lwd=4);
-#' lines(x, ci_pi_star$PI_y[,2], col='darkgray', type='s', lwd=4)
-#' lines(x, ci_pi_star$CI_y_hat[,1], col='blue', lwd=3, lty=6);
-#' lines(x, ci_pi_star$CI_y_hat[,2], col='blue', lwd=3, lty=6)
+#' plot(x, y, ylim = range(y, PI_y), main = 'STAR: Prediction Intervals')
+#' lines(x, PI_y[,1], col='darkgray', type='s', lwd=4);
+#' lines(x, PI_y[,2], col='darkgray', type='s', lwd=4)
 #' lines(x, fitted(fit_em), lwd=5, col='blue')
 #' lines(x, y, type='p')
 #'
 #'
 #' @export
-star_intervals = function(CI_mu = NULL,
-                          PI_z = NULL,
-                          fit_star){
+star_intervals = function(PI_z, fit_star){
 
   # Sample size:
   n = length(fit_star$mu.hat)
@@ -1070,31 +1053,8 @@ star_intervals = function(CI_mu = NULL,
     a_j = function(j) {val = j; val[j==0] = -Inf; val[j==fit_star$y_max+1] = Inf; val}
   }
 
-  # Confidence intervals for y_hat given confidence intervals for mu:
-  if(!is.null(CI_mu)){
-
-    # Upper bound for truncating the infinite summation:
-    Jmax = ceiling(round_fun(ginv(
-      qnorm(0.9999, mean = fit_star$mu.hat, sd = fit_star$sigma.hat), lambda = fit_star$lambda)))
-    Jmaxmax = max(Jmax)
-
-    # CI for the expected counts:
-    CI_y_hat = interval_gRcpp(g_a_j = g(a_j(0:Jmaxmax), fit_star$lambda),
-                              g_a_jp1 = g(a_j(1:(Jmaxmax + 1)), fit_star$lambda),
-                              L_mu = CI_mu[,1], U_mu = CI_mu[,2],
-                              sigma = rep(fit_star$sigma.hat, n),
-                              Jmax = Jmax)
-  } else CI_y_hat = NULL
-
   # Prediction intervals for y given prediction intervals for z:
-  if(!is.null(PI_z)){
-    PI_y = round_fun(ginv(PI_z, lambda = fit_star$lambda))
-  } else PI_y = NULL
-
-  list(
-    CI_y_hat = CI_y_hat,
-    PI_y = PI_y
-  )
+  round_fun(ginv(PI_z, lambda = fit_star$lambda))
 }
 #' Compute the first and second moment of a truncated normal
 #'

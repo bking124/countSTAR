@@ -2,31 +2,24 @@
 % Please edit documentation in R/source_EM.R
 \name{star_intervals}
 \alias{star_intervals}
-\title{Compute confidence and prediction intervals for the count response}
+\title{Compute prediction intervals for the integer-valued response}
 \usage{
-star_intervals(CI_mu = NULL, PI_z = NULL, fit_star)
+star_intervals(PI_z, fit_star)
 }
 \arguments{
-\item{CI_mu}{\code{n x 2} matrix of confidence intervals/bands for \code{mu}}
-
 \item{PI_z}{\code{n x 2} matrix of prediction intervals/bands for \code{z_star}}
 
 \item{fit_star}{the fitted object from a STAR model; must contain the values of
 \code{mu.hat}, \code{sigma.hat}, and \code{lambda} from the MLEs.}
 }
 \value{
-a named list containing
-\enumerate{
-\item \code{CI_y_hat}: the \code{n x 2} matrix of confidence intervals/bands for the expected counts
-\item \code{PI_y}: the \code{n x 2} matrix of prediction intervals/bands for the counts
-}
+\code{PI_y}: the \code{n x 2} matrix of prediction intervals/bands
 }
 \description{
-Given confidence intervals for \code{mu} and/or prediction intervals for \code{z_star},
-compute confidence intervals for the expected counts and prediction intervals for the counts.
+Given prediction intervals for \code{z_star}, compute prediction intervals for the counts.
 }
 \details{
-Since the model for \code{z_star} is Gaussian, confidence and prediction intervals are readily available
+Since the model for \code{z_star} is Gaussian, prediction intervals are readily available
 in a variety of settings, such as linear regression, spline regression, and additive regression models.
 The coverage for these intervals will propagate to the STAR intervals; similarly, simultaneous
 bands may be provided with the same result.
@@ -48,27 +41,19 @@ fit_em = star_EM(y = y,
 # Latent Gaussian variables at the MLEs:
 z_hat = fit_em$z.hat
 
-# Compute confidence intervals for mu:
-CI_mu = predict(lm(z_hat ~ X - 1),
-                newdata = data.frame(X = X),
-                interval = 'confidence',
-                level = 0.95)[,-1]
-
 # Compute prediction intervals for z_star:
 PI_z = predict(lm(z_hat ~ X - 1),
                newdata = data.frame(X = X),
                interval = 'prediction',
                level = 0.95)[,-1]
 
-# Using these, compute confidence and prediction intervals for STAR:
-ci_pi_star = star_intervals(CI_mu, PI_z, fit_em)
+# Using these, compute prediction intervals for STAR:
+PI_y = star_intervals(PI_z, fit_em)
 
 # Plot the results: PIs and CIs
-plot(x, y, ylim = range(y, ci_pi_star$PI_y), main = 'STAR: CI and PI')
-lines(x, ci_pi_star$PI_y[,1], col='darkgray', type='s', lwd=4);
-lines(x, ci_pi_star$PI_y[,2], col='darkgray', type='s', lwd=4)
-lines(x, ci_pi_star$CI_y_hat[,1], col='blue', lwd=3, lty=6);
-lines(x, ci_pi_star$CI_y_hat[,2], col='blue', lwd=3, lty=6)
+plot(x, y, ylim = range(y, PI_y), main = 'STAR: Prediction Intervals')
+lines(x, PI_y[,1], col='darkgray', type='s', lwd=4);
+lines(x, PI_y[,2], col='darkgray', type='s', lwd=4)
 lines(x, fitted(fit_em), lwd=5, col='blue')
 lines(x, y, type='p')
 
