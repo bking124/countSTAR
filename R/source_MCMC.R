@@ -467,7 +467,7 @@ star_np_MCMC = function(y,
   # Grid for later (including t_g):
   t_grid = seq(0,
                min(2*max(y), y_max),
-               by = 0.25)
+               by = 0.01) #by = 0.25)
 
   # Number and location of interior knots:
   #num_int_knots_g = 4
@@ -838,7 +838,7 @@ star_np_MCMC2 = function(y,
   # Grid for later (including t_g):
   t_grid = seq(0,
                min(2*max(y), y_max),
-               by = 0.25)
+               length.out = 1000) #by = 0.25)
 
   # Number and location of interior knots:
   #num_int_knots_g = 4
@@ -1575,7 +1575,7 @@ bart_star_np_MCMC = function(y,
   # Grid for later (including t_g):
   t_grid = seq(0,
                min(2*max(y), y_max),
-               by = 0.25)
+               length.out = 1000) #by = 0.25)
 
   # Number and location of interior knots:
   #num_int_knots_g = 4
@@ -1755,6 +1755,22 @@ bart_star_np_MCMC = function(y,
         # Posterior predictive distribution:
         u = rnorm(n = n, mean = params$mu, sd = params$sigma); g_grid = B_I_grid%*%gamma
         post.pred[isave,] = round_fun(sapply(u, function(ui) t_grid[which.min(abs(ui - g_grid))]))
+
+        if(FALSE){
+          splinefun(g_eval, t_g)(u)
+
+
+          t_grid = seq(0, min(2*max(y), y_max), by = 0.01)
+          g_grid = splinefun(t_g, g_eval)(t_grid_1)
+
+          Jmax = ceiling(sapply(u, function(ui) t_grid[which.min(abs(ui - g_grid))]))
+          Jmax[Jmax > 2*max(y)] = 2*max(y) # To avoid excessive computation times, cap at 2*max(y)
+          Jmaxmax = max(Jmax)
+          g_a_j_0J = g_grid[match(a_j(0:Jmaxmax), t_grid)]; g_a_j_0J[1] = -Inf
+          g_a_j_1Jp1 = g_grid[match(a_j(1:(Jmaxmax + 1)), t_grid)]; g_a_j_1Jp1[length(g_a_j_1Jp1)] = Inf
+          temp0 = expectation_gRcpp(g_a_j = g_a_j_0J,g_a_jp1 = g_a_j_1Jp1, mu = params$mu, sigma = rep(params$sigma, n), Jmax = Jmax)
+        }
+
 
         # Conditional expectation:
         u = qnorm(0.9999, mean = params$mu, sd = params$sigma)
@@ -2416,7 +2432,7 @@ sample_params_lm_hs = function(y, X, params, XtX = NULL){
 #'
 #' Initialize the parameters for an additive model, which may contain
 #' both linear and nonlinear predictors. The nonlinear terms are modeled
-#' using low-rank thin plate splines.
+#' using orthogonalized splines.
 #'
 #' @param y \code{n x 1} vector of data
 #' @param X_lin \code{n x pL} matrix of predictors to be modelled as linear
@@ -2456,8 +2472,323 @@ sample_params_lm_hs = function(y, X, params, XtX = NULL){
 #' names(params)
 #' names(params$coefficients)
 #'
+#' @importFrom spikeSlabGAM sm
 #' @export
 init_params_additive = function(y,
+                                X_lin,
+                                X_nonlin,
+                                B_all = NULL){
+  # Dimension:
+  n = length(y)
+
+  # Matrix predictors: linear and nonlinear
+  X_lin = as.matrix(X_lin); X_nonlin = as.matrix(X_nonlin)
+
+  # Linear terms (only):
+  pL = ncol(X_lin)
+
+  # Nonlinear terms (only:)
+  pNL = ncol(X_nonlin)
+
+  # Total number of predictors:
+  p = pL + pNL
+
+  # Center and scale the nonlinear predictors:
+  X_nonlin = scale(X_nonlin)
+
+  # All linear predictors:
+  #X = cbind(X_lin, X_nonlin)
+  X = matrix(0, nrow = n, ncol = p)
+  X[,1:pL] = X_lin; X[, (pL+1):p] = X_nonlin
+
+  # Linear initialization:
+  fit_lm = lm(y ~ X - 1)
+  beta = coefficients(fit_lm)
+  mu_lin = fitted(fit_lm)
+
+  # Basis matrices for all nonlinear predictors:
+  if(is.null(B_all)) B_all = lapply(1:pNL, function(j) {B0 = sm(X_nonlin[,j]); B0/sqrt(sum(diag(crossprod(B0))))})
+
+  # Nonlinear components: initialize to correct dimension, then iterate
+  theta_j = lapply(B_all, function(b_j) colSums(b_j*0))
+  y_res_lin = y - mu_lin
+  for(j in 1:pNL){
+    # Residuals for predictor j:
+    if(pNL > 1){
+      y_res_lin_j = y_res_lin -
+        matrix(unlist(B_all[-j]), nrow = n)%*%unlist(theta_j[-j])
+    } else y_res_lin_j = y_res_lin
+
+    # Regression part to initialize the coefficients:
+    theta_j[[j]] = coefficients(lm(y_res_lin_j ~ B_all[[j]] - 1))
+  }
+  # Nonlinear fitted values:
+  mu_nonlin = matrix(unlist(B_all), nrow = n)%*%unlist(theta_j)
+
+  # Total fitted values:
+  mu = mu_lin + mu_nonlin
+
+  # Standard deviation:
+  sigma = sd(y - mu)
+
+  # SD parameters for linear terms:
+  sigma_beta = c(10^3, # Intercept
+                 rep(mean(abs(beta[-1])), p - 1))
+
+  # SD parameters for nonlinear terms:
+  sigma_theta_j = unlist(lapply(theta_j, sd))
+
+  # f_j functions: combine linear and nonlinear pieces
+  f_j = matrix(0, nrow = n, ncol = pNL)
+  for(j in 1:pNL)
+    f_j[,j] = X_nonlin[,j]*beta[pL+j] + B_all[[j]]%*%theta_j[[j]]
+
+  # And store all coefficients
+  coefficients = list(
+    beta = beta, # p x 1
+    f_j = f_j, # n x pNL
+    theta_j = theta_j, # pNL-dimensional list
+    sigma_beta = sigma_beta, # p x 1
+    sigma_theta_j = sigma_theta_j # pNL x 1
+  )
+
+  list(mu = mu, sigma = sigma, coefficients = coefficients)
+}
+#' Sample the parameters for an additive model
+#'
+#' Sample the parameters for an additive model, which may contain
+#' both linear and nonlinear predictors. The nonlinear terms are modeled
+#' using orthogonalized splines. The sampler draws the linear terms
+#' jointly and then samples each vector of nonlinear coefficients using
+#' Bayesian backfitting (i.e., conditional on all other nonlinear and linear terms).
+#'
+#' @param y \code{n x 1} vector of data
+#' @param X_lin \code{n x pL} matrix of predictors to be modelled as linear
+#' @param X_nonlin \code{n x pNL} matrix of predictors to be modelled as nonlinear
+#' @param params the named list of parameters containing
+#' \enumerate{
+#' \item \code{mu}: vector of conditional means (fitted values)
+#' \item \code{sigma}: the conditional standard deviation
+#' \item \code{coefficients}: a named list of parameters that determine \code{mu}
+#' }
+#' @param A the prior scale for \code{sigma_beta}, which we assume follows a Uniform(0, A) prior.
+#' @param B_all optional \code{pNL}-dimensional list of \code{n x L[j]} dimensional
+#' basis matrices for each nonlinear term j=1,...,pNL; if NULL, compute internally
+#' @param diagBtB_all optional \code{pNL}-dimensional list of \code{diag(crossprod(B_all[[j]]))};
+#' if NULL, compute internally
+#' @param XtX optional \code{p x p} matrix of \code{crossprod(X)} (one-time cost);
+#' if NULL, compute internally
+#'
+#' @return The updated named list \code{params} with draws from the full conditional distributions
+#' of \code{sigma} and \code{coefficients} (and updated \code{mu}).
+#'
+#' @note The parameters in \code{coefficients} are:
+#' \itemize{
+#' \item \code{beta}: the \code{p x 1} linear coefficients, including the linear terms from \code{X_nonlin}
+#' \item \code{f_j}: the \code{n x pNL} matrix of fitted values for each nonlinear function
+#' \item \code{theta_j}: the \code{pNL}-dimensional of nonlinear basis coefficients
+#' \item \code{sigma_beta}: \code{p x 1} vector of linear regression coefficient standard deviations
+#' \item \code{sigma_theta_j}: \code{pNL x 1} vector of nonlinear coefficient standard deviations
+#' }
+#'
+#' @examples
+#' # Simulate data for illustration:
+#' sim_dat = simulate_nb_friedman(n = 100, p = 5)
+#' y = sim_dat$y; X = sim_dat$X
+#'
+#' # Linear and nonlinear components:
+#' X_lin = as.matrix(X[,-(1:3)])
+#' X_nonlin = as.matrix(X[,(1:3)])
+#'
+#' # Initialize:
+#' params = init_params_additive(y = y, X_lin = X_lin, X_nonlin = X_nonlin)
+#'
+#' # Sample:
+#' params = sample_params_additive(y = y,
+#'                                 X_lin = X_lin,
+#'                                 X_nonlin = X_nonlin,
+#'                                 params = params)
+#' names(params)
+#' names(params$coefficients)
+#'
+#' # And plot an example:
+#' plot(X_nonlin[,1], params$coefficients$f_j[,1])
+#'
+#' @export
+sample_params_additive = function(y,
+                                  X_lin,
+                                  X_nonlin,
+                                  params,
+                                  A = 10^4,
+                                  B_all = NULL,
+                                  diagBtB_all = NULL,
+                                  XtX = NULL){
+
+  # Dimensions:
+  n = length(y)
+
+  # Matrix predictors: linear and nonlinear
+  X_lin = as.matrix(X_lin); X_nonlin = as.matrix(X_nonlin)
+
+  # Linear terms (only):
+  pL = ncol(X_lin)
+
+  # Nonlinear terms (only:)
+  pNL = ncol(X_nonlin)
+
+  # Total number of predictors:
+  p = pL + pNL
+
+  # Center and scale the nonlinear predictors:
+  X_nonlin = scale(X_nonlin)
+
+  # All linear predictors:
+  #X = cbind(X_lin, X_nonlin)
+  X = matrix(0, nrow = n, ncol = p)
+  X[,1:pL] = X_lin; X[, (pL+1):p] = X_nonlin
+
+  # Basis matrices for all nonlinear predictors:
+  if(is.null(B_all)) B_all = lapply(1:pNL, function(j) {B0 = sm(X_nonlin[,j]); B0/sqrt(sum(diag(crossprod(B0))))})
+
+  # And the crossproduct for the quadratic term, which is diagonal:
+  if(is.null(diagBtB_all)) diagBtB_all = lapply(1:pNL, function(j) colSums(B_all[[j]]^2))
+
+  # And the predictors:
+  if(is.null(XtX)) XtX = crossprod(X)
+
+  # Access elements of the named list:
+  sigma = params$sigma  # Observation SD
+  coefficients = params$coefficients # Coefficients to access below:
+
+  beta = coefficients$beta;              # Regression coefficients (including intercept)
+  sigma_beta = coefficients$sigma_beta   # prior SD of regression coefficients (including intercept)
+
+  theta_j = coefficients$theta_j         # Nonlinear coefficients
+  sigma_theta_j = coefficients$sigma_theta_j # Prior SD of nonlinear coefficients
+
+  # First, sample the regression coefficients:
+  y_res_nonlin = y - matrix(unlist(B_all), nrow = n)%*%unlist(theta_j)
+  if(p >= n){
+    beta = sampleFastGaussian(Phi = X/sigma,
+                              Ddiag = sigma_beta^2,
+                              alpha = y_res_nonlin/sigma)
+  } else {
+    Q_beta = 1/sigma^2*XtX + diag(1/sigma_beta^2, p)
+    ell_beta = 1/sigma^2*crossprod(X, y_res_nonlin)
+    ch_Q = chol(Q_beta)
+    beta = backsolve(ch_Q,
+                     forwardsolve(t(ch_Q), ell_beta) +
+                       rnorm(p))
+  }
+  # Linear fitted values:
+  mu_lin = X%*%beta
+
+  # Now sample the nonlinear parameters:
+
+  # Residuals from the linear fit:
+  y_res_lin = y - mu_lin
+
+  # Backfitting: loop through each nonlinear term
+  for(j in 1:pNL){
+    # Number of coefficients:
+    Lj = ncol(B_all[[j]])
+
+    # Residuals for predictor j:
+    if(pNL > 1){
+      y_res_lin_j = y_res_lin -
+        matrix(unlist(B_all[-j]), nrow = n)%*%unlist(theta_j[-j])
+    } else y_res_lin_j = y_res_lin
+
+    # Regression part:
+    ch_Q_j  = sqrt(1/sigma^2*diagBtB_all[[j]] + 1/sigma_theta_j[j]^2)
+    ell_theta_j = 1/sigma^2*crossprod(B_all[[j]], y_res_lin_j)
+    theta_j[[j]] = ell_theta_j/ch_Q_j^2 + 1/ch_Q_j*rnorm(Lj)
+
+    # f_j functions: combine linear and nonlinear components
+    coefficients$f_j[,j] = X_nonlin[,j]*beta[pL+j] + B_all[[j]]%*%theta_j[[j]]
+
+    # And sample the SD parameter as well:
+    sigma_theta_j[j] = 1/sqrt(rgamma(n = 1,
+                                     shape = Lj/2 + 0.1,
+                                     rate =  sum(theta_j[[j]]^2)/2 + 0.1))
+
+  }
+
+  # Nonlinear fitted values:
+  mu_nonlin = matrix(unlist(B_all), nrow = n)%*%unlist(theta_j)
+
+  # Total fitted values:
+  mu = mu_lin + mu_nonlin
+
+  # Observation SD:
+  sigma =  1/sqrt(rgamma(n = 1,
+                         shape = .001 + n/2,
+                         rate = .001 + sum((y - mu)^2)/2))
+
+  # Sample the prior SD for the (non-intercept) regression coefficients
+  sigma_beta = c(10^3,  # Flat prior for the intercept
+                 rep(1/sqrt(rtrunc(n = 1,
+                                   'gamma',   # Family of distribution
+                                   a = 1/A^2, # Lower interval
+                                   b = Inf,   # Upper interval
+                                   shape = (p-1)/2 - 1/2,
+                                   rate =  sum(beta[-1]^2)/2)),
+                     p - 1))
+
+  # Update the coefficients:
+  coefficients$beta = beta
+  coefficients$sigma_beta = sigma_beta
+  coefficients$theta_j = theta_j
+  coefficients$sigma_theta_j = sigma_theta_j
+
+  list(mu = mu, sigma = sigma, coefficients = coefficients)
+}
+#' Initialize the parameters for an additive model
+#'
+#' Initialize the parameters for an additive model, which may contain
+#' both linear and nonlinear predictors. The nonlinear terms are modeled
+#' using low-rank thin plate splines.
+#'
+#' @param y \code{n x 1} vector of data
+#' @param X_lin \code{n x pL} matrix of predictors to be modelled as linear
+#' @param X_nonlin \code{n x pNL} matrix of predictors to be modelled as nonlinear
+#' @param B_all optional \code{pNL}-dimensional list of \code{n x L[j]} dimensional
+#' basis matrices for each nonlinear term j=1,...,pNL; if NULL, compute internally
+#'
+#' @return a named list \code{params} containing
+#' \enumerate{
+#' \item \code{mu}: vector of conditional means (fitted values)
+#' \item \code{sigma}: the conditional standard deviation
+#' \item \code{coefficients}: a named list of parameters that determine \code{mu}
+#' }
+#'
+#' @note The parameters in \code{coefficients} are:
+#' \itemize{
+#' \item \code{beta}: the \code{p x 1} linear coefficients, including the linear terms from \code{X_nonlin}
+#' \item \code{f_j}: the \code{n x pNL} matrix of fitted values for each nonlinear function
+#' \item \code{theta_j}: the \code{pNL}-dimensional of nonlinear basis coefficients
+#' \item \code{sigma_beta}: \code{p x 1} vector of linear regression coefficient standard deviations
+#' \item \code{sigma_theta_j}: \code{pNL x 1} vector of nonlinear coefficient standard deviations
+#' }
+#'
+#' @examples
+#' # Simulate data for illustration:
+#' sim_dat = simulate_nb_friedman(n = 100, p = 5)
+#' y = sim_dat$y; X = sim_dat$X
+#'
+#' # Linear and nonlinear components:
+#' X_lin = as.matrix(X[,-(1:3)])
+#' X_nonlin = as.matrix(X[,(1:3)])
+#'
+#' # Initialize:
+#' params = init_params_additive0(y = y,
+#'                               X_lin = X_lin,
+#'                               X_nonlin = X_nonlin)
+#' names(params)
+#' names(params$coefficients)
+#'
+#' @export
+init_params_additive0 = function(y,
                                 X_lin,
                                 X_nonlin,
                                 B_all = NULL){
@@ -2584,10 +2915,10 @@ init_params_additive = function(y,
 #' X_nonlin = as.matrix(X[,(1:3)])
 #'
 #' # Initialize:
-#' params = init_params_additive(y = y, X_lin = X_lin, X_nonlin = X_nonlin)
+#' params = init_params_additive0(y = y, X_lin = X_lin, X_nonlin = X_nonlin)
 #'
 #' # Sample:
-#' params = sample_params_additive(y = y,
+#' params = sample_params_additive0(y = y,
 #'                                 X_lin = X_lin,
 #'                                 X_nonlin = X_nonlin,
 #'                                 params = params)
@@ -2598,7 +2929,7 @@ init_params_additive = function(y,
 #' plot(X_nonlin[,1], params$coefficients$f_j[,1])
 #'
 #' @export
-sample_params_additive = function(y,
+sample_params_additive0 = function(y,
                                   X_lin,
                                   X_nonlin,
                                   params,
@@ -2687,8 +3018,8 @@ sample_params_additive = function(y,
     ell_theta_j = 1/sigma^2*crossprod(B_all[[j]], y_res_lin_j)
     ch_Q_j = chol(Q_theta_j)
     theta_j[[j]] = backsolve(ch_Q_j,
-                     forwardsolve(t(ch_Q_j), ell_theta_j) +
-                       rnorm(Lj))
+                             forwardsolve(t(ch_Q_j), ell_theta_j) +
+                               rnorm(Lj))
 
     # f_j functions: combine linear and nonlinear components
     coefficients$f_j[,j] = X_nonlin[,j]*beta[pL+j] + B_all[[j]]%*%theta_j[[j]]
