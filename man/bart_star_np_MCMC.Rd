@@ -4,10 +4,10 @@
 \alias{bart_star_np_MCMC}
 \title{MCMC sampler for BART-STAR Model with nonparametric link function}
 \usage{
-bart_star_np_MCMC(y, X, X_test = NULL, lambda_prior = 1/2,
-  y_max = Inf, n.trees = 200, sigest = NULL, sigdf = 3,
-  sigquant = 0.9, k = 2, power = 2, base = 0.95, nsave = 5000,
-  nburn = 50000, nskip = 9, target_acc_rate = 0.3,
+bart_star_np_MCMC(y, X, X_test = NULL, y_test = NULL,
+  lambda_prior = 1/2, y_max = Inf, n.trees = 200, sigest = NULL,
+  sigdf = 3, sigquant = 0.9, k = 2, power = 2, base = 0.95,
+  nsave = 5000, nburn = 50000, nskip = 9, target_acc_rate = 0.3,
   adapt_rate = 0.75, stop_adapt_perc = 0.5, verbose = TRUE)
 }
 \arguments{
@@ -16,6 +16,9 @@ bart_star_np_MCMC(y, X, X_test = NULL, lambda_prior = 1/2,
 \item{X}{\code{n x p} matrix of predictors}
 
 \item{X_test}{\code{n0 x p} matrix of predictors for test data}
+
+\item{y_test}{\code{n0 x 1} vector of the test data responses (used for
+computing log-predictive scores)}
 
 \item{lambda_prior}{the prior mean for the transformation g() is the Box-Cox function with
 parameter \code{lambda_prior}}
@@ -68,6 +71,7 @@ a list with the following elements:
 the prior standard deviation of the transformation \code{g} coefficients
 \item \code{post.mu.test}: draws of the conditional mean of z_star at the test points
 \item \code{post.log.like.point}: draws of the log-likelihood for each of the \code{n} observations
+\item \code{post.log.pred.test}: draws of the log-predictive distribution for each of the \code{n0} test cases
 \item \code{WAIC}: Widely-Applicable/Watanabe-Akaike Information Criterion
 \item \code{p_waic}: Effective number of parameters based on WAIC
 }

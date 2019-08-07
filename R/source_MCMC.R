@@ -465,9 +465,10 @@ star_np_MCMC = function(y,
   # Define the I-Spline components:
 
   # Grid for later (including t_g):
-  t_grid = seq(0,
-               min(2*max(y), y_max),
-               by = 0.01) #by = 0.25)
+  t_grid = sort(unique(c(
+    0:min(2*max(y), y_max),
+    seq(0, min(2*max(y), y_max), length.out = 100),
+    quantile(unique(y[y!=0]), seq(0, 1, length.out = 100)))))
 
   # Number and location of interior knots:
   #num_int_knots_g = 4
@@ -836,9 +837,10 @@ star_np_MCMC2 = function(y,
   # Define the I-Spline components:
 
   # Grid for later (including t_g):
-  t_grid = seq(0,
-               min(2*max(y), y_max),
-               length.out = 1000) #by = 0.25)
+  t_grid = sort(unique(c(
+    0:min(2*max(y), y_max),
+    seq(0, min(2*max(y), y_max), length.out = 100),
+    quantile(unique(y[y!=0]), seq(0, 1, length.out = 100)))))
 
   # Number and location of interior knots:
   #num_int_knots_g = 4
@@ -1055,6 +1057,8 @@ star_np_MCMC2 = function(y,
 #' @param y \code{n x 1} vector of observed counts
 #' @param X \code{n x p} matrix of predictors
 #' @param X_test \code{n0 x p} matrix of predictors for test data
+#' @param y_test \code{n0 x 1} vector of the test data responses (used for
+#' computing log-predictive scores)
 #' @param transformation transformation to use for the latent process; must be one of
 #' \itemize{
 #' \item "identity" (identity transformation)
@@ -1091,6 +1095,7 @@ star_np_MCMC2 = function(y,
 #' \item \code{post.sigma}: draws from the posterior distribution of \code{sigma}
 #' \item \code{post.mu.test}: draws of the conditional mean of z_star at the test points
 #' \item \code{post.log.like.point}: draws of the log-likelihood for each of the \code{n} observations
+#' \item \code{post.log.pred.test}: draws of the log-predictive distribution for each of the \code{n0} test cases
 #' \item \code{logLik}: the log-likelihood evaluated at the posterior means
 #' \item \code{WAIC}: Widely-Applicable/Watanabe-Akaike Information Criterion
 #' \item \code{p_waic}: Effective number of parameters based on WAIC
@@ -1144,7 +1149,7 @@ star_np_MCMC2 = function(y,
 #' @export
 bart_star_MCMC = function(y,
                           X,
-                          X_test = NULL,
+                          X_test = NULL, y_test = NULL,
                           transformation = 'log',
                           lambda = NULL,
                           y_max = Inf,
@@ -1272,8 +1277,9 @@ bart_star_MCMC = function(y,
   # Test data: fitted values and posterior predictive distribution
   if(include_test){
     post.pred.test = post.fitted.values.test = post.mu.test = array(NA, c(nsave, n0))
+    if(!is.null(y_test)) {post.log.pred.test = array(NA, c(nsave, n0))} else post.log.pred.test = NULL
   } else {
-    post.pred.test = post.fitted.values.test = post.mu.test = NULL
+    post.pred.test = post.fitted.values.test = post.mu.test = post.log.pred.test = NULL
   }
 
   # Total number of MCMC simulations:
@@ -1353,6 +1359,13 @@ bart_star_MCMC = function(y,
                                                                     g_a_jp1 = g(a_j(1:(Jmaxmax + 1)), lambda),
                                                                     mu = samp$test, sigma = rep(params$sigma, n0),
                                                                     Jmax = Jmax)
+
+          # Test points for log-predictive score:
+          if(!is.null(y_test))
+            post.log.pred.test[isave,] = logLikePointRcpp(g_a_j = g(a_j(y_test), lambda),
+                                                          g_a_jp1 = g(a_j(y_test + 1), lambda),
+                                                          mu = samp$test,
+                                                          sigma = rep(params$sigma, n))
         }
 
         # Nonlinear parameter of Box-Cox transformation:
@@ -1397,7 +1410,7 @@ bart_star_MCMC = function(y,
        post.pred.test = post.pred.test,
        post.fitted.values.test = post.fitted.values.test, post.mu.test = post.mu.test,
        post.lambda = post.lambda, post.sigma = post.sigma,
-       post.log.like.point = post.log.like.point, logLik = logLik,
+       post.log.like.point = post.log.like.point, post.log.pred.test = post.log.pred.test, logLik = logLik,
        WAIC = WAIC, p_waic = p_waic)
 }
 #' MCMC sampler for BART-STAR Model with nonparametric link function
@@ -1410,6 +1423,8 @@ bart_star_MCMC = function(y,
 #' @param y \code{n x 1} vector of observed counts
 #' @param X \code{n x p} matrix of predictors
 #' @param X_test \code{n0 x p} matrix of predictors for test data
+#' @param y_test \code{n0 x 1} vector of the test data responses (used for
+#' computing log-predictive scores)
 #' @param lambda_prior the prior mean for the transformation g() is the Box-Cox function with
 #' parameter \code{lambda_prior}
 #' @param y_max a fixed and known upper bound for all observations; default is \code{Inf}
@@ -1445,6 +1460,7 @@ bart_star_MCMC = function(y,
 #' the prior standard deviation of the transformation \code{g} coefficients
 #' \item \code{post.mu.test}: draws of the conditional mean of z_star at the test points
 #' \item \code{post.log.like.point}: draws of the log-likelihood for each of the \code{n} observations
+#' \item \code{post.log.pred.test}: draws of the log-predictive distribution for each of the \code{n0} test cases
 #' \item \code{WAIC}: Widely-Applicable/Watanabe-Akaike Information Criterion
 #' \item \code{p_waic}: Effective number of parameters based on WAIC
 #' }
@@ -1479,7 +1495,7 @@ bart_star_MCMC = function(y,
 #' @export
 bart_star_np_MCMC = function(y,
                             X,
-                            X_test = NULL,
+                            X_test = NULL, y_test = NULL,
                             lambda_prior = 1/2,
                             y_max = Inf,
                             n.trees = 200,
@@ -1556,7 +1572,6 @@ bart_star_np_MCMC = function(y,
     sigest = median(fit0$post.sigma)
   }
 
-
   # Initialize the sampling object, which includes the prior specs:
   sampler = dbarts(z_star ~ X, test = X_test,
                    control = control,
@@ -1573,9 +1588,10 @@ bart_star_np_MCMC = function(y,
   # Define the I-Spline components:
 
   # Grid for later (including t_g):
-  t_grid = seq(0,
-               min(2*max(y), y_max),
-               length.out = 1000) #by = 0.25)
+  t_grid = sort(unique(c(
+    0:min(2*max(y), y_max),
+    seq(0, min(2*max(y), y_max), length.out = 100),
+    quantile(unique(y[y!=0]), seq(0, 1, length.out = 100)))))
 
   # Number and location of interior knots:
   #num_int_knots_g = 4
@@ -1648,8 +1664,9 @@ bart_star_np_MCMC = function(y,
   # Test data: fitted values and posterior predictive distribution
   if(include_test){
     post.pred.test = post.fitted.values.test = post.mu.test = array(NA, c(nsave, n0))
+    if(!is.null(y_test)) {post.log.pred.test = array(NA, c(nsave, n0))} else post.log.pred.test = NULL
   } else {
-    post.pred.test = post.fitted.values.test = post.mu.test = NULL
+    post.pred.test = post.fitted.values.test = post.mu.test = post.log.pred.test = NULL
   }
 
   # Total number of MCMC simulations:
@@ -1756,22 +1773,6 @@ bart_star_np_MCMC = function(y,
         u = rnorm(n = n, mean = params$mu, sd = params$sigma); g_grid = B_I_grid%*%gamma
         post.pred[isave,] = round_fun(sapply(u, function(ui) t_grid[which.min(abs(ui - g_grid))]))
 
-        if(FALSE){
-          splinefun(g_eval, t_g)(u)
-
-
-          t_grid = seq(0, min(2*max(y), y_max), by = 0.01)
-          g_grid = splinefun(t_g, g_eval)(t_grid_1)
-
-          Jmax = ceiling(sapply(u, function(ui) t_grid[which.min(abs(ui - g_grid))]))
-          Jmax[Jmax > 2*max(y)] = 2*max(y) # To avoid excessive computation times, cap at 2*max(y)
-          Jmaxmax = max(Jmax)
-          g_a_j_0J = g_grid[match(a_j(0:Jmaxmax), t_grid)]; g_a_j_0J[1] = -Inf
-          g_a_j_1Jp1 = g_grid[match(a_j(1:(Jmaxmax + 1)), t_grid)]; g_a_j_1Jp1[length(g_a_j_1Jp1)] = Inf
-          temp0 = expectation_gRcpp(g_a_j = g_a_j_0J,g_a_jp1 = g_a_j_1Jp1, mu = params$mu, sigma = rep(params$sigma, n), Jmax = Jmax)
-        }
-
-
         # Conditional expectation:
         u = qnorm(0.9999, mean = params$mu, sd = params$sigma)
         Jmax = ceiling(sapply(u, function(ui) t_grid[which.min(abs(ui - g_grid))]))
@@ -1803,6 +1804,24 @@ bart_star_np_MCMC = function(y,
                                                               g_a_jp1 = g_a_j_1Jp1,
                                                               mu = samp$test, sigma = rep(params$sigma, n0),
                                                               Jmax = Jmax)
+
+          # Test points for log-predictive score:
+          if(!is.null(y_test)){
+            # Need g() evaluated at the test points:
+            a_y_test = a_j(y_test); a_yp1_test = a_j(y_test + 1)
+            g_test_a_y = g_test_ayp1 = rep(NA, length(y_test))
+            # Account for +/-Inf:
+            g_test_a_y[a_y_test==-Inf] = -Inf; g_test_ayp1[a_yp1_test==Inf] = Inf
+            # Impute (w/ 0 and 1 at the boundaries)
+            g_fun = approxfun(t_g, g_eval, yleft = 0, yright = 1)
+            g_test_a_y[a_y_test!=-Inf] = g_fun(a_y_test[a_y_test!=-Inf])
+            g_test_ayp1[a_yp1_test!=Inf] = g_fun(a_yp1_test[a_yp1_test!=Inf])
+
+            post.log.pred.test[isave,] = logLikePointRcpp(g_a_j = g_test_a_y,
+                                                          g_a_jp1 = g_test_ayp1,
+                                                          mu = samp$test,
+                                                          sigma = rep(params$sigma, n))
+          }
         }
 
         # Monotone transformation:
@@ -1845,7 +1864,7 @@ bart_star_np_MCMC = function(y,
        post.g = post.g,
        post.sigma = post.sigma, post.sigma.gamma = post.sigma.gamma,
        post.mu.test = post.mu.test,
-       post.log.like.point = post.log.like.point,
+       post.log.like.point = post.log.like.point, post.log.pred.test = post.log.pred.test,
        WAIC = WAIC, p_waic = p_waic)
 }
 #' MCMC Algorithm for conditional Gaussian likelihood

@@ -1,4 +1,124 @@
 #----------------------------------------------------------------------------
+#' Rounding and inverse transformation function
+#'
+#' Compute the inverse transformation and round, as defined in the data-generating
+#' process. This is useful for computing posterior/prior predictive distributions.
+#'
+#' @param z argument(s) at which to evaluate \code{h(ginv())}
+#' @param transformation transformation to use for the latent process; must be one of
+#' \itemize{
+#' \item "identity" (identity transformation)
+#' \item "log" (log transformation)
+#' \item "sqrt" (square root transformation)
+#' \item "box-cox" (box-cox transformation)
+#' }
+#' @param lambda the nonlinear parameter for the Box-Cox transformation
+#' @param y_max a fixed and known upper bound for all observations; default is \code{Inf}
+#' @return \code{h(ginv(z))}, where \code{h} and \code{ginv} are determined by the
+#' transformation
+#' @export
+h_ginv = function(z,
+                  transformation = 'log',
+                  lambda = NULL,
+                  y_max = Inf){
+
+  # Check: does the transformation make sense?
+  transformation = tolower(transformation);
+  if(is.na(match(transformation, c("identity", "log", "sqrt", "box-cox"))))
+    stop("The transformation must be one of 'identity', 'log', 'sqrt' or 'box-cox'")
+
+  # Check: is lambda non-negative?
+  if(!is.null(lambda) && lambda < 0)
+    stop("The Box-Cox parameter (lambda) must be non-negative")
+
+  # Check : is lambda given for Box-Cox?
+  if(is.null(lambda) && transformation == 'box-cox')
+    stop("The Box-Cox parameter (lambda) must be specified")
+
+  # Use Box-Cox transformation for all transformations, as special case:
+  if(transformation == 'identity') lambda = 1
+  if(transformation == 'log') lambda = 0
+  if(transformation == 'sqrt') lambda = 1/2
+
+  # Inverse transformation g:
+  ginv = function(s, lambda) {
+    if(lambda == 0) {
+      return(exp(s))
+    } else {
+      return(sign(lambda*s + 1)*abs(lambda*s+1)^(1/lambda))
+    }
+  }
+
+  # Also define the rounding function and the corresponding intervals:
+  if(transformation == 'log' || lambda ==0){
+    round_fun = function(z) pmin(floor(z), y_max)
+  } else {
+    round_fun = function(z) pmin(floor(z)*I(z > 0), y_max)
+  }
+
+  return(round_fun(ginv(z,lambda = lambda)))
+}
+#----------------------------------------------------------------------------
+#' Inverse rounding and transformation function
+#'
+#' Compute the inverse of the rounding operator and transform, which
+#' is used in the likelihood.
+#'
+#' @param y argument(s) at which to evaluate \code{g(aj())}
+#' @param transformation transformation to use for the latent process; must be one of
+#' \itemize{
+#' \item "identity" (identity transformation)
+#' \item "log" (log transformation)
+#' \item "sqrt" (square root transformation)
+#' \item "box-cox" (box-cox transformation)
+#' }
+#' @param lambda the nonlinear parameter for the Box-Cox transformation
+#' @param y_max a fixed and known upper bound for all observations; default is \code{Inf}
+#' @return \code{g(aj(y))}, where \code{g} and \code{aj} are determined by the
+#' transformation
+#' @export
+g_aj = function(y,
+                transformation = 'log',
+                lambda = NULL,
+                y_max = Inf){
+
+  # Check: does the transformation make sense?
+  transformation = tolower(transformation);
+  if(is.na(match(transformation, c("identity", "log", "sqrt", "box-cox"))))
+    stop("The transformation must be one of 'identity', 'log', 'sqrt' or 'box-cox'")
+
+  # Check: is lambda non-negative?
+  if(!is.null(lambda) && lambda < 0)
+    stop("The Box-Cox parameter (lambda) must be non-negative")
+
+  # Check : is lambda given for Box-Cox?
+  if(is.null(lambda) && transformation == 'box-cox')
+    stop("The Box-Cox parameter (lambda) must be specified")
+
+  # Use Box-Cox transformation for all transformations, as special case:
+  if(transformation == 'identity') lambda = 1
+  if(transformation == 'log') lambda = 0
+  if(transformation == 'sqrt') lambda = 1/2
+
+  # Transformation g:
+  g = function(t, lambda) {
+    if(lambda == 0) {
+      return(log(t))
+    } else {
+      return((sign(t)*abs(t)^lambda - 1)/lambda)
+    }
+  }
+
+  # Also define the intervals corresponding to the rounding function:
+  if(transformation == 'log' || lambda ==0){
+    a_j = function(j) {val = j; val[j==y_max+1] = Inf; val}
+  } else {
+    a_j = function(j) {val = j; val[j==0] = -Inf; val[j==y_max+1] = Inf; val}
+  }
+
+  return(g(a_j(y), lambda = lambda))
+}
+#----------------------------------------------------------------------------
 #' Simulate count data from a linear regression
 #'
 #' Simulate data from a negative-binomial distribution with linear mean function.
