@@ -843,7 +843,6 @@ star_np_MCMC2 = function(y,
     quantile(unique(y[y!=0]), seq(0, 1, length.out = 100)))))
 
   # Number and location of interior knots:
-  #num_int_knots_g = 4
   num_int_knots_g = min(ceiling(length(unique(y))/4), 10)
   knots_g = c(1,
               quantile(unique(y[y!=0 & y!=1]), # Quantiles of data (excluding zero and one)
@@ -884,13 +883,11 @@ star_np_MCMC2 = function(y,
   g_eval_ay = g_eval[ind_t_a_y]; g_eval_ay[a_y==-Inf] = -Inf;
   g_eval_ayp1 = g_eval[ind_t_a_yp1]; g_eval_ayp1[a_yp1==Inf] = Inf
 
-  # Clusters: random assignments
-  s_i = sample(1:L, n, replace = TRUE)
-  n_ell = sapply(1:L, function(ell) sum(ell == s_i))
+  # Cluster probabilities
   pr_i_ell = matrix(NA, nrow = n, ncol = L)
 
   # Prior concentration:
-  alpha = 100
+  alpha = 5
 
   # Initial value:
   gamma = mu_gamma;  # Coefficient for g()
@@ -954,7 +951,7 @@ star_np_MCMC2 = function(y,
 
     # Next, sample the gammas:
     gamma = as.double(rdirichlet(n = 1,
-                       alpha = n_ell + alpha*mu_gamma))
+                       alpha = n_ell + alpha*n*mu_gamma))
 
     # And update g:
     g_eval = B_I%*%gamma;
@@ -965,11 +962,13 @@ star_np_MCMC2 = function(y,
     alpha = uni.slice(x0 = alpha,
                       g = function(a){
                         #log(ddirichlet(gamma, a*mu_gamma)) +
-                        lgamma(a) - sum(lgamma(a*mu_gamma)) + sum((a*mu_gamma - 1)*log(gamma)) +
+                        #lgamma(a) - sum(lgamma(a*n*mu_gamma)) + sum((a*n*mu_gamma - 1)*log(gamma)) +
+                        lgamma(sum(a*n*mu_gamma)) - lgamma(n + sum(a*n*mu_gamma)) + sum(lgamma(n_ell + a*n*mu_gamma) - lgamma(a*n*mu_gamma)) +
+
                           # This is the prior on alpha:
-                          dunif(a, min = 0, max = 1000, log = TRUE)
-                          #dnorm(a, mean = 100, sd = 100, log = TRUE)
-                          #dgamma(a, shape = a_alpha, rate = b_alpha, log = TRUE)
+                          dunif(a, min = 0, max = 10, log = TRUE)
+                        #dnorm(a, mean = 1, sd = 5, log = TRUE)
+                        #dgamma(a, shape = a_alpha, rate = b_alpha, log = TRUE)
                       },
                       lower = 0, upper = Inf)
     #----------------------------------------------------------------------------
