@@ -6,7 +6,7 @@
 \usage{
 star_MCMC(y, sample_params, init_params, transformation = "log",
   lambda = NULL, y_max = Inf, nsave = 5000, nburn = 5000,
-  nskip = 2, verbose = TRUE)
+  nskip = 2, save_y_hat = FALSE, verbose = TRUE)
 }
 \arguments{
 \item{y}{\code{n x 1} vector of observed counts}
@@ -41,6 +41,9 @@ and initializes the named list \code{params} of \code{mu}, \code{sigma}, and \co
 
 \item{nskip}{number of MCMC iterations to skip between saving iterations,
 i.e., save every (nskip + 1)th draw}
+
+\item{save_y_hat}{logical; if TRUE, compute and save the posterior draws of
+the expected counts, E(y), which may be slow to compute}
 
 \item{verbose}{logical; if TRUE, print time remaining}
 }

@@ -6,7 +6,7 @@
 \usage{
 star_np_MCMC2(y, sample_params, init_params, lambda_prior = 1/2,
   y_max = Inf, nsave = 5000, nburn = 5000, nskip = 2,
-  verbose = TRUE)
+  save_y_hat = FALSE, verbose = TRUE)
 }
 \arguments{
 \item{y}{\code{n x 1} vector of observed counts}
@@ -34,6 +34,9 @@ parameter \code{lambda_prior}}
 
 \item{nskip}{number of MCMC iterations to skip between saving iterations,
 i.e., save every (nskip + 1)th draw}
+
+\item{save_y_hat}{logical; if TRUE, compute and save the posterior draws of
+the expected counts, E(y), which may be slow to compute}
 
 \item{verbose}{logical; if TRUE, print time remaining}
 }

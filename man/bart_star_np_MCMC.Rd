@@ -7,8 +7,9 @@
 bart_star_np_MCMC(y, X, X_test = NULL, y_test = NULL,
   lambda_prior = 1/2, y_max = Inf, n.trees = 200, sigest = NULL,
   sigdf = 3, sigquant = 0.9, k = 2, power = 2, base = 0.95,
-  nsave = 5000, nburn = 50000, nskip = 9, target_acc_rate = 0.3,
-  adapt_rate = 0.75, stop_adapt_perc = 0.5, verbose = TRUE)
+  nsave = 5000, nburn = 50000, nskip = 9, save_y_hat = FALSE,
+  target_acc_rate = 0.3, adapt_rate = 0.75, stop_adapt_perc = 0.5,
+  verbose = TRUE)
 }
 \arguments{
 \item{y}{\code{n x 1} vector of observed counts}
@@ -48,6 +49,9 @@ The bigger k is, the more conservative the fitting will be (see ?bart)}
 
 \item{nskip}{number of MCMC iterations to skip between saving iterations,
 i.e., save every (nskip + 1)th draw}
+
+\item{save_y_hat}{logical; if TRUE, compute and save the posterior draws of
+the expected counts, E(y), which may be slow to compute}
 
 \item{target_acc_rate}{target acceptance rate (between zero and one)}
 

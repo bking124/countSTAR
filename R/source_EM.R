@@ -33,6 +33,7 @@
 #' \item \code{z.hat} the estimated latent variables (on the transformed scale) at the MLEs
 #' \item \code{residuals} the Dunn-Smyth residuals
 #' \item \code{logLik} the log-likelihood at the MLEs
+#' \item \code{logLik0} the log-likelihood at the MLEs for the *unrounded* initialization
 #' \item and other parameters that
 #' (i) track the parameters across EM iterations and
 #' (ii) record the model specifications
@@ -104,11 +105,6 @@ star_EM = function(y,
   if(!is.null(lambda) && lambda < 0)
     stop("The Box-Cox parameter (lambda) must be non-negative")
 
-  # Check: does the estimator make sense?
-  temp = estimator(y);
-  if(is.null(temp$fitted.values) || is.null(temp$coefficients))
-    stop("The estimator() function must return 'fitted.values' and 'coefficients'")
-
   # Use Box-Cox transformation for all transformations, as special case:
   if(transformation == 'identity') lambda = 1
   if(transformation == 'log') lambda = 0
@@ -132,7 +128,13 @@ star_EM = function(y,
   }
 
   # Random initialization for the lambda, if estimated:
-  if(estimate_lambda) lambda = runif(n = 1) # Initialize on U(0,1)
+  if(estimate_lambda) {
+    # Initialize on (0,1)
+    lambda = runif(n = 1)
+
+    # Sequence for grid search:
+    lam_seq = seq(0.001, 1.2, length.out=100)
+  }
 
   # Also define the rounding function and the corresponding intervals:
   if(transformation == 'log' || lambda ==0){
@@ -148,29 +150,54 @@ star_EM = function(y,
   # Number of observations:
   n = length(y);
 
-  # Number of parameters (excluding sigma)
-  p = length(estimator(y)$coefficients)
+  # Initialize the parameters: add 1 in case of zeros
+  z_hat = g(y + 1, lambda = lambda)
+  fit = estimator(z_hat);
 
-  # Random initialization:
-  z_hat = g(y + abs(rnorm(n = n)), lambda = lambda) # First moment
-  z2_hat = z_hat^2 # Second moment
+  # Check: does the estimator make sense?
+  if(is.null(fit$fitted.values) || is.null(fit$coefficients))
+    stop("The estimator() function must return 'fitted.values' and 'coefficients'")
+
+  # (Initial) Fitted values:
+  mu_hat = fit$fitted.values
+
+  # (Initial) Coefficients:
+  theta_hat = fit$coefficients
+
+  # (Initial) observation SD:
+  sigma_hat = sd(z_hat - mu_hat)
+
+  # (Initial) log-likelihood:
+  logLik0 = logLik_em0 =
+    (lambda - 1)*sum(log(y+1)) + sum(dnorm(z_hat, mean = mu_hat, sd = sigma_hat, log = TRUE))
+
+  # Number of parameters (excluding sigma)
+  p = length(theta_hat)
 
   # Lower and upper intervals:
   a_y = a_j(y); a_yp1 = a_j(y + 1)
   z_lower = g(a_y, lambda = lambda);
   z_upper = g(a_yp1, lambda = lambda)
 
-  # For iteration s=1 comparison:
-  mu_hat0 = rep(0,n); theta_hat0 = rep(0,p)
-
   # Store the EM trajectories:
   mu_all = zhat_all = array(0, c(max_iters, n))
   theta_all = array(0, c(max_iters, p)) # Parameters (coefficients)
   sigma_all = numeric(max_iters) # SD
+  logLik_all = numeric(max_iters) # Log-likelihood
   lambda_all = numeric(max_iters) # Nonlinear parameter
 
   for(s in 1:max_iters){
-    # Estimation:
+
+    # ----------------------------------
+    ## E-step: impute the latent data
+    # ----------------------------------
+    # First and second moments of latent variables:
+    z_mom = truncnorm_mom(a = z_lower, b = z_upper, mu = mu_hat, sig = sigma_hat)
+    z_hat = z_mom$m1; z2_hat= z_mom$m2;
+
+    # ----------------------------------
+    ## M-step: estimation
+    # ----------------------------------
     fit = estimator(z_hat)
     mu_hat = fit$fitted.values
     theta_hat = fit$coefficients
@@ -179,33 +206,32 @@ star_EM = function(y,
     # If estimating lambda:
     if(estimate_lambda){
       # Grid search:
-      lam_seq = seq(0.001, 1.2, length.out=100)
       lambda = lam_seq[which.min(sapply(lam_seq, function(l_bc){
         -logLikeRcpp(g_a_j = g(a_y, l_bc),
                      g_a_jp1 = g(a_yp1, l_bc),
                      mu = mu_hat,
                      sigma = rep(sigma_hat, n))}))]
 
-
       # Next, update the lower and upper limits:
       z_lower = g(a_y, lambda = lambda);
       z_upper = g(a_yp1, lambda = lambda)
     }
 
-    # First and second moments of latent variables:
-    z_mom = truncnorm_mom(a = z_lower, b = z_upper, mu = mu_hat, sig = sigma_hat)
-    z_hat = z_mom$m1; z2_hat= z_mom$m2;
+    # Update log-likelihood:
+    logLik_em = logLikeRcpp(g_a_j = z_lower,
+                            g_a_jp1 = z_upper,
+                            mu = mu_hat,
+                            sigma = rep(sigma_hat, n))
 
     # Storage:
-    mu_all[s,] = mu_hat; theta_all[s,] = theta_hat; sigma_all[s] = sigma_hat; zhat_all[s,] = z_hat; lambda_all[s] = lambda
+    mu_all[s,] = mu_hat; theta_all[s,] = theta_hat; sigma_all[s] = sigma_hat; logLik_all[s] = logLik_em; zhat_all[s,] = z_hat; lambda_all[s] = lambda
 
     # Check whether to stop:
-    if(mean((theta_hat - theta_hat0)^2) +
-       mean((mu_hat - mu_hat0)^2) < tol) break
-    theta_hat0 = theta_hat; mu_hat0 = mu_hat
+    if((logLik_em - logLik_em0)^2 < tol) break
+    logLik_em0 = logLik_em
   }
   # Subset trajectory to the estimated values:
-  mu_all = mu_all[1:s,]; theta_all = theta_all[1:s,]; sigma_all = sigma_all[1:s]; zhat_all = zhat_all[1:s,]; lambda_all = lambda_all[1:s]
+  mu_all = mu_all[1:s,]; theta_all = theta_all[1:s,]; sigma_all = sigma_all[1:s]; logLik_all = logLik_all[1:s]; zhat_all = zhat_all[1:s,]; lambda_all = lambda_all[1:s]
 
   # Also the expected value (fitted values):
   Jmax = ceiling(round_fun(ginv(
@@ -216,12 +242,6 @@ star_EM = function(y,
                                                        g_a_jp1 = g(a_j(1:(Jmaxmax + 1)), lambda),
                                                        mu = mu_hat, sigma = rep(sigma_hat, n),
                                                        Jmax = Jmax)
-  # Log-likelihood at MLEs:
-  logLik_em = logLikeRcpp(g_a_j = z_lower,
-                           g_a_jp1 = z_upper,
-                           mu = mu_hat,
-                           sigma = rep(sigma_hat,n))
-
   # Dunn-Smyth residuals:
   resids_ds = qnorm(runif(n)*(pnorm((z_upper - mu_hat)/sigma_hat) -
                                 pnorm((z_lower - mu_hat)/sigma_hat)) +
@@ -235,7 +255,8 @@ star_EM = function(y,
        z.hat = z_hat,
        residuals = resids_ds,
        logLik = logLik_em,
-       mu_all = mu_all, theta_all = theta_all, sigma_all = sigma_all, zhat_all = zhat_all, lambda_all = lambda_all, # EM trajectory
+       logLik0 = logLik0,
+       mu_all = mu_all, theta_all = theta_all, sigma_all = sigma_all, logLik_all = logLik_all, zhat_all = zhat_all, lambda_all = lambda_all, # EM trajectory
        transformation = transformation, lambda = lambda, y_max = y_max, tol = tol, max_iters = max_iters) # And return the info about the model as well
 }
 #' EM Algorithm for the STAR linear model with weighted least squares
@@ -270,6 +291,7 @@ star_EM = function(y,
 #' \item \code{z.hat} the estimated latent variables (on the transformed scale) at the MLEs
 #' \item \code{residuals} the Dunn-Smyth residuals
 #' \item \code{logLik} the log-likelihood at the MLEs
+#' \item \code{logLik0} the log-likelihood at the MLEs for the *unrounded* initialization
 #' \item and other parameters that
 #' (i) track the parameters across EM iterations and
 #' (ii) record the model specifications
@@ -344,7 +366,13 @@ star_EM_wls = function(y, X,
   }
 
   # Random initialization for the lambda, if estimated:
-  if(estimate_lambda) lambda = runif(n = 1) # Initialize on U(0,1)
+  if(estimate_lambda) {
+    # Initialize on (0,1)
+    lambda = runif(n = 1)
+
+    # Sequence for grid search:
+    lam_seq = seq(0.001, 1.2, length.out=100)
+  }
 
   # Also define the rounding function and the corresponding intervals:
   if(transformation == 'log' || lambda ==0){
@@ -360,29 +388,54 @@ star_EM_wls = function(y, X,
   # Number of observations:
   n = length(y);
 
-  # Number of parameters (excluding sigma)
-  p = length(estimator(y)$coefficients)
+  # Initialize the parameters: add 1 in case of zeros
+  z_hat = g(y + 1, lambda = lambda)
+  fit = estimator(z_hat);
 
-  # Random initialization:
-  z_hat = g(y + abs(rnorm(n = n)), lambda = lambda) # First moment
-  z2_hat = z_hat^2 # Second moment
+  # Check: does the estimator make sense?
+  if(is.null(fit$fitted.values) || is.null(fit$coefficients))
+    stop("The estimator() function must return 'fitted.values' and 'coefficients'")
+
+  # (Initial) Fitted values:
+  mu_hat = fit$fitted.values
+
+  # (Initial) Coefficients:
+  theta_hat = fit$coefficients
+
+  # (Initial) observation SD:
+  sigma_hat = sd(z_hat - mu_hat)
+
+  # (Initial) log-likelihood:
+  logLik0 = logLik_em0 =
+    (lambda - 1)*sum(log(y+1)) + sum(dnorm(z_hat, mean = mu_hat, sd = sigma_hat/sqrt(weights), log = TRUE))
+
+  # Number of parameters (excluding sigma)
+  p = length(theta_hat)
 
   # Lower and upper intervals:
   a_y = a_j(y); a_yp1 = a_j(y + 1)
   z_lower = g(a_y, lambda = lambda);
   z_upper = g(a_yp1, lambda = lambda)
 
-  # For iteration s=1 comparison:
-  mu_hat0 = rep(0,n); theta_hat0 = rep(0,p)
-
   # Store the EM trajectories:
   mu_all = zhat_all = array(0, c(max_iters, n))
   theta_all = array(0, c(max_iters, p)) # Parameters (coefficients)
   sigma_all = numeric(max_iters) # SD
+  logLik_all = numeric(max_iters) # Log-likelihood
   lambda_all = numeric(max_iters) # Nonlinear parameter
 
   for(s in 1:max_iters){
-    # Estimation:
+
+    # ----------------------------------
+    ## E-step: impute the latent data
+    # ----------------------------------
+    # First and second moments of latent variables:
+    z_mom = truncnorm_mom(a = z_lower, b = z_upper, mu = mu_hat, sig = sigma_hat/sqrt(weights))
+    z_hat = z_mom$m1; z2_hat= z_mom$m2;
+
+    # ----------------------------------
+    ## M-step: estimation
+    # ----------------------------------
     fit = estimator(z_hat)
     mu_hat = fit$fitted.values
     theta_hat = fit$coefficients
@@ -391,7 +444,6 @@ star_EM_wls = function(y, X,
     # If estimating lambda:
     if(estimate_lambda){
       # Grid search:
-      lam_seq = seq(0.001, 1.2, length.out=100)
       lambda = lam_seq[which.min(sapply(lam_seq, function(l_bc){
         -logLikeRcpp(g_a_j = g(a_y, l_bc),
                      g_a_jp1 = g(a_yp1, l_bc),
@@ -403,20 +455,22 @@ star_EM_wls = function(y, X,
       z_upper = g(a_yp1, lambda = lambda)
     }
 
-    # First and second moments of latent variables:
-    z_mom = truncnorm_mom(a = z_lower, b = z_upper, mu = mu_hat, sig = sigma_hat/sqrt(weights))
-    z_hat = z_mom$m1; z2_hat= z_mom$m2;
+    # Update log-likelihood:
+    logLik_em = logLikeRcpp(g_a_j = z_lower,
+                            g_a_jp1 = z_upper,
+                            mu = mu_hat,
+                            sigma = sigma_hat/sqrt(weights))
 
     # Storage:
-    mu_all[s,] = mu_hat; theta_all[s,] = theta_hat; sigma_all[s] = sigma_hat; zhat_all[s,] = z_hat; lambda_all[s] = lambda
+    mu_all[s,] = mu_hat; theta_all[s,] = theta_hat; sigma_all[s] = sigma_hat; logLik_all[s] = logLik_em; zhat_all[s,] = z_hat; lambda_all[s] = lambda
 
     # Check whether to stop:
-    if(mean((theta_hat - theta_hat0)^2) +
-       mean((mu_hat - mu_hat0)^2) < tol) break
-    theta_hat0 = theta_hat; mu_hat0 = mu_hat
+    if((logLik_em - logLik_em0)^2 < tol) break
+    logLik_em0 = logLik_em
+
   }
   # Subset trajectory to the estimated values:
-  mu_all = mu_all[1:s,]; theta_all = theta_all[1:s,]; sigma_all = sigma_all[1:s]; zhat_all = zhat_all[1:s,]; lambda_all = lambda_all[1:s]
+  mu_all = mu_all[1:s,]; theta_all = theta_all[1:s,]; sigma_all = sigma_all[1:s]; logLik_all = logLik_all[1:s]; zhat_all = zhat_all[1:s,]; lambda_all = lambda_all[1:s]
 
   # Also the expected value (fitted values):
   Jmax = ceiling(round_fun(ginv(
@@ -427,11 +481,6 @@ star_EM_wls = function(y, X,
                             g_a_jp1 = g(a_j(1:(Jmaxmax + 1)), lambda),
                             mu = mu_hat, sigma = sigma_hat/sqrt(weights),
                             Jmax = Jmax)
-  # Log-likelihood at MLEs:
-  logLik_em = logLikeRcpp(g_a_j = z_lower,
-                          g_a_jp1 = z_upper,
-                          mu = mu_hat,
-                          sigma = sigma_hat/sqrt(weights))
 
   # Dunn-Smyth residuals:
   resids_ds = qnorm(runif(n)*(pnorm((z_upper - mu_hat)/(sigma_hat/sqrt(weights))) -
@@ -446,7 +495,8 @@ star_EM_wls = function(y, X,
        z.hat = z_hat,
        residuals = resids_ds,
        logLik = logLik_em,
-       mu_all = mu_all, theta_all = theta_all, sigma_all = sigma_all, zhat_all = zhat_all, lambda_all = lambda_all, # EM trajectory
+       logLik0 = logLik0,
+       mu_all = mu_all, theta_all = theta_all, sigma_all = sigma_all, logLik_all = logLik_all, zhat_all = zhat_all, lambda_all = lambda_all, # EM trajectory
        transformation = transformation, lambda = lambda, y_max = y_max, tol = tol, max_iters = max_iters) # And return the info about the model as well
 }
 #' EM Algorithm for Random Forest STAR
@@ -487,6 +537,7 @@ star_EM_wls = function(y, X,
 #' \item \code{z.hat}: the estimated latent variables (on the transformed scale) at the MLEs
 #' \item \code{residuals}: the Dunn-Smyth residuals
 #' \item \code{logLik}: the log-likelihood at the MLEs based on out-of-bag samples
+#' \item \code{logLik0} the log-likelihood at the MLEs for the *unrounded* initialization
 #' \item \code{rfObj}: the object returned by randomForest() at the MLEs
 #' \item and other parameters that
 #' (i) track the parameters across EM iterations and
@@ -584,7 +635,13 @@ randomForest_star = function(y, X, X.test = NULL,
   }
 
   # Random initialization for the lambda, if estimated:
-  if(estimate_lambda) lambda = runif(n = 1) # Initialize on U(0,1)
+  if(estimate_lambda) {
+    # Initialize on (0,1)
+    lambda = runif(n = 1)
+
+    # Sequence for grid search:
+    lam_seq = seq(0.001, 1.2, length.out=100)
+  }
 
   # Also define the rounding function and the corresponding intervals:
   if(transformation == 'log' || lambda ==0){
@@ -600,17 +657,25 @@ randomForest_star = function(y, X, X.test = NULL,
   # Number of observations:
   n = length(y);
 
-  # Random initialization:
-  z_hat = g(y + abs(rnorm(n = n)), lambda = lambda) # First moment
-  z2_hat = z_hat^2 # Second moment
+  # Initialize the parameters: add 1 in case of zeros
+  z_hat = g(y + 1, lambda = lambda)
+  fit = randomForest(x = X, y = z_hat,
+                     ntree = ntree, mtry = mtry, nodesize = nodesize)
+
+  # (Initial) Fitted values:
+  mu_hat = fit$predicted
+
+  # (Initial) observation SD:
+  sigma_hat = sd(z_hat - mu_hat)
+
+  # (Initial) log-likelihood:
+  logLik0 = logLik_em0 =
+    (lambda - 1)*sum(log(y+1)) + sum(dnorm(z_hat, mean = mu_hat, sd = sigma_hat, log = TRUE))
 
   # Lower and upper intervals:
   a_y = a_j(y); a_yp1 = a_j(y + 1)
   z_lower = g(a_y, lambda = lambda);
   z_upper = g(a_yp1, lambda = lambda)
-
-  # For iteration s=1 comparison:
-  logLik_em0 = 0
 
   # Store the EM trajectories:
   mu_all = zhat_all = array(0, c(max_iters, n))
@@ -619,7 +684,17 @@ randomForest_star = function(y, X, X.test = NULL,
   lambda_all = numeric(max_iters) # Nonlinear parameter
 
   for(s in 1:max_iters){
-    # Estimation:
+
+    # ----------------------------------
+    ## E-step: impute the latent data
+    # ----------------------------------
+    # First and second moments of latent variables:
+    z_mom = truncnorm_mom(a = z_lower, b = z_upper, mu = mu_hat, sig = sigma_hat)
+    z_hat = z_mom$m1; z2_hat= z_mom$m2;
+
+    # ----------------------------------
+    ## M-step: estimation
+    # ----------------------------------
     fit = randomForest(x = X, y = z_hat,
                  ntree = ntree, mtry = mtry, nodesize = nodesize)
     mu_hat = fit$predicted
@@ -627,8 +702,6 @@ randomForest_star = function(y, X, X.test = NULL,
 
     # If estimating lambda:
     if(estimate_lambda){
-      # Grid search:
-      lam_seq = seq(0.001, 1.2, length.out=100)
       lambda = lam_seq[which.min(sapply(lam_seq, function(l_bc){
         -logLikeRcpp(g_a_j = g(a_y, l_bc),
                      g_a_jp1 = g(a_yp1, l_bc),
@@ -640,11 +713,7 @@ randomForest_star = function(y, X, X.test = NULL,
       z_upper = g(a_yp1, lambda = lambda)
     }
 
-    # First and second moments of latent variables:
-    z_mom = truncnorm_mom(a = z_lower, b = z_upper, mu = mu_hat, sig = sigma_hat)
-    z_hat = z_mom$m1; z2_hat= z_mom$m2;
-
-    # Compute the log-likelihood:
+    # Update log-likelihood:
     logLik_em = logLikeRcpp(g_a_j = z_lower,
                             g_a_jp1 = z_upper,
                             mu = mu_hat,
@@ -707,6 +776,7 @@ randomForest_star = function(y, X, X.test = NULL,
        z.hat = z_hat,
        residuals = resids_ds,
        logLik = logLik_em,
+       logLik0 = logLik0,
        rfObj = fit,
        mu_all = mu_all, logLik_all = logLik_all, sigma_all = sigma_all, zhat_all = zhat_all, lambda_all = lambda_all, # EM trajectory
        transformation = transformation, lambda = lambda, y_max = y_max, tol = tol, max_iters = max_iters) # And return the info about the model as well
@@ -755,6 +825,7 @@ randomForest_star = function(y, X, X.test = NULL,
 #' \item \code{z.hat}: the estimated latent variables (on the transformed scale) at the MLEs
 #' \item \code{residuals}: the Dunn-Smyth residuals
 #' \item \code{logLik}: the log-likelihood at the MLEs
+#' \item \code{logLik0} the log-likelihood at the MLEs for the *unrounded* initialization
 #' \item \code{cond.pred.test}: 1000 simulated datasets at test points conditional on the MLEs
 #' \item \code{gbmObj}: the object returned by gbm() at the MLEs
 #' \item and other parameters that
@@ -845,7 +916,13 @@ gbm_star = function(y, X, X.test = NULL,
   }
 
   # Random initialization for the lambda, if estimated:
-  if(estimate_lambda) lambda = runif(n = 1) # Initialize on U(0,1)
+  if(estimate_lambda) {
+    # Initialize on (0,1)
+    lambda = runif(n = 1)
+
+    # Sequence for grid search:
+    lam_seq = seq(0.001, 1.2, length.out=100)
+  }
 
   # Also define the rounding function and the corresponding intervals:
   if(transformation == 'log' || lambda ==0){
@@ -861,17 +938,30 @@ gbm_star = function(y, X, X.test = NULL,
   # Number of observations:
   n = length(y);
 
-  # Random initialization:
-  z_hat = g(y + abs(rnorm(n = n)), lambda = lambda) # First moment
-  z2_hat = z_hat^2 # Second moment
+  # Initialize the parameters: add 1 in case of zeros
+  z_hat = g(y + 1, lambda = lambda)
+  fit = gbm(y ~ ., data = data.frame(y = z_hat, X = X),
+            distribution = "gaussian", # Squared error loss
+            n.trees = n.trees,
+            interaction.depth = interaction.depth,
+            shrinkage = shrinkage,
+            bag.fraction = bag.fraction
+  )
+
+  # (Initial) Fitted values:
+  mu_hat = fit$fit
+
+  # (Initial) observation SD:
+  sigma_hat = sd(z_hat - mu_hat)
+
+  # (Initial) log-likelihood:
+  logLik0 = logLik_em0 =
+    (lambda - 1)*sum(log(y+1)) + sum(dnorm(z_hat, mean = mu_hat, sd = sigma_hat, log = TRUE))
 
   # Lower and upper intervals:
   a_y = a_j(y); a_yp1 = a_j(y + 1)
   z_lower = g(a_y, lambda = lambda);
   z_upper = g(a_yp1, lambda = lambda)
-
-  # For iteration s=1 comparison:
-  logLik_em0 = 0
 
   # Store the EM trajectories:
   mu_all = zhat_all = array(0, c(max_iters, n))
@@ -880,7 +970,17 @@ gbm_star = function(y, X, X.test = NULL,
   lambda_all = numeric(max_iters) # Nonlinear parameter
 
   for(s in 1:max_iters){
-    # Estimation:
+
+    # ----------------------------------
+    ## E-step: impute the latent data
+    # ----------------------------------
+    # First and second moments of latent variables:
+    z_mom = truncnorm_mom(a = z_lower, b = z_upper, mu = mu_hat, sig = sigma_hat)
+    z_hat = z_mom$m1; z2_hat= z_mom$m2;
+
+    # ----------------------------------
+    ## M-step: estimation
+    # ----------------------------------
     fit = gbm(y ~ ., data = data.frame(y = z_hat, X = X),
               distribution = "gaussian", # Squared error loss
               n.trees = n.trees,
@@ -893,8 +993,6 @@ gbm_star = function(y, X, X.test = NULL,
 
     # If estimating lambda:
     if(estimate_lambda){
-      # Grid search:
-      lam_seq = seq(0.001, 1.2, length.out=100)
       lambda = lam_seq[which.min(sapply(lam_seq, function(l_bc){
         -logLikeRcpp(g_a_j = g(a_y, l_bc),
                      g_a_jp1 = g(a_yp1, l_bc),
@@ -906,11 +1004,8 @@ gbm_star = function(y, X, X.test = NULL,
       z_upper = g(a_yp1, lambda = lambda)
     }
 
-    # First and second moments of latent variables:
-    z_mom = truncnorm_mom(a = z_lower, b = z_upper, mu = mu_hat, sig = sigma_hat)
-    z_hat = z_mom$m1; z2_hat= z_mom$m2;
 
-    # Compute the log-likelihood:
+    # Update log-likelihood:
     logLik_em = logLikeRcpp(g_a_j = z_lower,
                             g_a_jp1 = z_upper,
                             mu = mu_hat,
@@ -973,6 +1068,7 @@ gbm_star = function(y, X, X.test = NULL,
        z.hat = z_hat,
        residuals = resids_ds,
        logLik = logLik_em,
+       logLik0 = logLik0,
        cond.pred.test = cond.pred.test,
        gbmObj = fit,
        mu_all = mu_all, logLik_all = logLik_all, sigma_all = sigma_all, zhat_all = zhat_all, lambda_all = lambda_all, # EM trajectory
@@ -1053,7 +1149,6 @@ star_CI = function(y, X, j,
       return(log(t))
     } else {
       return((sign(t)*abs(t)^lambda - 1)/lambda)
-      #return((abs(t)^lambda - 1)/lambda)
     }
   }
   # Inverse transformation g:
@@ -1062,7 +1157,6 @@ star_CI = function(y, X, j,
       return(exp(s))
     } else {
       return(sign(lambda*s + 1)*abs(lambda*s+1)^(1/lambda))
-      #return(abs(lambda*s+1)^(1/lambda))
     }
   }
 
@@ -1253,6 +1347,7 @@ star_intervals = function(PI_z, fit_star){
       return(sign(lambda*s + 1)*abs(lambda*s+1)^(1/lambda))
     }
   }
+
   # Also define the rounding function and the corresponding intervals:
   if(fit_star$lambda ==0){
     # For the log transformation (lambda = 0), g(-Inf) is not defined
@@ -1364,6 +1459,7 @@ star_pred_dist = function(y, X, X.test = NULL,
       return(sign(lambda*s + 1)*abs(lambda*s+1)^(1/lambda))
     }
   }
+
   # Also define the rounding function and the corresponding intervals:
   if(fit_star$lambda ==0){
     # For the log transformation (lambda = 0), g(-Inf) is not defined

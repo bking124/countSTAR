@@ -35,6 +35,8 @@
 #' @param nburn number of MCMC iterations to discard
 #' @param nskip number of MCMC iterations to skip between saving iterations,
 #' i.e., save every (nskip + 1)th draw
+#' @param save_y_hat logical; if TRUE, compute and save the posterior draws of
+#' the expected counts, E(y), which may be slow to compute
 #' @param verbose logical; if TRUE, print time remaining
 #'
 #' @return a list with the following elements:
@@ -106,6 +108,7 @@ star_MCMC = function(y,
                      nsave = 5000,
                      nburn = 5000,
                      nskip = 2,
+                     save_y_hat = FALSE,
                      verbose = TRUE){
 
   # Check: currently implemented for nonnegative integers
@@ -258,14 +261,16 @@ star_MCMC = function(y,
                                                  lambda = lambda))
 
         # Conditional expectation:
-        Jmax = ceiling(round_fun(ginv(
-          qnorm(0.9999, mean = params$mu, sd = params$sigma), lambda = lambda)))
-        Jmax[Jmax > 2*max(y)] = 2*max(y) # To avoid excessive computation times, cap at 2*max(y)
-        Jmaxmax = max(Jmax)
-        post.fitted.values[isave,] = expectation_gRcpp(g_a_j = g(a_j(0:Jmaxmax), lambda),
-                                                             g_a_jp1 = g(a_j(1:(Jmaxmax + 1)), lambda),
-                                                             mu = params$mu, sigma = rep(params$sigma, n),
-                                                             Jmax = Jmax)
+        if(save_y_hat){
+          Jmax = ceiling(round_fun(ginv(
+            qnorm(0.9999, mean = params$mu, sd = params$sigma), lambda = lambda)))
+          Jmax[Jmax > 2*max(y)] = 2*max(y) # To avoid excessive computation times, cap at 2*max(y)
+          Jmaxmax = max(Jmax)
+          post.fitted.values[isave,] = expectation_gRcpp(g_a_j = g(a_j(0:Jmaxmax), lambda),
+                                                         g_a_jp1 = g(a_j(1:(Jmaxmax + 1)), lambda),
+                                                         mu = params$mu, sigma = rep(params$sigma, n),
+                                                         Jmax = Jmax)
+        }
 
         # Nonlinear parameter of Box-Cox transformation:
         post.lambda[isave] = lambda
@@ -340,6 +345,8 @@ star_MCMC = function(y,
 #' @param nburn number of MCMC iterations to discard
 #' @param nskip number of MCMC iterations to skip between saving iterations,
 #' i.e., save every (nskip + 1)th draw
+#' @param save_y_hat logical; if TRUE, compute and save the posterior draws of
+#' the expected counts, E(y), which may be slow to compute
 #' @param target_acc_rate target acceptance rate (between zero and one)
 #' @param adapt_rate rate of adaptation in RAM sampler (between zero and one)
 #' @param stop_adapt_perc stop adapting at the proposal covariance at \code{stop_adapt_perc*nburn}
@@ -398,6 +405,7 @@ star_np_MCMC = function(y,
                        nsave = 5000,
                        nburn = 50000,
                        nskip = 9,
+                       save_y_hat = FALSE,
                        target_acc_rate = 0.3,
                        adapt_rate = 0.75,
                        stop_adapt_perc = 0.5,
@@ -655,16 +663,18 @@ star_np_MCMC = function(y,
         post.pred[isave,] = round_fun(sapply(u, function(ui) t_grid[which.min(abs(ui - g_grid))]))
 
         # Conditional expectation:
-        u = qnorm(0.9999, mean = params$mu, sd = params$sigma)
-        Jmax = ceiling(sapply(u, function(ui) t_grid[which.min(abs(ui - g_grid))]))
-        Jmax[Jmax > 2*max(y)] = 2*max(y) # To avoid excessive computation times, cap at 2*max(y)
-        Jmaxmax = max(Jmax)
-        g_a_j_0J = g_grid[match(a_j(0:Jmaxmax), t_grid)]; g_a_j_0J[1] = -Inf
-        g_a_j_1Jp1 = g_grid[match(a_j(1:(Jmaxmax + 1)), t_grid)]; g_a_j_1Jp1[length(g_a_j_1Jp1)] = Inf
-        post.fitted.values[isave,] = expectation_gRcpp(g_a_j = g_a_j_0J,
-                                                       g_a_jp1 = g_a_j_1Jp1,
-                                                       mu = params$mu, sigma = rep(params$sigma, n),
-                                                       Jmax = Jmax)
+        if(save_y_hat){
+          u = qnorm(0.9999, mean = params$mu, sd = params$sigma)
+          Jmax = ceiling(sapply(u, function(ui) t_grid[which.min(abs(ui - g_grid))]))
+          Jmax[Jmax > 2*max(y)] = 2*max(y) # To avoid excessive computation times, cap at 2*max(y)
+          Jmaxmax = max(Jmax)
+          g_a_j_0J = g_grid[match(a_j(0:Jmaxmax), t_grid)]; g_a_j_0J[1] = -Inf
+          g_a_j_1Jp1 = g_grid[match(a_j(1:(Jmaxmax + 1)), t_grid)]; g_a_j_1Jp1[length(g_a_j_1Jp1)] = Inf
+          post.fitted.values[isave,] = expectation_gRcpp(g_a_j = g_a_j_0J,
+                                                         g_a_jp1 = g_a_j_1Jp1,
+                                                         mu = params$mu, sigma = rep(params$sigma, n),
+                                                         Jmax = Jmax)
+        }
 
         # Monotone transformation:
         post.g[isave,] = g_eval;
@@ -736,6 +746,8 @@ star_np_MCMC = function(y,
 #' @param nburn number of MCMC iterations to discard
 #' @param nskip number of MCMC iterations to skip between saving iterations,
 #' i.e., save every (nskip + 1)th draw
+#' @param save_y_hat logical; if TRUE, compute and save the posterior draws of
+#' the expected counts, E(y), which may be slow to compute
 #' @param verbose logical; if TRUE, print time remaining
 #'
 #' @return a list with the following elements:
@@ -766,6 +778,7 @@ star_np_MCMC2 = function(y,
                         nsave = 5000,
                         nburn = 5000,
                         nskip = 2,
+                        save_y_hat = FALSE,
                         verbose = TRUE){
 
   #lambda_prior = 1/2;   nsave = 5000;   nburn = 5000;   nskip = 2;   verbose = TRUE
@@ -991,16 +1004,18 @@ star_np_MCMC2 = function(y,
         post.pred[isave,] = round_fun(sapply(u, function(ui) t_grid[which.min(abs(ui - g_grid))]))
 
         # Conditional expectation:
-        u = qnorm(0.9999, mean = params$mu, sd = params$sigma)
-        Jmax = ceiling(sapply(u, function(ui) t_grid[which.min(abs(ui - g_grid))]))
-        Jmax[Jmax > 2*max(y)] = 2*max(y) # To avoid excessive computation times, cap at 2*max(y)
-        Jmaxmax = max(Jmax)
-        g_a_j_0J = g_grid[match(a_j(0:Jmaxmax), t_grid)]; g_a_j_0J[1] = -Inf
-        g_a_j_1Jp1 = g_grid[match(a_j(1:(Jmaxmax + 1)), t_grid)]; g_a_j_1Jp1[length(g_a_j_1Jp1)] = Inf
-        post.fitted.values[isave,] = expectation_gRcpp(g_a_j = g_a_j_0J,
-                                                       g_a_jp1 = g_a_j_1Jp1,
-                                                       mu = params$mu, sigma = rep(params$sigma, n),
-                                                       Jmax = Jmax)
+        if(save_y_hat){
+          u = qnorm(0.9999, mean = params$mu, sd = params$sigma)
+          Jmax = ceiling(sapply(u, function(ui) t_grid[which.min(abs(ui - g_grid))]))
+          Jmax[Jmax > 2*max(y)] = 2*max(y) # To avoid excessive computation times, cap at 2*max(y)
+          Jmaxmax = max(Jmax)
+          g_a_j_0J = g_grid[match(a_j(0:Jmaxmax), t_grid)]; g_a_j_0J[1] = -Inf
+          g_a_j_1Jp1 = g_grid[match(a_j(1:(Jmaxmax + 1)), t_grid)]; g_a_j_1Jp1[length(g_a_j_1Jp1)] = Inf
+          post.fitted.values[isave,] = expectation_gRcpp(g_a_j = g_a_j_0J,
+                                                         g_a_jp1 = g_a_j_1Jp1,
+                                                         mu = params$mu, sigma = rep(params$sigma, n),
+                                                         Jmax = Jmax)
+        }
 
         # Monotone transformation:
         post.g[isave,] = g_eval;
@@ -1081,6 +1096,8 @@ star_np_MCMC2 = function(y,
 #' @param nburn number of MCMC iterations to discard
 #' @param nskip number of MCMC iterations to skip between saving iterations,
 #' i.e., save every (nskip + 1)th draw
+#' @param save_y_hat logical; if TRUE, compute and save the posterior draws of
+#' the expected counts, E(y), which may be slow to compute
 #' @param verbose logical; if TRUE, print time remaining
 #'
 #' @return a list with the following elements:
@@ -1157,6 +1174,7 @@ bart_star_MCMC = function(y,
                           nsave = 5000,
                           nburn = 5000,
                           nskip = 2,
+                          save_y_hat = FALSE,
                           verbose = TRUE){
 
   # Check: currently implemented for nonnegative integers
@@ -1332,15 +1350,18 @@ bart_star_MCMC = function(y,
         post.pred[isave,] = round_fun(ginv(rnorm(n = n, mean = params$mu, sd = params$sigma),
                                                  lambda = lambda))
 
+
         # Conditional expectation:
-        Jmax = ceiling(round_fun(ginv(
-          qnorm(0.9999, mean = params$mu, sd = params$sigma), lambda = lambda)))
-        Jmax[Jmax > 2*max(y)] = 2*max(y) # To avoid excessive computation times, cap at 2*max(y)
-        Jmaxmax = max(Jmax)
-        post.fitted.values[isave,] = expectation_gRcpp(g_a_j = g(a_j(0:Jmaxmax), lambda),
-                                                             g_a_jp1 = g(a_j(1:(Jmaxmax + 1)), lambda),
-                                                             mu = params$mu, sigma = rep(params$sigma, n),
-                                                             Jmax = Jmax)
+        if(save_y_hat){
+          Jmax = ceiling(round_fun(ginv(
+            qnorm(0.9999, mean = params$mu, sd = params$sigma), lambda = lambda)))
+          Jmax[Jmax > 2*max(y)] = 2*max(y) # To avoid excessive computation times, cap at 2*max(y)
+          Jmaxmax = max(Jmax)
+          post.fitted.values[isave,] = expectation_gRcpp(g_a_j = g(a_j(0:Jmaxmax), lambda),
+                                                         g_a_jp1 = g(a_j(1:(Jmaxmax + 1)), lambda),
+                                                         mu = params$mu, sigma = rep(params$sigma, n),
+                                                         Jmax = Jmax)
+        }
 
         if(include_test){
           # Conditional of the z_star at test points (useful for predictive distribution later)
@@ -1441,6 +1462,8 @@ bart_star_MCMC = function(y,
 #' @param nburn number of MCMC iterations to discard
 #' @param nskip number of MCMC iterations to skip between saving iterations,
 #' i.e., save every (nskip + 1)th draw
+#' @param save_y_hat logical; if TRUE, compute and save the posterior draws of
+#' the expected counts, E(y), which may be slow to compute
 #' @param target_acc_rate target acceptance rate (between zero and one)
 #' @param adapt_rate rate of adaptation in RAM sampler (between zero and one)
 #' @param stop_adapt_perc stop adapting at the proposal covariance at \code{stop_adapt_perc*nburn}
@@ -1502,6 +1525,7 @@ bart_star_np_MCMC = function(y,
                             nsave = 5000,
                             nburn = 50000,
                             nskip = 9,
+                            save_y_hat = FALSE,
                             target_acc_rate = 0.3,
                             adapt_rate = 0.75,
                             stop_adapt_perc = 0.5,
@@ -1773,16 +1797,19 @@ bart_star_np_MCMC = function(y,
         post.pred[isave,] = round_fun(sapply(u, function(ui) t_grid[which.min(abs(ui - g_grid))]))
 
         # Conditional expectation:
-        u = qnorm(0.9999, mean = params$mu, sd = params$sigma)
-        Jmax = ceiling(sapply(u, function(ui) t_grid[which.min(abs(ui - g_grid))]))
-        Jmax[Jmax > 2*max(y)] = 2*max(y) # To avoid excessive computation times, cap at 2*max(y)
-        Jmaxmax = max(Jmax)
-        g_a_j_0J = g_grid[match(a_j(0:Jmaxmax), t_grid)]; g_a_j_0J[1] = -Inf
-        g_a_j_1Jp1 = g_grid[match(a_j(1:(Jmaxmax + 1)), t_grid)]; g_a_j_1Jp1[length(g_a_j_1Jp1)] = Inf
-        post.fitted.values[isave,] = expectation_gRcpp(g_a_j = g_a_j_0J,
-                                                       g_a_jp1 = g_a_j_1Jp1,
-                                                       mu = params$mu, sigma = rep(params$sigma, n),
-                                                       Jmax = Jmax)
+        if(save_y_hat){
+          u = qnorm(0.9999, mean = params$mu, sd = params$sigma)
+          Jmax = ceiling(sapply(u, function(ui) t_grid[which.min(abs(ui - g_grid))]))
+          Jmax[Jmax > 2*max(y)] = 2*max(y) # To avoid excessive computation times, cap at 2*max(y)
+          Jmaxmax = max(Jmax)
+          g_a_j_0J = g_grid[match(a_j(0:Jmaxmax), t_grid)]; g_a_j_0J[1] = -Inf
+          g_a_j_1Jp1 = g_grid[match(a_j(1:(Jmaxmax + 1)), t_grid)]; g_a_j_1Jp1[length(g_a_j_1Jp1)] = Inf
+          post.fitted.values[isave,] = expectation_gRcpp(g_a_j = g_a_j_0J,
+                                                         g_a_jp1 = g_a_j_1Jp1,
+                                                         mu = params$mu, sigma = rep(params$sigma, n),
+                                                         Jmax = Jmax)
+        }
+
 
         if(include_test){
           # Conditional of the z_star at test points (useful for predictive distribution later)
