@@ -21,9 +21,10 @@
 #' }
 #' @param lambda the nonlinear parameter for the Box-Cox transformation; otherwise ignored
 #' @param y_max a fixed and known upper bound for all observations; default is \code{Inf}
+#' @param sd_init add random noise for initialization scaled by \code{sd_init}
+#' times the Gaussian MLE standard deviation
 #' @param tol tolerance for stopping the EM algorithm; default is 10^-10;
 #' @param max_iters maximum number of EM iterations before stopping; default is 1000
-#'
 #' @return a list with the following elements:
 #' \itemize{
 #' \item \code{coefficients} the MLEs of the coefficients
@@ -43,6 +44,13 @@
 #' \code{lambda} requires estimation of \code{lambda}. The maximum likelihood
 #' estimator is computed over a grid of values within the EM algorithm.
 #'
+#' @note Infinite latent data values may occur when the transformed
+#' Gaussian model is highly inadequate. In that case, the function returns
+#' the *indices* of the data points with infinite latent values, which are
+#' significant outliers under the model. Deletion of these indices and
+#' re-running the model is one option, but care must be taken to ensure
+#' that (i) it is appropriate to treat these observations as outliers and
+#' (ii) the model is adequate for the remaining data points.
 #'
 #' @examples
 #' # Simulate data with count-valued response y:
@@ -81,6 +89,7 @@ star_EM = function(y,
                    transformation = 'log',
                    lambda = NULL,
                    y_max = Inf,
+                   sd_init = 10,
                    tol = 10^-10,
                    max_iters = 1000){
 
@@ -171,6 +180,15 @@ star_EM = function(y,
   logLik0 = logLik_em0 =
     (lambda - 1)*sum(log(y+1)) + sum(dnorm(z_hat, mean = mu_hat, sd = sigma_hat, log = TRUE))
 
+  # Randomize for EM initialization:
+  if(sd_init > 0){
+    z_hat = g(y + 1, lambda = lambda) + sd_init*sigma_hat*rnorm(n = n)
+    fit = estimator(z_hat);
+    mu_hat = fit$fitted.values;
+    theta_hat = fit$coefficients;
+    sigma_hat = sd(z_hat - mu_hat)
+  }
+
   # Number of parameters (excluding sigma)
   p = length(theta_hat)
 
@@ -195,6 +213,11 @@ star_EM = function(y,
     z_mom = truncnorm_mom(a = z_lower, b = z_upper, mu = mu_hat, sig = sigma_hat)
     z_hat = z_mom$m1; z2_hat= z_mom$m2;
 
+    # Check: if any infinite z_hat values, return these indices and stop
+    if(any(is.infinite(z_hat))){
+      warning('Infinite z_hat values: returning the problematic indices')
+      return(list(error_inds = which(is.infinite(z_hat))))
+    }
     # ----------------------------------
     ## M-step: estimation
     # ----------------------------------
@@ -279,6 +302,8 @@ star_EM = function(y,
 #' @param y_max a fixed and known upper bound for all observations; default is \code{Inf}
 #' @param weights an optional vector of weights to be used in the fitting process, which
 #' produces weighted least squares estimators.
+#' @param sd_init add random noise for initialization scaled by \code{sd_init}
+#' times the Gaussian MLE standard deviation
 #' @param tol tolerance for stopping the EM algorithm; default is 10^-10;
 #' @param max_iters maximum number of EM iterations before stopping; default is 1000
 #'
@@ -302,12 +327,21 @@ star_EM = function(y,
 #' \code{lambda} requires estimation of \code{lambda}. The maximum likelihood
 #' estimator is computed over a grid of values within the EM algorithm.
 #'
+#' @note Infinite latent data values may occur when the transformed
+#' Gaussian model is highly inadequate. In that case, the function returns
+#' the *indices* of the data points with infinite latent values, which are
+#' significant outliers under the model. Deletion of these indices and
+#' re-running the model is one option, but care must be taken to ensure
+#' that (i) it is appropriate to treat these observations as outliers and
+#' (ii) the model is adequate for the remaining data points.
+#'
 #' @export
 star_EM_wls = function(y, X,
                    transformation = 'log',
                    lambda = NULL,
                    y_max = Inf,
                    weights = NULL,
+                   sd_init = 10,
                    tol = 10^-10,
                    max_iters = 1000){
 
@@ -409,6 +443,15 @@ star_EM_wls = function(y, X,
   logLik0 = logLik_em0 =
     (lambda - 1)*sum(log(y+1)) + sum(dnorm(z_hat, mean = mu_hat, sd = sigma_hat/sqrt(weights), log = TRUE))
 
+  # Randomize for EM initialization:
+  if(sd_init > 0){
+    z_hat = g(y + 1, lambda = lambda) + sd_init*sigma_hat*rnorm(n = n)
+    fit = estimator(z_hat);
+    mu_hat = fit$fitted.values;
+    theta_hat = fit$coefficients;
+    sigma_hat = sd(z_hat - mu_hat)
+  }
+
   # Number of parameters (excluding sigma)
   p = length(theta_hat)
 
@@ -433,6 +476,11 @@ star_EM_wls = function(y, X,
     z_mom = truncnorm_mom(a = z_lower, b = z_upper, mu = mu_hat, sig = sigma_hat/sqrt(weights))
     z_hat = z_mom$m1; z2_hat= z_mom$m2;
 
+    # Check: if any infinite z_hat values, return these indices and stop
+    if(any(is.infinite(z_hat))){
+      warning('Infinite z_hat values: returning the problematic indices')
+      return(list(error_inds = which(is.infinite(z_hat))))
+    }
     # ----------------------------------
     ## M-step: estimation
     # ----------------------------------
@@ -525,6 +573,8 @@ star_EM_wls = function(y, X,
 #' }
 #' @param lambda the nonlinear parameter for the Box-Cox transformation; otherwise ignored
 #' @param y_max a fixed and known upper bound for all observations; default is \code{Inf}
+#' @param sd_init add random noise for initialization scaled by \code{sd_init}
+#' times the Gaussian MLE standard deviation
 #' @param tol tolerance for stopping the EM algorithm; default is 10^-10;
 #' @param max_iters maximum number of EM iterations before stopping; default is 1000
 #'
@@ -554,6 +604,14 @@ star_EM_wls = function(y, X,
 #'
 #' @note Since the random foreset produces random predictions, the EM algorithm
 #' will never converge exactly.
+#'
+#' @note Infinite latent data values may occur when the transformed
+#' Gaussian model is highly inadequate. In that case, the function returns
+#' the *indices* of the data points with infinite latent values, which are
+#' significant outliers under the model. Deletion of these indices and
+#' re-running the model is one option, but care must be taken to ensure
+#' that (i) it is appropriate to treat these observations as outliers and
+#' (ii) the model is adequate for the remaining data points.
 #'
 #'
 #' @examples
@@ -588,6 +646,7 @@ randomForest_star = function(y, X, X.test = NULL,
                              transformation = 'log',
                              lambda = NULL,
                              y_max = Inf,
+                             sd_init = 10,
                              tol = 10^-6,
                              max_iters = 500){
 
@@ -672,6 +731,13 @@ randomForest_star = function(y, X, X.test = NULL,
   logLik0 = logLik_em0 =
     (lambda - 1)*sum(log(y+1)) + sum(dnorm(z_hat, mean = mu_hat, sd = sigma_hat, log = TRUE))
 
+  # Randomize for EM initialization:
+  if(sd_init > 0){
+    z_hat = g(y + 1, lambda = lambda) + sd_init*sigma_hat*rnorm(n = n)
+    fit = estimator(z_hat);
+    mu_hat = fit$fitted.values; sigma_hat = sd(z_hat - mu_hat)
+  }
+
   # Lower and upper intervals:
   a_y = a_j(y); a_yp1 = a_j(y + 1)
   z_lower = g(a_y, lambda = lambda);
@@ -692,6 +758,11 @@ randomForest_star = function(y, X, X.test = NULL,
     z_mom = truncnorm_mom(a = z_lower, b = z_upper, mu = mu_hat, sig = sigma_hat)
     z_hat = z_mom$m1; z2_hat= z_mom$m2;
 
+    # Check: if any infinite z_hat values, return these indices and stop
+    if(any(is.infinite(z_hat))){
+      warning('Infinite z_hat values: returning the problematic indices')
+      return(list(error_inds = which(is.infinite(z_hat))))
+    }
     # ----------------------------------
     ## M-step: estimation
     # ----------------------------------
@@ -813,6 +884,8 @@ randomForest_star = function(y, X, X.test = NULL,
 #' }
 #' @param lambda the nonlinear parameter for the Box-Cox transformation; otherwise ignored
 #' @param y_max a fixed and known upper bound for all observations; default is \code{Inf}
+#' @param sd_init add random noise for initialization scaled by \code{sd_init}
+#' times the Gaussian MLE standard deviation
 #' @param tol tolerance for stopping the EM algorithm; default is 10^-10;
 #' @param max_iters maximum number of EM iterations before stopping; default is 1000
 #'
@@ -832,9 +905,18 @@ randomForest_star = function(y, X, X.test = NULL,
 #' (i) track the parameters across EM iterations and
 #' (ii) record the model specifications
 #' }
+#'
 #' @note For the Box-Cox transformation, a \code{NULL} value of
 #' \code{lambda} requires estimation of \code{lambda}. The maximum likelihood
 #' estimator is computed over a grid of values within the EM algorithm.
+#'
+#' @note Infinite latent data values may occur when the transformed
+#' Gaussian model is highly inadequate. In that case, the function returns
+#' the *indices* of the data points with infinite latent values, which are
+#' significant outliers under the model. Deletion of these indices and
+#' re-running the model is one option, but care must be taken to ensure
+#' that (i) it is appropriate to treat these observations as outliers and
+#' (ii) the model is adequate for the remaining data points.
 #'
 #' @examples
 #' # Simulate data with count-valued response y:
@@ -869,6 +951,7 @@ gbm_star = function(y, X, X.test = NULL,
                     transformation = 'log',
                     lambda = NULL,
                     y_max = Inf,
+                    sd_init = 10,
                     tol = 10^-6,
                     max_iters = 500){
 
@@ -958,6 +1041,13 @@ gbm_star = function(y, X, X.test = NULL,
   logLik0 = logLik_em0 =
     (lambda - 1)*sum(log(y+1)) + sum(dnorm(z_hat, mean = mu_hat, sd = sigma_hat, log = TRUE))
 
+  # Randomize for EM initialization:
+  if(sd_init > 0){
+    z_hat = g(y + 1, lambda = lambda) + sd_init*sigma_hat*rnorm(n = n)
+    fit = estimator(z_hat);
+    mu_hat = fit$fitted.values; sigma_hat = sd(z_hat - mu_hat)
+  }
+
   # Lower and upper intervals:
   a_y = a_j(y); a_yp1 = a_j(y + 1)
   z_lower = g(a_y, lambda = lambda);
@@ -978,6 +1068,11 @@ gbm_star = function(y, X, X.test = NULL,
     z_mom = truncnorm_mom(a = z_lower, b = z_upper, mu = mu_hat, sig = sigma_hat)
     z_hat = z_mom$m1; z2_hat= z_mom$m2;
 
+    # Check: if any infinite z_hat values, return these indices and stop
+    if(any(is.infinite(z_hat))){
+      warning('Infinite z_hat values: returning the problematic indices')
+      return(list(error_inds = which(is.infinite(z_hat))))
+    }
     # ----------------------------------
     ## M-step: estimation
     # ----------------------------------
@@ -1095,6 +1190,8 @@ gbm_star = function(y, X, X.test = NULL,
 #' }
 #' @param lambda the nonlinear parameter for the Box-Cox transformation; otherwise ignored
 #' @param y_max a fixed and known upper bound for all observations; default is \code{Inf}
+#' @param sd_init add random noise for initialization scaled by \code{sd_init}
+#' times the Gaussian MLE standard deviation
 #' @param tol tolerance for stopping the EM algorithm; default is 10^-10;
 #' @param max_iters maximum number of EM iterations before stopping; default is 1000
 #' @return the upper and lower endpoints of the confidence interval
@@ -1123,7 +1220,7 @@ gbm_star = function(y, X, X.test = NULL,
 star_CI = function(y, X, j,
                    alpha = 0.05, include_plot = TRUE,
                    transformation = 'log', lambda = NULL, y_max = Inf,
-                   tol = 10^-10, max_iters = 1000){
+                   sd_init = 10, tol = 10^-10, max_iters = 1000){
 
   # Check: intercept?
   if(!any(apply(X, 2, function(x) all(x==1))))
@@ -1386,6 +1483,8 @@ star_intervals = function(PI_z, fit_star){
 #' }
 #' @param lambda the nonlinear parameter for the Box-Cox transformation; otherwise ignored
 #' @param y_max a fixed and known upper bound for all observations; default is \code{Inf}
+#' @param sd_init add random noise for initialization scaled by \code{sd_init}
+#' times the Gaussian MLE standard deviation
 #' @param tol tolerance for stopping the EM algorithm; default is 10^-10;
 #' @param max_iters maximum number of EM iterations before stopping; default is 1000
 #' @param N number of Monte Carlo samples from the posterior predictive distribution
@@ -1416,6 +1515,7 @@ star_pred_dist = function(y, X, X.test = NULL,
                           transformation = 'log',
                           lambda = NULL,
                           y_max = Inf,
+                          sd_init = 10,
                           tol = 10^-10,
                           max_iters = 1000,
                           N = 1000){
@@ -1439,7 +1539,7 @@ star_pred_dist = function(y, X, X.test = NULL,
   # Define the estimating equation and run the lm:
   fit_star = star_EM(y = y,
                      estimator = function(y) lm(y ~ X - 1),
-                     transformation = transformation, lambda = lambda, y_max = y_max, tol = tol, max_iters = max_iters)
+                     transformation = transformation, lambda = lambda, y_max = y_max, sd_init = sd_init, tol = tol, max_iters = max_iters)
 
   # Define the transformation and rounding functions locally:
 

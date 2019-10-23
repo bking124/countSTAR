@@ -1,4 +1,5 @@
-# Note: to update, use "git push -u origin2 master" (C******7)
+# Note: to update (old mac), use "git push -u origin2 master" (C******7)
+# Note: to update (new mac), use "git push -u starloc master" (C******7)
 
 #' MCMC Algorithm for STAR
 #'
