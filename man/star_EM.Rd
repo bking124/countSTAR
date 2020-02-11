@@ -5,7 +5,7 @@
 \title{EM Algorithm for STAR}
 \usage{
 star_EM(y, estimator, transformation = "log", lambda = NULL,
-  y_max = Inf, tol = 10^-10, max_iters = 1000)
+  y_max = Inf, sd_init = 10, tol = 10^-10, max_iters = 1000)
 }
 \arguments{
 \item{y}{\code{n x 1} vector of observed counts}
@@ -28,6 +28,9 @@ star_EM(y, estimator, transformation = "log", lambda = NULL,
 
 \item{y_max}{a fixed and known upper bound for all observations; default is \code{Inf}}
 
+\item{sd_init}{add random noise for initialization scaled by \code{sd_init}
+times the Gaussian MLE standard deviation}
+
 \item{tol}{tolerance for stopping the EM algorithm; default is 10^-10;}
 
 \item{max_iters}{maximum number of EM iterations before stopping; default is 1000}
@@ -42,6 +45,7 @@ a list with the following elements:
 \item \code{z.hat} the estimated latent variables (on the transformed scale) at the MLEs
 \item \code{residuals} the Dunn-Smyth residuals
 \item \code{logLik} the log-likelihood at the MLEs
+\item \code{logLik0} the log-likelihood at the MLEs for the *unrounded* initialization
 \item and other parameters that
 (i) track the parameters across EM iterations and
 (ii) record the model specifications
@@ -58,6 +62,14 @@ including \code{coefficients()}, \code{fitted()}, and \code{residuals()} apply.
 For the Box-Cox transformation, a \code{NULL} value of
 \code{lambda} requires estimation of \code{lambda}. The maximum likelihood
 estimator is computed over a grid of values within the EM algorithm.
+
+Infinite latent data values may occur when the transformed
+Gaussian model is highly inadequate. In that case, the function returns
+the *indices* of the data points with infinite latent values, which are
+significant outliers under the model. Deletion of these indices and
+re-running the model is one option, but care must be taken to ensure
+that (i) it is appropriate to treat these observations as outliers and
+(ii) the model is adequate for the remaining data points.
 }
 \examples{
 # Simulate data with count-valued response y:

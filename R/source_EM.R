@@ -140,9 +140,6 @@ star_EM = function(y,
   if(estimate_lambda) {
     # Initialize on (0,1)
     lambda = runif(n = 1)
-
-    # Sequence for grid search:
-    lam_seq = seq(0.001, 1.2, length.out=100)
   }
 
   # Also define the rounding function and the corresponding intervals:
@@ -228,12 +225,25 @@ star_EM = function(y,
 
     # If estimating lambda:
     if(estimate_lambda){
-      # Grid search:
-      lambda = lam_seq[which.min(sapply(lam_seq, function(l_bc){
-        -logLikeRcpp(g_a_j = g(a_y, l_bc),
-                     g_a_jp1 = g(a_yp1, l_bc),
-                     mu = mu_hat,
-                     sigma = rep(sigma_hat, n))}))]
+
+      # Loglikelihood function
+      ff <- function(l_bc){
+        sapply(l_bc, function(l_bc){
+          -logLikeRcpp(g_a_j = g(a_y, l_bc),
+                       g_a_jp1 = g(a_yp1, l_bc),
+                       mu = mu_hat,
+                       sigma = rep(sigma_hat, n))})
+      }
+
+      # Set the search interval
+      a = 0; b = 1.0;
+      # Brent method will get in error if the function value is infinite
+      # A simple (but not too rigorous) way to restrict the search interval
+      while (ff(b) == Inf){
+        b = b * 0.8
+      }
+      # Tune tolorence if needed
+      lambda = BrentMethod(a, b, fcn = ff, tol = .Machine$double.eps^0.2)$x
 
       # Next, update the lower and upper limits:
       z_lower = g(a_y, lambda = lambda);
@@ -403,9 +413,6 @@ star_EM_wls = function(y, X,
   if(estimate_lambda) {
     # Initialize on (0,1)
     lambda = runif(n = 1)
-
-    # Sequence for grid search:
-    lam_seq = seq(0.001, 1.2, length.out=100)
   }
 
   # Also define the rounding function and the corresponding intervals:
@@ -491,12 +498,25 @@ star_EM_wls = function(y, X,
 
     # If estimating lambda:
     if(estimate_lambda){
-      # Grid search:
-      lambda = lam_seq[which.min(sapply(lam_seq, function(l_bc){
-        -logLikeRcpp(g_a_j = g(a_y, l_bc),
-                     g_a_jp1 = g(a_yp1, l_bc),
-                     mu = mu_hat,
-                     sigma = sigma_hat/sqrt(weights))}))]
+
+      # Loglikelihood function
+      ff <- function(l_bc){
+        sapply(l_bc, function(l_bc){
+          -logLikeRcpp(g_a_j = g(a_y, l_bc),
+                       g_a_jp1 = g(a_yp1, l_bc),
+                       mu = mu_hat,
+                       sigma = sigma_hat/sqrt(weights))})
+      }
+
+      # Set the search interval
+      a = 0; b = 1.0;
+      # Brent method will get in error if the function value is infinite
+      # A simple (but not too rigorous) way to restrict the search interval
+      while (ff(b) == Inf){
+        b = b * 0.8
+      }
+      # Tune tolorence if needed
+      lambda = BrentMethod(a, b, fcn = ff, tol = .Machine$double.eps^0.2)$x
 
       # Next, update the lower and upper limits:
       z_lower = g(a_y, lambda = lambda);
@@ -697,9 +717,6 @@ randomForest_star = function(y, X, X.test = NULL,
   if(estimate_lambda) {
     # Initialize on (0,1)
     lambda = runif(n = 1)
-
-    # Sequence for grid search:
-    lam_seq = seq(0.001, 1.2, length.out=100)
   }
 
   # Also define the rounding function and the corresponding intervals:
@@ -734,8 +751,9 @@ randomForest_star = function(y, X, X.test = NULL,
   # Randomize for EM initialization:
   if(sd_init > 0){
     z_hat = g(y + 1, lambda = lambda) + sd_init*sigma_hat*rnorm(n = n)
-    fit = estimator(z_hat);
-    mu_hat = fit$fitted.values; sigma_hat = sd(z_hat - mu_hat)
+    fit = randomForest(x = X, y = z_hat,
+                       ntree = ntree, mtry = mtry, nodesize = nodesize)
+    mu_hat = fit$predicted; sigma_hat = sd(z_hat - mu_hat)
   }
 
   # Lower and upper intervals:
@@ -773,11 +791,24 @@ randomForest_star = function(y, X, X.test = NULL,
 
     # If estimating lambda:
     if(estimate_lambda){
-      lambda = lam_seq[which.min(sapply(lam_seq, function(l_bc){
-        -logLikeRcpp(g_a_j = g(a_y, l_bc),
-                     g_a_jp1 = g(a_yp1, l_bc),
-                     mu = mu_hat,
-                     sigma = rep(sigma_hat, n))}))]
+      # Loglikelihood function
+      ff <- function(l_bc){
+        sapply(l_bc, function(l_bc){
+          -logLikeRcpp(g_a_j = g(a_y, l_bc),
+                       g_a_jp1 = g(a_yp1, l_bc),
+                       mu = mu_hat,
+                       sigma = rep(sigma_hat, n))})
+      }
+
+      # Set the search interval
+      a = 0; b = 1.0;
+      # Brent method will get in error if the function value is infinite
+      # A simple (but not too rigorous) way to restrict the search interval
+      while (ff(b) == Inf){
+        b = b * 0.8
+      }
+      # Tune tolorence if needed
+      lambda = BrentMethod(a, b, fcn = ff, tol = .Machine$double.eps^0.2)$x
 
       # Next, update the lower and upper limits:
       z_lower = g(a_y, lambda = lambda);
@@ -1002,9 +1033,6 @@ gbm_star = function(y, X, X.test = NULL,
   if(estimate_lambda) {
     # Initialize on (0,1)
     lambda = runif(n = 1)
-
-    # Sequence for grid search:
-    lam_seq = seq(0.001, 1.2, length.out=100)
   }
 
   # Also define the rounding function and the corresponding intervals:
@@ -1044,8 +1072,14 @@ gbm_star = function(y, X, X.test = NULL,
   # Randomize for EM initialization:
   if(sd_init > 0){
     z_hat = g(y + 1, lambda = lambda) + sd_init*sigma_hat*rnorm(n = n)
-    fit = estimator(z_hat);
-    mu_hat = fit$fitted.values; sigma_hat = sd(z_hat - mu_hat)
+    fit = gbm(y ~ ., data = data.frame(y = z_hat, X = X),
+              distribution = "gaussian", # Squared error loss
+              n.trees = n.trees,
+              interaction.depth = interaction.depth,
+              shrinkage = shrinkage,
+              bag.fraction = bag.fraction
+    )
+    mu_hat = fit$fit; sigma_hat = sd(z_hat - mu_hat)
   }
 
   # Lower and upper intervals:
@@ -1088,11 +1122,25 @@ gbm_star = function(y, X, X.test = NULL,
 
     # If estimating lambda:
     if(estimate_lambda){
-      lambda = lam_seq[which.min(sapply(lam_seq, function(l_bc){
-        -logLikeRcpp(g_a_j = g(a_y, l_bc),
-                     g_a_jp1 = g(a_yp1, l_bc),
-                     mu = mu_hat,
-                     sigma = rep(sigma_hat, n))}))]
+
+      # Loglikelihood function
+      ff <- function(l_bc){
+        sapply(l_bc, function(l_bc){
+          -logLikeRcpp(g_a_j = g(a_y, l_bc),
+                       g_a_jp1 = g(a_yp1, l_bc),
+                       mu = mu_hat,
+                       sigma = rep(sigma_hat, n))})
+      }
+
+      # Set the search interval
+      a = 0; b = 1.0;
+      # Brent method will get in error if the function value is infinite
+      # A simple (but not too rigorous) way to restrict the search interval
+      while (ff(b) == Inf){
+        b = b * 0.8
+      }
+      # Tune tolorence if needed
+      lambda = BrentMethod(a, b, fcn = ff, tol = .Machine$double.eps^0.2)$x
 
       # Next, update the lower and upper limits:
       z_lower = g(a_y, lambda = lambda);

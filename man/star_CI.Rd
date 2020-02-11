@@ -5,8 +5,8 @@
 \title{Compute asymptotic confidence intervals for STAR linear regression}
 \usage{
 star_CI(y, X, j, alpha = 0.05, include_plot = TRUE,
-  transformation = "log", lambda = NULL, y_max = Inf, tol = 10^-10,
-  max_iters = 1000)
+  transformation = "log", lambda = NULL, y_max = Inf, sd_init = 10,
+  tol = 10^-10, max_iters = 1000)
 }
 \arguments{
 \item{y}{\code{n x 1} vector of observed counts}
@@ -30,6 +30,9 @@ star_CI(y, X, j, alpha = 0.05, include_plot = TRUE,
 \item{lambda}{the nonlinear parameter for the Box-Cox transformation; otherwise ignored}
 
 \item{y_max}{a fixed and known upper bound for all observations; default is \code{Inf}}
+
+\item{sd_init}{add random noise for initialization scaled by \code{sd_init}
+times the Gaussian MLE standard deviation}
 
 \item{tol}{tolerance for stopping the EM algorithm; default is 10^-10;}
 

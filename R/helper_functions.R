@@ -662,6 +662,131 @@ logit = function(x) {
 #' @export
 invlogit = function(x) exp(x - log(1+exp(x))) # exp(x)/(1+exp(x))
 #----------------------------------------------------------------------------
+#' Brent's method for optimization
+#'
+#' Implementation for Brent's algorithm for maximizing a univariate function over an interval.
+#' @param a lower limit for search
+#' @param b upper limit for search
+#' @param fcn function to maximum
+#' @param tol tolerance level
+#' @return a list of
+BrentMethod <- function (a = 0, b, fcn, tol = .Machine$double.eps^0.25, ...)
+{
+  counts <- c(fcn = 0, grd = NA)
+  c <- (3 - sqrt(5)) * 0.5
+  eps <- .Machine$double.eps
+  tol1 <- eps + 1
+  eps <- sqrt(eps)
+  v <- a + c * (b - a)
+  vx <- x <- w <- v
+  d <- e <- 0
+  fx <- fcn(x, ...)
+  counts[1] <- counts[1] + 1
+  fw <- fv <- fx
+
+  tol3 <- tol/3
+  iter <- 0
+  cond <- TRUE
+  while (cond) {
+    # if (fcn(b) == Inf){
+    #   break
+    # }
+    xm <- (a + b) * 0.5
+    tol1 <- eps * abs(x) + tol3
+    t2 <- tol1 * 2
+    if (abs(x - xm) <= t2 - (b - a) * 0.5)
+      break
+    r <- q <- p <- 0
+    if (abs(e) > tol1) {
+      r <- (x - w) * (fx - fv)
+      q <- (x - v) * (fx - fw)
+      p <- (x - v) * q - (x - w) * r
+      q <- (q - r) * 2
+      # print(c("q is ", q))
+      # print(c("r is ", r))
+      # print(c("p is ", p))
+      # print(c("fx is ", fx))
+      # print(c("fw is ", fw))
+      # print(c("fv is ", fv))
+      # if (is.nan(q) == TRUE){
+      #   break
+      # }
+      if (q > 0) {
+        p <- -p
+      }
+      else q <- -q
+      r <- e
+      e <- d
+    }
+    if (abs(p) >= abs(q * 0.5 * r) || p <= q * (a - x) ||
+        p >= q * (b - x)) {
+      if (x < xm) {
+        e <- b - x
+      }
+      else e <- a - x
+      d <- c * e
+    }
+    else {
+      d <- p/q
+      u <- x + d
+      if (u - a < t2 || b - u < t2) {
+        d <- tol1
+        if (x >= xm)
+          d <- -d
+      }
+    }
+    if (abs(d) >= tol1) {
+      u <- x + d
+    }
+    else if (d > 0) {
+      u <- x + tol1
+    }
+    else u <- x - tol1
+    fu <- fcn(u, ...)
+    counts[1] <- counts[1] + 1
+    if (fu <= fx) {
+      if (u < x) {
+        b <- x
+      }
+      else a <- x
+      v <- w
+      w <- x
+      x <- u
+      vx <- c(vx, x)
+      fv <- fw
+      fw <- fx
+      fx <- fu
+      # print(c("fx1 is ", fx))
+      # print(c("fw1 is ", fw))
+      # print(c("fv1 is ", fv))
+      # print(c("fu1 is ", fu))
+    }
+    else {
+      if (u < x) {
+        a <- u
+      }
+      else b <- u
+      if (fu <= fw || w == x) {
+        v <- w
+        fv <- fw
+        w <- u
+        fw <- fu
+        # print(c("fx2 is ", fx))
+        # print(c("fw2 is ", fw))
+        # print(c("fv2 is ", fv))
+        # print(c("fu2 is ", fu))
+      }
+      else if (fu <= fv || v == x || v == w) {
+        v <- u
+        fv <- fu
+      }
+    }
+    iter <- iter + 1
+  }
+  list(vx = vx, minimum = x, x = x, fx = fx, iter = iter,
+       counts = counts)
+}
+#----------------------------------------------------------------------------
 #' Univariate Slice Sampler from Neal (2008)
 #'
 #' Compute a draw from a univariate distribution using the code provided by
