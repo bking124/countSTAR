@@ -4,9 +4,19 @@
 \alias{star_MCMC}
 \title{MCMC Algorithm for STAR}
 \usage{
-star_MCMC(y, sample_params, init_params, transformation = "log",
-  lambda = NULL, y_max = Inf, nsave = 5000, nburn = 5000,
-  nskip = 2, save_y_hat = FALSE, verbose = TRUE)
+star_MCMC(
+  y,
+  sample_params,
+  init_params,
+  transformation = "log",
+  lambda = NULL,
+  y_max = Inf,
+  nsave = 5000,
+  nburn = 5000,
+  nskip = 2,
+  save_y_hat = FALSE,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{y}{\code{n x 1} vector of observed counts}

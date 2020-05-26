@@ -4,20 +4,27 @@
 \alias{BrentMethod}
 \title{Brent's method for optimization}
 \usage{
-BrentMethod(a = 0, b, fcn, tol = .Machine$double.eps^0.25, ...)
+BrentMethod(a = 0, b, fcn, tol = .Machine$double.eps^0.25)
 }
 \arguments{
 \item{a}{lower limit for search}
 
 \item{b}{upper limit for search}
 
-\item{fcn}{function to maximum}
+\item{fcn}{function to minimize}
 
-\item{tol}{tolerance level}
+\item{tol}{tolerance level for convergence of the optimization procedure}
 }
 \value{
-a list of
+a list of containing the following elements:
+\itemize{
+\item \code{fx} the minimum value of the input function
+\item \code{x} the argument that minimizes the function
+\item \code{iter} number of iterations to converge
+\item \code{vx} a vector that stores the arguments until convergence
+}
 }
 \description{
-Implementation for Brent's algorithm for maximizing a univariate function over an interval.
+Implementation for Brent's algorithm for minimizing a univariate function over an interval.
+The code is based on a function in the \code{stsm} package.
 }

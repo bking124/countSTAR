@@ -1,122 +1,296 @@
 #----------------------------------------------------------------------------
-#' Rounding and inverse transformation function
+#' Box-Cox transformation
 #'
-#' Compute the inverse transformation and round, as defined in the data-generating
-#' process. This is useful for computing posterior/prior predictive distributions.
+#' Evaluate the Box-Cox transformation, which is a scaled power transformation
+#' to preserve continuity in the index \code{lambda} at zero. Negative values are
+#' permitted.
 #'
-#' @param z argument(s) at which to evaluate \code{h(ginv())}
-#' @param transformation transformation to use for the latent process; must be one of
-#' \itemize{
-#' \item "identity" (identity transformation)
-#' \item "log" (log transformation)
-#' \item "sqrt" (square root transformation)
-#' \item "box-cox" (box-cox transformation)
-#' }
-#' @param lambda the nonlinear parameter for the Box-Cox transformation
-#' @param y_max a fixed and known upper bound for all observations; default is \code{Inf}
-#' @return \code{h(ginv(z))}, where \code{h} and \code{ginv} are determined by the
-#' transformation
+#' @param t argument(s) at which to evaluate the function
+#' @param lambda Box-Cox parameter
+#' @return The evaluation(s) of the Box-Cox function at the given input(s) \code{t}.
+#'
+#' @note Special cases include
+#' the identity transformation (\code{lambda = 1}),
+#' the square-root transformation (\code{lambda = 1/2}),
+#' and the log transformation (\code{lambda = 0}).
+#'
+#' @examples
+#' # Log-transformation:
+#' g_bc(1:5, lambda = 0); log(1:5)
+#'
+#' # Square-root transformation: note the shift and scaling
+#' g_bc(1:5, lambda = 1/2); sqrt(1:5)
+#'
 #' @export
-h_ginv = function(z,
-                  transformation = 'log',
-                  lambda = NULL,
-                  y_max = Inf){
-
-  # Check: does the transformation make sense?
-  transformation = tolower(transformation);
-  if(is.na(match(transformation, c("identity", "log", "sqrt", "box-cox"))))
-    stop("The transformation must be one of 'identity', 'log', 'sqrt' or 'box-cox'")
-
-  # Check: is lambda non-negative?
-  if(!is.null(lambda) && lambda < 0)
-    stop("The Box-Cox parameter (lambda) must be non-negative")
-
-  # Check : is lambda given for Box-Cox?
-  if(is.null(lambda) && transformation == 'box-cox')
-    stop("The Box-Cox parameter (lambda) must be specified")
-
-  # Use Box-Cox transformation for all transformations, as special case:
-  if(transformation == 'identity') lambda = 1
-  if(transformation == 'log') lambda = 0
-  if(transformation == 'sqrt') lambda = 1/2
-
-  # Inverse transformation g:
-  ginv = function(s, lambda) {
-    if(lambda == 0) {
-      return(exp(s))
-    } else {
-      return(sign(lambda*s + 1)*abs(lambda*s+1)^(1/lambda))
-    }
-  }
-
-  # Also define the rounding function and the corresponding intervals:
-  if(transformation == 'log' || lambda ==0){
-    round_fun = function(z) pmin(floor(z), y_max)
+g_bc = function(t, lambda) {
+  if(lambda == 0) {
+    # (Signed) log-transformation
+    sign(t)*log(abs(t))
   } else {
-    round_fun = function(z) pmin(floor(z)*I(z > 0), y_max)
+    # (Signed) Box-Cox-transformation
+    (sign(t)*abs(t)^lambda - 1)/lambda
   }
-
-  return(round_fun(ginv(z,lambda = lambda)))
 }
 #----------------------------------------------------------------------------
-#' Inverse rounding and transformation function
+#' Inverse Box-Cox transformation
 #'
-#' Compute the inverse of the rounding operator and transform, which
-#' is used in the likelihood.
+#' Evaluate the inverse Box-Cox transformation. Negative values are permitted.
 #'
-#' @param y argument(s) at which to evaluate \code{g(aj())}
-#' @param transformation transformation to use for the latent process; must be one of
-#' \itemize{
-#' \item "identity" (identity transformation)
-#' \item "log" (log transformation)
-#' \item "sqrt" (square root transformation)
-#' \item "box-cox" (box-cox transformation)
-#' }
-#' @param lambda the nonlinear parameter for the Box-Cox transformation
-#' @param y_max a fixed and known upper bound for all observations; default is \code{Inf}
-#' @return \code{g(aj(y))}, where \code{g} and \code{aj} are determined by the
-#' transformation
+#' @param s argument(s) at which to evaluate the function
+#' @param lambda Box-Cox parameter
+#' @return The evaluation(s) of the inverse Box-Cox function at the given input(s) \code{s}.
+#'
+#' @note Special cases include
+#' the identity transformation (\code{lambda = 1}),
+#' the square-root transformation (\code{lambda = 1/2}),
+#' and the log transformation (\code{lambda = 0}).
+#'
+#'#' @examples
+#' # (Inverse) log-transformation:
+#' g_inv_bc(1:5, lambda = 0); exp(1:5)
+#'
+#' # (Inverse) square-root transformation: note the shift and scaling
+#' g_inv_bc(1:5, lambda = 1/2); (1:5)^2
+#'
 #' @export
-g_aj = function(y,
-                transformation = 'log',
-                lambda = NULL,
-                y_max = Inf){
-
-  # Check: does the transformation make sense?
-  transformation = tolower(transformation);
-  if(is.na(match(transformation, c("identity", "log", "sqrt", "box-cox"))))
-    stop("The transformation must be one of 'identity', 'log', 'sqrt' or 'box-cox'")
-
-  # Check: is lambda non-negative?
-  if(!is.null(lambda) && lambda < 0)
-    stop("The Box-Cox parameter (lambda) must be non-negative")
-
-  # Check : is lambda given for Box-Cox?
-  if(is.null(lambda) && transformation == 'box-cox')
-    stop("The Box-Cox parameter (lambda) must be specified")
-
-  # Use Box-Cox transformation for all transformations, as special case:
-  if(transformation == 'identity') lambda = 1
-  if(transformation == 'log') lambda = 0
-  if(transformation == 'sqrt') lambda = 1/2
-
-  # Transformation g:
-  g = function(t, lambda) {
-    if(lambda == 0) {
-      return(log(t))
-    } else {
-      return((sign(t)*abs(t)^lambda - 1)/lambda)
-    }
-  }
-
-  # Also define the intervals corresponding to the rounding function:
-  if(transformation == 'log' || lambda ==0){
-    a_j = function(j) {val = j; val[j==y_max+1] = Inf; val}
+g_inv_bc = function(s, lambda) {
+  if(lambda == 0) {
+    # Inverse log-transformation
+    exp(s)
   } else {
-    a_j = function(j) {val = j; val[j==0] = -Inf; val[j==y_max+1] = Inf; val}
+    # Inverse (signed) Box-Cox-transformation
+    sign(lambda*s + 1)*abs(lambda*s+1)^(1/lambda)
+  }
+}
+#----------------------------------------------------------------------------
+#' Cumulative distribution function (CDF)-based transformation
+#'
+#' Compute a CDF-based transformation using the observed count data.
+#' The CDF can be estimated nonparametrically or parametrically based on the
+#' Poisson or Negative-Binimial distributions. In the parametric case,
+#' the parameters are determined based on the moments of \code{y}.
+#'
+#' @param y \code{n x 1} vector of observed counts
+#' @param distribution the distribution used for the CDF; must be one of
+#' \itemize{
+#' \item "np" (empirical CDF)
+#' \item "pois" (moment-matched marginal Poisson CDF)
+#' \item "neg-bin" (moment-matched marginal Negative Binomial CDF)
+#' }
+#' @return A smooth monotone function which can be used for evaluations of the transformation.
+#'
+#'
+#' @examples
+#' # Sample some data:
+#' y = rpois(n = 500, lambda = 5)
+#'
+#' # Empirical CDF version:
+#' g_np = g_cdf(y, distribution = 'np')
+#'
+#' # Poisson version:
+#' g_pois = g_cdf(y, distribution = 'pois')
+#'
+#' # Negative binomial version:
+#' g_negbin = g_cdf(y, distribution = 'neg-bin')
+#'
+#' # Plot together:
+#' t = 1:max(y) # grid
+#' plot(t, g_np(t), type='l')
+#' lines(t, g_pois(t), lty = 2)
+#' lines(t, g_negbin(t), lty = 3)
+#'
+#' @export
+g_cdf = function(y, distribution = "np") {
+
+  # Check: does the distribution make sense?
+  distribution = tolower(distribution);
+  if(!is.element(distribution, c("np", "pois", "neg-bin", "box-cox")))
+    stop("The distribution must be one of 'np', 'pois', or 'neg-bin'")
+
+  # Number of observations:
+  n = length(y)
+
+  # Moments of the raw counts:
+  mu_y = mean(y); sigma_y = sd(y)
+
+  # CDFs:
+  if(distribution == 'np') {
+    # (Scaled) empirical CDF:
+    F_y = function(t) n/(n+1)*ecdf(y)(t)
+  }
+  if(distribution == 'pois'){
+    # Poisson CDF with moment-matched parameters:
+    F_y = function(t) ppois(t,
+                            lambda = mu_y)
+  }
+  if(distribution == 'neg-bin') {
+    # Negative-binomial CDF with moment-matched parameters:
+    if(mu_y >= sigma_y^2){
+      # Check: underdispersion is incompatible with Negative-Binomial
+      warning("'neg-bin' not recommended for underdispersed data")
+
+      # Force sigma_y^2 > mu_y:
+      sigma_y = 1.1*sqrt(abs(mu_y))
+    }
+    F_y = function(t) pnbinom(t,
+                              size = mu_y^2/(sigma_y^2 - mu_y),
+                              prob = mu_y/sigma_y^2)
   }
 
-  return(g(a_j(y), lambda = lambda))
+  # Input points for smoothing:
+  t0 = sort(unique(y[y!=0]))
+
+  # Initial transformation:
+  g0 = mu_y + sigma_y*qnorm(F_y(t0-1))
+
+  # Make sure we have only finite values of g0 (infinite values occur for F_y = 0 or F_y = 1)
+  t0 = t0[which(is.finite(g0))]; g0 = g0[which(is.finite(g0))]
+
+  # Return the smoothed (monotone) transformation:
+  splinefun(t0, g0, method = 'monoH.FC')
+}
+#----------------------------------------------------------------------------
+#' Approximate inverse transformation
+#'
+#' Compute the inverse function of a transformation \code{g} based on a grid search.
+#'
+#' @param g the transformation function
+#' @param t_grid grid of arguments at which to evaluate the transformation function
+#' @return A function which can be used for evaluations of the
+#' (approximate) inverse transformation function.
+#'
+#'
+#' @examples
+#' # Sample some data:
+#' y = rpois(n = 500, lambda = 5)
+#'
+#' # Empirical CDF transformation:
+#' g_np = g_cdf(y, distribution = 'np')
+#'
+#' # Grid for approximation:
+#' t_grid = seq(1, max(y), length.out = 100)
+#'
+#' # Approximate inverse:
+#' g_inv = g_inv_approx(g = g_np, t_grid = t_grid)
+#'
+#' # Check the approximation:
+#' plot(t_grid, g_inv(g_np(t_grid)), type='p')
+#' lines(t_grid, t_grid)
+#'
+#' @export
+g_inv_approx = function(g, t_grid) {
+
+  # Evaluate g() on the grid:
+  g_grid = g(t_grid)
+
+  # Approximate inverse function:
+  function(s) {
+    sapply(s, function(si)
+      t_grid[which.min(abs(si - g_grid))])
+  }
+}
+#----------------------------------------------------------------------------
+#' Approximate derivative of transformation
+#'
+#' Compute the (approximate) derivative of a transformation \code{g} based
+#' on a smoothed grid evaluation.
+#'
+#' @param g the transformation function
+#' @param t_grid grid of arguments at which to evaluate the transformation function
+#' @return A function which can be used for evaluations of the
+#' (approximate) derivative of the transformation function.
+#'
+#'
+#' @examples
+#' # Sample some data:
+#' y = rpois(n = 500, lambda = 5)
+#'
+#' # Empirical CDF transformation:
+#' g_np = g_cdf(y, distribution = 'np')
+#'
+#' # Grid for approximation:
+#' t_grid = seq(1, max(y), length.out = 100)
+#'
+#' # Compute the approximate derivative:
+#' g_deriv = g_deriv_approx(g = g_np, t_grid = t_grid)
+
+#' # Plot the transformation and then the derivative:
+#' plot(t_grid, g_np(t_grid))
+#' plot(t_grid, g_deriv(t_grid))
+#'
+#' @export
+g_deriv_approx = function(g, t_grid) {
+
+  # Evaluate g() on the grid:
+  g_grid = g(t_grid)
+
+  # Empirical derivative: include initial value as well
+  emp_deriv = c(
+    (g_grid[2] - g_grid[1])/(t_grid[2] - t_grid[1]),
+    diff(g_grid)/diff(t_grid)
+  )
+
+  # Fit a spline to the empirical derivative:
+  splinefun(x = t_grid, y = emp_deriv)
+}
+#----------------------------------------------------------------------------
+#' Rounding function
+#'
+#' Define the rounding operator associated with the floor function. The function
+#' also returns zero whenever the input is negative and caps the value at \code{y_max},
+#' where \code{y_max} is a known upper bound on the data \code{y} (if specified).
+#'
+#' @param z the real-valued input(s)
+#' @param y_max a fixed and known upper bound for all observations; default is \code{Inf}
+#' @return The count-valued output(s) from the rounding function.
+#'
+#' @examples
+#'
+#' # Floor function:
+#' round_fun(1.5)
+#' round_fun(0.5)
+#'
+#' # Special treatmeant of negative numbers:
+#' round_fun(-1)
+#'
+#' @export
+round_fun = function(z, y_max = Inf) {
+  pmin(floor(z)*I(z > 0),
+       y_max)
+}
+#----------------------------------------------------------------------------
+#' Inverse rounding function
+#'
+#' Define the intervals associated with \code{y = j} based on the flooring function.
+#' The function returns \code{-Inf} for \code{j = 0} (or smaller) and \code{Inf} for
+#' any \code{j >= y_max + 1}, where \code{y_max} is a known upper bound on the data \code{y}
+#' (if specified).
+#'
+#' @param j the integer-valued input(s)
+#' @param y_max a fixed and known upper bound for all observations; default is \code{Inf}
+#' @return The (lower) interval endpoint(s) associated with \code{j}.
+#'
+#' @examples
+#' # Standard cases:
+#' a_j(1)
+#' a_j(20)
+#'
+#' # Boundary cases:
+#' a_j(0)
+#' a_j(20, y_max = 15)
+#'
+#' @export
+a_j = function(j, y_max = Inf) {
+  # a_j = j
+  val = j;
+
+  # a_0 = -Inf
+  val[j<=0] = -Inf;
+
+  # a_{y_max + 1} = Inf
+  val[j>=y_max+1] = Inf;
+
+  return(val)
 }
 #----------------------------------------------------------------------------
 #' Simulate count data from a linear regression
@@ -153,6 +327,7 @@ g_aj = function(y,
 #' # Simulate and plot the count data:
 #' sim_dat = simulate_nb_lm(n = 100, p = 10);
 #' plot(sim_dat$y)
+#'
 #' @export
 simulate_nb_lm = function(n = 100,
                           p = 10,
@@ -664,13 +839,22 @@ invlogit = function(x) exp(x - log(1+exp(x))) # exp(x)/(1+exp(x))
 #----------------------------------------------------------------------------
 #' Brent's method for optimization
 #'
-#' Implementation for Brent's algorithm for maximizing a univariate function over an interval.
+#' Implementation for Brent's algorithm for minimizing a univariate function over an interval.
+#' The code is based on a function in the \code{stsm} package.
+#'
 #' @param a lower limit for search
 #' @param b upper limit for search
-#' @param fcn function to maximum
-#' @param tol tolerance level
-#' @return a list of
-BrentMethod <- function (a = 0, b, fcn, tol = .Machine$double.eps^0.25, ...)
+#' @param fcn function to minimize
+#' @param tol tolerance level for convergence of the optimization procedure
+#' @return a list of containing the following elements:
+#' \itemize{
+#' \item \code{fx} the minimum value of the input function
+#' \item \code{x} the argument that minimizes the function
+#' \item \code{iter} number of iterations to converge
+#' \item \code{vx} a vector that stores the arguments until convergence
+#' }
+#'
+BrentMethod <- function (a = 0, b, fcn, tol = .Machine$double.eps^0.25)
 {
   counts <- c(fcn = 0, grd = NA)
   c <- (3 - sqrt(5)) * 0.5
@@ -680,7 +864,7 @@ BrentMethod <- function (a = 0, b, fcn, tol = .Machine$double.eps^0.25, ...)
   v <- a + c * (b - a)
   vx <- x <- w <- v
   d <- e <- 0
-  fx <- fcn(x, ...)
+  fx <- fcn(x)
   counts[1] <- counts[1] + 1
   fw <- fv <- fx
 
@@ -742,7 +926,7 @@ BrentMethod <- function (a = 0, b, fcn, tol = .Machine$double.eps^0.25, ...)
       u <- x + tol1
     }
     else u <- x - tol1
-    fu <- fcn(u, ...)
+    fu <- fcn(u)
     counts[1] <- counts[1] + 1
     if (fu <= fx) {
       if (u < x) {
@@ -920,6 +1104,6 @@ uni.slice <- function (x0, g, w=1, m=Inf, lower=-Inf, upper=+Inf, gx0=NULL)
 }
 
 # Just add these for general use:
-#' @importFrom stats optim predict constrOptim cor fitted approxfun median arima coef quantile rexp rgamma rnorm runif sd dnorm lm var qchisq pnorm splinefun qnorm rnbinom
+#' @importFrom stats optim predict constrOptim cor fitted approxfun median arima coef quantile rexp rgamma rnorm runif sd dnorm lm var qchisq rchisq pnorm splinefun qnorm rnbinom ecdf ppois pnbinom
 #' @importFrom graphics lines par plot polygon abline hist arrows legend axis
 NULL

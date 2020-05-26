@@ -2,11 +2,19 @@
 % Please edit documentation in R/source_EM.R
 \name{star_pred_dist}
 \alias{star_pred_dist}
-\title{Compute the predictive distribution for the integer-valued response}
+\title{Compute a predictive distribution for the integer-valued response}
 \usage{
-star_pred_dist(y, X, X.test = NULL, transformation = "log",
-  lambda = NULL, y_max = Inf, sd_init = 10, tol = 10^-10,
-  max_iters = 1000, N = 1000)
+star_pred_dist(
+  y,
+  X,
+  X.test = NULL,
+  transformation = "np",
+  y_max = Inf,
+  sd_init = 10,
+  tol = 10^-10,
+  max_iters = 1000,
+  N = 1000
+)
 }
 \arguments{
 \item{y}{\code{n x 1} vector of observed counts}
@@ -15,15 +23,16 @@ star_pred_dist(y, X, X.test = NULL, transformation = "log",
 
 \item{X.test}{\code{m x p} matrix of out-of-sample predictors}
 
-\item{transformation}{transformation to use for the latent process; must be one of
+\item{transformation}{transformation to use for the latent data; must be one of
 \itemize{
 \item "identity" (identity transformation)
 \item "log" (log transformation)
 \item "sqrt" (square root transformation)
-\item "box-cox" (box-cox transformation)
+\item "np" (nonparametric transformation estimated from empirical CDF)
+\item "pois" (transformation for moment-matched marginal Poisson CDF)
+\item "neg-bin" (transformation for moment-matched marginal Negative Binomial CDF)
+\item "box-cox" (box-cox transformation with learned parameter)
 }}
-
-\item{lambda}{the nonlinear parameter for the Box-Cox transformation; otherwise ignored}
 
 \item{y_max}{a fixed and known upper bound for all observations; default is \code{Inf}}
 
@@ -63,10 +72,10 @@ X = cbind(1,x, x^2)
 y_pred = star_pred_dist(y, X, transformation = 'sqrt')
 
 # Using these draws, compute prediction intervals for STAR:
-PI_y = t(apply(y_pred, 2, quantile, c(0.05/2, 1 - 0.05/2)))
+PI_y = t(apply(y_pred, 2, quantile, c(0.05, 1 - 0.05)))
 
 # Plot the results: PIs and CIs
-plot(x, y, ylim = range(y, PI_y), main = 'STAR: Prediction Intervals')
+plot(x, y, ylim = range(y, PI_y), main = 'STAR: 90\% Prediction Intervals')
 lines(x, PI_y[,1], col='darkgray', type='s', lwd=4);
 lines(x, PI_y[,2], col='darkgray', type='s', lwd=4)
 }

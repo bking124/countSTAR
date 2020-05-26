@@ -1,7 +1,7 @@
 ---
 title: "STAR: Simultaneous Transformation and Rounding for Modeling Integer-Valued Data"
 author: "Daniel R. Kowal"
-date: "10/14/2019"
+date: "05/20/2020"
 output: pdf_document # rmarkdown::github_document
 ---
 
@@ -106,16 +106,20 @@ Frequentist (or classical) estimation and inference for STAR models is provided 
 # Define the estimator function:
 estimator = function(y) lm(y ~ X - 1)
 
+# Select a transformation:
+transformation = 'log' # Log transformation
+# transformation = 'np' # Estimated transformation using empirical CDF
+
 # EM algorithm for STAR (using the log-link)
 fit_em = star_EM(y = y, 
                  estimator = estimator, 
-                 transformation = 'log')
+                 transformation = transformation)
 
 # Fitted coefficients:
 round(coef(fit_em), 3)
 ```
 
-Here the `log` transformation was used, but other options are available. 
+Here the `log` transformation was used, but other options are available; see `?star_EM` for details. 
 
 Based on the fitted STAR model, we may further obtain *confidence intervals* for the estimated coefficients using `star_CI`:
 
@@ -123,18 +127,18 @@ Based on the fitted STAR model, we may further obtain *confidence intervals* for
 
 # Confidence interval for the j=2 column:
 j = 2
-ci_j = star_CI(y = y, X = X, alpha = 0.05,
+ci_j = star_CI(y = y, X = X, level = 0.95,
         j = j,
-        transformation = 'log', 
+        transformation = transformation, 
         include_plot = FALSE)
 names(ci_j) = paste(colnames(X)[j], c('(Lower)', '(Upper)'))
 print(round(ci_j, 3))
 
 # Confidence for all columns:
 ci_all = sapply(1:p, function(j)
-  star_CI(y = y, X = X, alpha = 0.05,
+  star_CI(y = y, X = X, level = 0.95,
         j = j,
-        transformation = 'log', 
+        transformation = transformation, 
         include_plot = FALSE))
 colnames(ci_all) = colnames(X); 
 rownames(ci_all) = c('Lower', 'Upper')
@@ -155,7 +159,7 @@ j = 3 # the jth covariate
 # Note that the null model estimator *does not* include X[,j]:
 fit_em_0 = star_EM(y = y,
                    estimator = function(y) lm(y ~ X[,-j] - 1), 
-                   transformation = 'log')
+                   transformation = transformation)
 # P-values:
 p_val_j = pchisq(-2*(fit_em_0$logLik - fit_em$logLik),
        df = 1, lower.tail = FALSE)
@@ -175,7 +179,7 @@ $$
 # Note that the null model estimator *does not* include any X:
 fit_em_0 = star_EM(y = y,
                    estimator = function(y) lm(y ~ 1), # no x-variable
-                   transformation = 'log')
+                   transformation = transformation)
 # P-values:
 p_val_all = pchisq(-2*(fit_em_0$logLik - fit_em$logLik),
        df = p - 1, lower.tail = FALSE)
@@ -191,7 +195,7 @@ For a Bayesian model, STAR requires only an algorithm for *initializing and samp
 
 As an illustration, consider the Bayesian linear regression model
 \begin{align*}
-z_i^* &= x_i'\beta + \epsilon_i, \quad \epsilon_i \stackrel{iid}{\sim}N(0, \sigma^2)
+z_i^* &= x_i'\beta + \epsilon_i, \quad \epsilon_i \stackrel{iid}{\sim}N(0, \sigma^2)\\
 \beta_j & \stackrel{iid}{\sim}N(0, \sigma_\beta^2), \quad \sigma_\beta \sim \mbox{Uniform}(0, 10^4)
 \end{align*}
 With STAR and a log transformation, posterior samples for $(\beta, \sigma_\beta, \sigma)$ are obtained using `star_MCMC` as follows:

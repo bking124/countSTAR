@@ -4,8 +4,15 @@
 \alias{Gauss_MCMC}
 \title{MCMC Algorithm for conditional Gaussian likelihood}
 \usage{
-Gauss_MCMC(y, sample_params, init_params, nsave = 5000, nburn = 5000,
-  nskip = 2, verbose = TRUE)
+Gauss_MCMC(
+  y,
+  sample_params,
+  init_params,
+  nsave = 5000,
+  nburn = 5000,
+  nskip = 2,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{y}{\code{n x 1} vector of observations}

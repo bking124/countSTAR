@@ -2,7 +2,7 @@ STAR: Simultaneous Transformation and Rounding for Modeling
 Integer-Valued Data
 ================
 Daniel R. Kowal
-10/14/2019
+05/20/2020
 
 # Background: integer-valued data
 
@@ -142,21 +142,26 @@ estimators (MLEs), and is implemented in `star_EM`:
 # Define the estimator function:
 estimator = function(y) lm(y ~ X - 1)
 
+# Select a transformation:
+transformation = 'log' # Log transformation
+# transformation = 'np' # Estimated transformation using empirical CDF
+
 # EM algorithm for STAR (using the log-link)
 fit_em = star_EM(y = y, 
                  estimator = estimator, 
-                 transformation = 'log')
+                 transformation = transformation)
 
 # Fitted coefficients:
 round(coef(fit_em), 3)
 ```
 
-    ##        X(Intercept) XPre-treat #Roaches          Xtreatment 
-    ##               1.260               0.015              -0.715 
-    ##             Xsenior     Xlog(exposure2) 
-    ##              -0.912               0.560
+    ##        X(Intercept) XPre-treat #Roaches          Xtreatment             Xsenior 
+    ##               1.260               0.015              -0.715              -0.912 
+    ##     Xlog(exposure2) 
+    ##               0.560
 
-Here the `log` transformation was used, but other options are available.
+Here the `log` transformation was used, but other options are available;
+see `?star_EM` for details.
 
 Based on the fitted STAR model, we may further obtain *confidence
 intervals* for the estimated coefficients using `star_CI`:
@@ -164,9 +169,9 @@ intervals* for the estimated coefficients using `star_CI`:
 ``` r
 # Confidence interval for the j=2 column:
 j = 2
-ci_j = star_CI(y = y, X = X, alpha = 0.05,
+ci_j = star_CI(y = y, X = X, level = 0.95,
         j = j,
-        transformation = 'log', 
+        transformation = transformation, 
         include_plot = FALSE)
 names(ci_j) = paste(colnames(X)[j], c('(Lower)', '(Upper)'))
 print(round(ci_j, 3))
@@ -178,9 +183,9 @@ print(round(ci_j, 3))
 ``` r
 # Confidence for all columns:
 ci_all = sapply(1:p, function(j)
-  star_CI(y = y, X = X, alpha = 0.05,
+  star_CI(y = y, X = X, level = 0.95,
         j = j,
-        transformation = 'log', 
+        transformation = transformation, 
         include_plot = FALSE))
 colnames(ci_all) = colnames(X); 
 rownames(ci_all) = c('Lower', 'Upper')
@@ -188,11 +193,11 @@ print(t(round(ci_all, 3)))
 ```
 
     ##                     Lower  Upper
-    ## (Intercept)         0.776  1.729
+    ## (Intercept)         0.791  1.729
     ## Pre-treat #Roaches  0.012  0.019
-    ## treatment          -1.266 -0.172
-    ## senior             -1.529 -0.312
-    ## log(exposure2)     -0.558  1.697
+    ## treatment          -1.263 -0.175
+    ## senior             -1.517 -0.322
+    ## log(exposure2)     -0.556  1.696
 
 Similarly, *p-values* are available using likelihood ratio tests, which
 can be applied for individual coefficients,
@@ -208,7 +213,7 @@ j = 3 # the jth covariate
 # Note that the null model estimator *does not* include X[,j]:
 fit_em_0 = star_EM(y = y,
                    estimator = function(y) lm(y ~ X[,-j] - 1), 
-                   transformation = 'log')
+                   transformation = transformation)
 # P-values:
 p_val_j = pchisq(-2*(fit_em_0$logLik - fit_em$logLik),
        df = 1, lower.tail = FALSE)
@@ -232,7 +237,7 @@ H_0: \beta_1=\ldots=\beta_p = 0, \quad \mbox{vs.} \quad H_1: \beta_j \ne 0 \mbox
 # Note that the null model estimator *does not* include any X:
 fit_em_0 = star_EM(y = y,
                    estimator = function(y) lm(y ~ 1), # no x-variable
-                   transformation = 'log')
+                   transformation = transformation)
 # P-values:
 p_val_all = pchisq(-2*(fit_em_0$logLik - fit_em$logLik),
        df = p - 1, lower.tail = FALSE)
@@ -282,9 +287,9 @@ round(coef(fit_mcmc),3)
 ```
 
     ##       beta1       beta2       beta3       beta4       beta5 sigma_beta1 
-    ##       1.118       0.015      -0.591      -0.741       0.344    1000.000 
+    ##       1.127       0.016      -0.599      -0.754       0.349    1000.000 
     ## sigma_beta2 sigma_beta3 sigma_beta4 sigma_beta5 
-    ##       0.896       0.896       0.896       0.896
+    ##       0.901       0.901       0.901       0.901
 
 ``` r
 # Credible intervals for regression coefficients
@@ -297,11 +302,11 @@ print(t(round(ci_all_bayes, 3)))
 ```
 
     ##                     Lower  Upper
-    ## (Intercept)         0.553  1.624
+    ## (Intercept)         0.589  1.635
     ## Pre-treat #Roaches  0.012  0.019
-    ## treatment          -1.163 -0.031
-    ## senior             -1.391 -0.074
-    ## log(exposure2)     -0.492  1.316
+    ## treatment          -1.167 -0.049
+    ## senior             -1.381 -0.127
+    ## log(exposure2)     -0.498  1.335
 
 We may further evaluate the model based on posterior diagnostics and
 posterior predictive checks on the simulated versus observed proportion
@@ -324,7 +329,7 @@ getEffSize(post.coef)
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##    2756    2978    3799    3757    4578    4673
+    ##    3719    4162    4554    4457    4849    5000
 
 ``` r
 # Posterior predictive check:

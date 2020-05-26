@@ -4,12 +4,29 @@
 \alias{bart_star_np_MCMC}
 \title{MCMC sampler for BART-STAR Model with nonparametric link function}
 \usage{
-bart_star_np_MCMC(y, X, X_test = NULL, y_test = NULL,
-  lambda_prior = 1/2, y_max = Inf, n.trees = 200, sigest = NULL,
-  sigdf = 3, sigquant = 0.9, k = 2, power = 2, base = 0.95,
-  nsave = 5000, nburn = 50000, nskip = 9, save_y_hat = FALSE,
-  target_acc_rate = 0.3, adapt_rate = 0.75, stop_adapt_perc = 0.5,
-  verbose = TRUE)
+bart_star_np_MCMC(
+  y,
+  X,
+  X_test = NULL,
+  y_test = NULL,
+  lambda_prior = 1/2,
+  y_max = Inf,
+  n.trees = 200,
+  sigest = NULL,
+  sigdf = 3,
+  sigquant = 0.9,
+  k = 2,
+  power = 2,
+  base = 0.95,
+  nsave = 5000,
+  nburn = 50000,
+  nskip = 9,
+  save_y_hat = FALSE,
+  target_acc_rate = 0.3,
+  adapt_rate = 0.75,
+  stop_adapt_perc = 0.5,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{y}{\code{n x 1} vector of observed counts}

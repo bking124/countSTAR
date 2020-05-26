@@ -4,8 +4,12 @@
 \alias{plot_coef}
 \title{Plot the estimated regression coefficients and credible intervals}
 \usage{
-plot_coef(post_coefficients_1, post_coefficients_2 = NULL,
-  alpha = 0.05, labels = NULL)
+plot_coef(
+  post_coefficients_1,
+  post_coefficients_2 = NULL,
+  alpha = 0.05,
+  labels = NULL
+)
 }
 \arguments{
 \item{post_coefficients_1}{\code{Nsims x p} matrix of simulations from the posterior

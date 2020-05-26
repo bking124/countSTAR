@@ -4,11 +4,27 @@
 \alias{bart_star_MCMC}
 \title{MCMC Algorithm for BART-STAR Model}
 \usage{
-bart_star_MCMC(y, X, X_test = NULL, y_test = NULL,
-  transformation = "log", lambda = NULL, y_max = Inf,
-  n.trees = 200, sigest = NULL, sigdf = 3, sigquant = 0.9, k = 2,
-  power = 2, base = 0.95, nsave = 5000, nburn = 5000, nskip = 2,
-  save_y_hat = FALSE, verbose = TRUE)
+bart_star_MCMC(
+  y,
+  X,
+  X_test = NULL,
+  y_test = NULL,
+  transformation = "log",
+  lambda = NULL,
+  y_max = Inf,
+  n.trees = 200,
+  sigest = NULL,
+  sigdf = 3,
+  sigquant = 0.9,
+  k = 2,
+  power = 2,
+  base = 0.95,
+  nsave = 5000,
+  nburn = 5000,
+  nskip = 2,
+  save_y_hat = FALSE,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{y}{\code{n x 1} vector of observed counts}

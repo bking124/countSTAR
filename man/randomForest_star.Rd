@@ -4,10 +4,19 @@
 \alias{randomForest_star}
 \title{EM Algorithm for Random Forest STAR}
 \usage{
-randomForest_star(y, X, X.test = NULL, ntree = 500,
-  mtry = max(floor(ncol(X)/3), 1), nodesize = 5,
-  transformation = "log", lambda = NULL, y_max = Inf, sd_init = 10,
-  tol = 10^-6, max_iters = 500)
+randomForest_star(
+  y,
+  X,
+  X.test = NULL,
+  ntree = 500,
+  mtry = max(floor(ncol(X)/3), 1),
+  nodesize = 5,
+  transformation = "np",
+  y_max = Inf,
+  sd_init = 10,
+  tol = 10^-6,
+  max_iters = 500
+)
 }
 \arguments{
 \item{y}{\code{n x 1} vector of observed counts}
@@ -26,20 +35,21 @@ Default is p/3.}
 \item{nodesize}{Minimum size of terminal nodes. Setting this number larger causes smaller trees to be grown (and thus take less time).
 Default is 5.}
 
-\item{transformation}{transformation to use for the latent process; must be one of
+\item{transformation}{transformation to use for the latent data; must be one of
 \itemize{
 \item "identity" (identity transformation)
 \item "log" (log transformation)
 \item "sqrt" (square root transformation)
-\item "box-cox" (box-cox transformation)
+\item "np" (nonparametric transformation estimated from empirical CDF)
+\item "pois" (transformation for moment-matched marginal Poisson CDF)
+\item "neg-bin" (transformation for moment-matched marginal Negative Binomial CDF)
+\item "box-cox" (box-cox transformation with learned parameter)
 }}
-
-\item{lambda}{the nonlinear parameter for the Box-Cox transformation; otherwise ignored}
 
 \item{y_max}{a fixed and known upper bound for all observations; default is \code{Inf}}
 
-\item{sd_init}{add random noise for initialization scaled by \code{sd_init}
-times the Gaussian MLE standard deviation}
+\item{sd_init}{add random noise for EM algorithm initialization scaled by \code{sd_init}
+times the Gaussian MLE standard deviation; default is 10}
 
 \item{tol}{tolerance for stopping the EM algorithm; default is 10^-10;}
 
@@ -50,29 +60,37 @@ a list with the following elements:
 \itemize{
 \item \code{fitted.values}: the fitted values at the MLEs based on out-of-bag samples (training)
 \item \code{fitted.values.test}: the fitted values at the MLEs (testing)
-\item \code{sigma.hat}: the MLE of the standard deviation
-\item \code{mu.hat}: the MLE of the conditional mean (on the transformed scale)
-\item \code{z.hat}: the estimated latent variables (on the transformed scale) at the MLEs
-\item \code{residuals}: the Dunn-Smyth residuals
-\item \code{logLik}: the log-likelihood at the MLEs based on out-of-bag samples
+\item \code{g.hat} a function containing the (known or estimated) transformation
+\item \code{sigma.hat} the MLE of the standard deviation
+\item \code{mu.hat} the MLE of the conditional mean (on the transformed scale)
+\item \code{z.hat} the estimated latent data (on the transformed scale) at the MLEs
+\item \code{residuals} the Dunn-Smyth residuals (randomized)
+\item \code{residuals_rep} the Dunn-Smyth residuals (randomized) for 10 replicates
+\item \code{logLik} the log-likelihood at the MLEs
 \item \code{logLik0} the log-likelihood at the MLEs for the *unrounded* initialization
+\item \code{lambda} the Box-Cox nonlinear parameter
 \item \code{rfObj}: the object returned by randomForest() at the MLEs
 \item and other parameters that
-(i) track the parameters across EM iterations and
-(ii) record the model specifications
+(1) track the parameters across EM iterations and
+(2) record the model specifications
 }
 }
 \description{
-Compute the MLEs and log-likelihood for the Random Forest STAR model. The STAR model requires
-a transformation (such as log, sqrt, or Box-Cox) and will estimate the conditional mean
-on the transformed scale using random forests. Standard function calls
-including \code{fitted()} and \code{residuals()} apply.
+Compute the MLEs and log-likelihood for the Random Forest STAR model.
+The STAR model requires a *transformation* and an *estimation function* for the conditional mean
+given observed data. The transformation can be known (e.g., log or sqrt) or unknown
+(Box-Cox or estimated nonparametrically) for greater flexibility.
+The estimator in this case is a random forest.
+Standard function calls including \code{fitted()} and \code{residuals()} apply.
 }
 \details{
-For the Box-Cox transformation, a \code{NULL} value of
-\code{lambda} requires estimation of \code{lambda}. The maximum likelihood
-estimator is computed over a grid of values within the EM algorithm.
+STAR defines a count-valued probability model by
+(1) specifying a Gaussian model for continuous *latent* data and
+(2) connecting the latent data to the observed data via a
+*transformation and rounding* operation.
 
+The expectation-maximization (EM) algorithm is used to produce
+maximum likelihood estimators (MLEs) for the parameters defined in the
 The fitted values are computed using out-of-bag samples. As a result,
 the log-likelihood is based on out-of-bag prediction, and it is similarly
 straightforward to compute out-of-bag squared and absolute errors.

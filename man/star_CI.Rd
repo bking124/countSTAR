@@ -4,9 +4,18 @@
 \alias{star_CI}
 \title{Compute asymptotic confidence intervals for STAR linear regression}
 \usage{
-star_CI(y, X, j, alpha = 0.05, include_plot = TRUE,
-  transformation = "log", lambda = NULL, y_max = Inf, sd_init = 10,
-  tol = 10^-10, max_iters = 1000)
+star_CI(
+  y,
+  X,
+  j,
+  level = 0.95,
+  include_plot = TRUE,
+  transformation = "np",
+  y_max = Inf,
+  sd_init = 10,
+  tol = 10^-10,
+  max_iters = 1000
+)
 }
 \arguments{
 \item{y}{\code{n x 1} vector of observed counts}
@@ -15,19 +24,20 @@ star_CI(y, X, j, alpha = 0.05, include_plot = TRUE,
 
 \item{j}{the scalar column index for the desired confidence interval}
 
-\item{alpha}{confidence level; default is 0.05}
+\item{level}{confidence level; default is 0.95}
 
 \item{include_plot}{logical; if TRUE, include a plot of the profile likelihood}
 
-\item{transformation}{transformation to use for the latent process; must be one of
+\item{transformation}{transformation to use for the latent data; must be one of
 \itemize{
 \item "identity" (identity transformation)
 \item "log" (log transformation)
 \item "sqrt" (square root transformation)
-\item "box-cox" (box-cox transformation)
+\item "np" (nonparametric transformation estimated from empirical CDF)
+\item "pois" (transformation for moment-matched marginal Poisson CDF)
+\item "neg-bin" (transformation for moment-matched marginal Negative Binomial CDF)
+\item "box-cox" (box-cox transformation with learned parameter)
 }}
-
-\item{lambda}{the nonlinear parameter for the Box-Cox transformation; otherwise ignored}
 
 \item{y_max}{a fixed and known upper bound for all observations; default is \code{Inf}}
 
@@ -55,16 +65,19 @@ The design matrix \code{X} should include an intercept.
 sim_dat = simulate_nb_lm(n = 100, p = 2)
 y = sim_dat$y; X = sim_dat$X
 
+# Select a transformation:
+transformation = 'np'
+
 # Confidence interval for the intercept:
 ci_beta_0 = star_CI(y = y, X = X,
                    j = 1,
-                   transformation = 'log')
+                   transformation = transformation)
 ci_beta_0
 
 # Confidence interval for the slope:
 ci_beta_1 = star_CI(y = y, X = X,
                    j = 2,
-                   transformation = 'log')
+                   transformation = transformation)
 ci_beta_1
 
 }

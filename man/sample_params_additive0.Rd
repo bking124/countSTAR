@@ -4,8 +4,16 @@
 \alias{sample_params_additive0}
 \title{Sample the parameters for an additive model}
 \usage{
-sample_params_additive0(y, X_lin, X_nonlin, params, A = 10^4,
-  B_all = NULL, BtB_all = NULL, XtX = NULL)
+sample_params_additive0(
+  y,
+  X_lin,
+  X_nonlin,
+  params,
+  A = 10^4,
+  B_all = NULL,
+  BtB_all = NULL,
+  XtX = NULL
+)
 }
 \arguments{
 \item{y}{\code{n x 1} vector of data}

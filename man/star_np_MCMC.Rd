@@ -4,10 +4,21 @@
 \alias{star_np_MCMC}
 \title{MCMC sampler for STAR with nonparametric link function}
 \usage{
-star_np_MCMC(y, sample_params, init_params, lambda_prior = 1/2,
-  y_max = Inf, nsave = 5000, nburn = 50000, nskip = 9,
-  save_y_hat = FALSE, target_acc_rate = 0.3, adapt_rate = 0.75,
-  stop_adapt_perc = 0.5, verbose = TRUE)
+star_np_MCMC(
+  y,
+  sample_params,
+  init_params,
+  lambda_prior = 1/2,
+  y_max = Inf,
+  nsave = 5000,
+  nburn = 50000,
+  nskip = 9,
+  save_y_hat = FALSE,
+  target_acc_rate = 0.3,
+  adapt_rate = 0.75,
+  stop_adapt_perc = 0.5,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{y}{\code{n x 1} vector of observed counts}

@@ -4,8 +4,15 @@
 \alias{star_EM}
 \title{EM Algorithm for STAR}
 \usage{
-star_EM(y, estimator, transformation = "log", lambda = NULL,
-  y_max = Inf, sd_init = 10, tol = 10^-10, max_iters = 1000)
+star_EM(
+  y,
+  estimator,
+  transformation = "np",
+  y_max = Inf,
+  sd_init = 10,
+  tol = 10^-10,
+  max_iters = 1000
+)
 }
 \arguments{
 \item{y}{\code{n x 1} vector of observed counts}
@@ -16,20 +23,21 @@ star_EM(y, estimator, transformation = "log", lambda = NULL,
 \item The parameter estimates \code{coefficients}
 }}
 
-\item{transformation}{transformation to use for the latent process; must be one of
+\item{transformation}{transformation to use for the latent data; must be one of
 \itemize{
 \item "identity" (identity transformation)
 \item "log" (log transformation)
 \item "sqrt" (square root transformation)
-\item "box-cox" (box-cox transformation)
+\item "np" (nonparametric transformation estimated from empirical CDF)
+\item "pois" (transformation for moment-matched marginal Poisson CDF)
+\item "neg-bin" (transformation for moment-matched marginal Negative Binomial CDF)
+\item "box-cox" (box-cox transformation with learned parameter)
 }}
-
-\item{lambda}{the nonlinear parameter for the Box-Cox transformation; otherwise ignored}
 
 \item{y_max}{a fixed and known upper bound for all observations; default is \code{Inf}}
 
-\item{sd_init}{add random noise for initialization scaled by \code{sd_init}
-times the Gaussian MLE standard deviation}
+\item{sd_init}{add random noise for EM algorithm initialization scaled by \code{sd_init}
+times the Gaussian MLE standard deviation; default is 10}
 
 \item{tol}{tolerance for stopping the EM algorithm; default is 10^-10;}
 
@@ -40,29 +48,59 @@ a list with the following elements:
 \itemize{
 \item \code{coefficients} the MLEs of the coefficients
 \item \code{fitted.values} the fitted values at the MLEs
+\item \code{g.hat} a function containing the (known or estimated) transformation
 \item \code{sigma.hat} the MLE of the standard deviation
 \item \code{mu.hat} the MLE of the conditional mean (on the transformed scale)
-\item \code{z.hat} the estimated latent variables (on the transformed scale) at the MLEs
-\item \code{residuals} the Dunn-Smyth residuals
+\item \code{z.hat} the estimated latent data (on the transformed scale) at the MLEs
+\item \code{residuals} the Dunn-Smyth residuals (randomized)
+\item \code{residuals_rep} the Dunn-Smyth residuals (randomized) for 10 replicates
 \item \code{logLik} the log-likelihood at the MLEs
 \item \code{logLik0} the log-likelihood at the MLEs for the *unrounded* initialization
+\item \code{lambda} the Box-Cox nonlinear parameter
 \item and other parameters that
-(i) track the parameters across EM iterations and
-(ii) record the model specifications
+(1) track the parameters across EM iterations and
+(2) record the model specifications
 }
 }
 \description{
 Compute the MLEs and log-likelihood for the STAR model. The STAR model requires
-a transformation (such as log, sqrt, or Box-Cox) and a function to produce an
-estimator of the conditional mean given observed data. All least squares estimators
-(including nonlinear models) are valid within this framework. Standard function calls
-including \code{coefficients()}, \code{fitted()}, and \code{residuals()} apply.
+a *transformation* and an *estimation function* for the conditional mean
+given observed data. The transformation can be known (e.g., log or sqrt) or unknown
+(Box-Cox or estimated nonparametrically) for greater flexibility.
+The estimator can be any least squares estimator, including nonlinear models.
+Standard function calls including
+\code{coefficients()}, \code{fitted()}, and \code{residuals()} apply.
+}
+\details{
+STAR defines a count-valued probability model by
+(1) specifying a Gaussian model for continuous *latent* data and
+(2) connecting the latent data to the observed data via a
+*transformation and rounding* operation.
+
+The expectation-maximization (EM) algorithm is used to produce
+maximum likelihood estimators (MLEs) for the parameters defined in the
+\code{estimator} function, such as linear regression coefficients,
+which define the Gaussian model for the continuous latent data.
+Fitted values (point predictions), residuals, and log-likelihood values
+are also available. Inference for the estimators proceeds via classical maximum likelihood.
+Initialization of the EM algorithm can be randomized to monitor convergence.
+However, the log-likelihood is concave for all transformations (except 'box-cox'),
+so global convergence is guaranteed.
+
+There are several options for the transformation. First, the transformation
+can belong to the *Box-Cox* family, which includes the known transformations
+'identity', 'log', and 'sqrt', as well as a version in which the Box-Cox parameter
+is estimated within the EM algorithm ('box-cox'). Second, the transformation
+can be estimated (before model fitting) using the empirical distribution of the
+data \code{y}. Options in this case include the empirical cumulative
+distribution function (CDF), which is fully nonparametric ('np'), or the parametric
+alternatives based on Poisson ('pois') or Negative-Binomial ('neg-bin')
+distributions. For the parametric distributions, the parameters of the distribution
+are estimated using momemnts (means and variances) of \code{y}. The distribution-based
+transformations approximately preserve the mean and variance of the count data \code{y}
+on the latent data scale, which lends interpretability to the model parameters.
 }
 \note{
-For the Box-Cox transformation, a \code{NULL} value of
-\code{lambda} requires estimation of \code{lambda}. The maximum likelihood
-estimator is computed over a grid of values within the EM algorithm.
-
 Infinite latent data values may occur when the transformed
 Gaussian model is highly inadequate. In that case, the function returns
 the *indices* of the data points with infinite latent values, which are
@@ -76,10 +114,13 @@ that (i) it is appropriate to treat these observations as outliers and
 sim_dat = simulate_nb_lm(n = 100, p = 2)
 y = sim_dat$y; X = sim_dat$X
 
-# EM algorithm for STAR (using the log-link)
+# Select a transformation:
+transformation = 'np'
+
+# EM algorithm:
 fit_em = star_EM(y = y,
                  estimator = function(y) lm(y ~ X - 1),
-                 transformation = 'log')
+                 transformation = transformation)
 
 # Fitted coefficients:
 coef(fit_em)
@@ -98,7 +139,7 @@ fit_em$logLik
 # p-value for the slope (likelihood ratio test):
 fit_em_0 = star_EM(y = y,
                    estimator = function(y) lm(y ~ 1), # no x-variable
-                   transformation = 'log')
+                   transformation = transformation)
 pchisq(-2*(fit_em_0$logLik - fit_em$logLik),
        df = 1, lower.tail = FALSE)
 

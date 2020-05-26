@@ -4,31 +4,40 @@
 \alias{star_EM_wls}
 \title{EM Algorithm for the STAR linear model with weighted least squares}
 \usage{
-star_EM_wls(y, X, transformation = "log", lambda = NULL, y_max = Inf,
-  weights = NULL, sd_init = 10, tol = 10^-10, max_iters = 1000)
+star_EM_wls(
+  y,
+  X,
+  transformation = "np",
+  y_max = Inf,
+  weights = NULL,
+  sd_init = 10,
+  tol = 10^-10,
+  max_iters = 1000
+)
 }
 \arguments{
 \item{y}{\code{n x 1} vector of observed counts}
 
 \item{X}{\code{n x p} matrix of predictors}
 
-\item{transformation}{transformation to use for the latent process; must be one of
+\item{transformation}{transformation to use for the latent data; must be one of
 \itemize{
 \item "identity" (identity transformation)
 \item "log" (log transformation)
 \item "sqrt" (square root transformation)
-\item "box-cox" (box-cox transformation)
+\item "np" (nonparametric transformation estimated from empirical CDF)
+\item "pois" (transformation for moment-matched marginal Poisson CDF)
+\item "neg-bin" (transformation for moment-matched marginal Negative Binomial CDF)
+\item "box-cox" (box-cox transformation with learned parameter)
 }}
-
-\item{lambda}{the nonlinear parameter for the Box-Cox transformation; otherwise ignored}
 
 \item{y_max}{a fixed and known upper bound for all observations; default is \code{Inf}}
 
 \item{weights}{an optional vector of weights to be used in the fitting process, which
 produces weighted least squares estimators.}
 
-\item{sd_init}{add random noise for initialization scaled by \code{sd_init}
-times the Gaussian MLE standard deviation}
+\item{sd_init}{add random noise for EM algorithm initialization scaled by \code{sd_init}
+times the Gaussian MLE standard deviation; default is 10}
 
 \item{tol}{tolerance for stopping the EM algorithm; default is 10^-10;}
 
@@ -39,28 +48,29 @@ a list with the following elements:
 \itemize{
 \item \code{coefficients} the MLEs of the coefficients
 \item \code{fitted.values} the fitted values at the MLEs
+\item \code{g.hat} a function containing the (known or estimated) transformation
 \item \code{sigma.hat} the MLE of the standard deviation
 \item \code{mu.hat} the MLE of the conditional mean (on the transformed scale)
-\item \code{z.hat} the estimated latent variables (on the transformed scale) at the MLEs
-\item \code{residuals} the Dunn-Smyth residuals
+\item \code{z.hat} the estimated latent data (on the transformed scale) at the MLEs
+\item \code{residuals} the Dunn-Smyth residuals (randomized)
+\item \code{residuals_rep} the Dunn-Smyth residuals (randomized) for 10 replicates
 \item \code{logLik} the log-likelihood at the MLEs
 \item \code{logLik0} the log-likelihood at the MLEs for the *unrounded* initialization
+\item \code{lambda} the Box-Cox nonlinear parameter
 \item and other parameters that
-(i) track the parameters across EM iterations and
-(ii) record the model specifications
+(1) track the parameters across EM iterations and
+(2) record the model specifications
 }
 }
 \description{
 Compute the MLEs and log-likelihood for the STAR linear model.
 The regression coefficients are estimated using weighted least squares within
-an EM algorithm. Standard function calls including \code{coefficients()},
-\code{fitted()}, and \code{residuals()} apply.
+an EM algorithm. The transformation can be known (e.g., log or sqrt) or unknown
+(Box-Cox or estimated nonparametrically) for greater flexibility.
+Standard function calls including
+\code{coefficients()}, \code{fitted()}, and \code{residuals()} apply.
 }
 \note{
-For the Box-Cox transformation, a \code{NULL} value of
-\code{lambda} requires estimation of \code{lambda}. The maximum likelihood
-estimator is computed over a grid of values within the EM algorithm.
-
 Infinite latent data values may occur when the transformed
 Gaussian model is highly inadequate. In that case, the function returns
 the *indices* of the data points with infinite latent values, which are

@@ -4,10 +4,20 @@
 \alias{gbm_star}
 \title{EM Algorithm for STAR Gradient Boosting Machines}
 \usage{
-gbm_star(y, X, X.test = NULL, n.trees = 100, interaction.depth = 1,
-  shrinkage = 0.1, bag.fraction = 1, transformation = "log",
-  lambda = NULL, y_max = Inf, sd_init = 10, tol = 10^-6,
-  max_iters = 500)
+gbm_star(
+  y,
+  X,
+  X.test = NULL,
+  n.trees = 100,
+  interaction.depth = 1,
+  shrinkage = 0.1,
+  bag.fraction = 1,
+  transformation = "np",
+  y_max = Inf,
+  sd_init = 10,
+  tol = 10^-6,
+  max_iters = 500
+)
 }
 \arguments{
 \item{y}{\code{n x 1} vector of observed counts}
@@ -33,20 +43,21 @@ Default is 0.1.}
 This introduces randomnesses into the model fit. If bag.fraction < 1 then running the same model twice will result in similar but different fits.
 Default is 1 (for a deterministic prediction).}
 
-\item{transformation}{transformation to use for the latent process; must be one of
+\item{transformation}{transformation to use for the latent data; must be one of
 \itemize{
 \item "identity" (identity transformation)
 \item "log" (log transformation)
 \item "sqrt" (square root transformation)
-\item "box-cox" (box-cox transformation)
+\item "np" (nonparametric transformation estimated from empirical CDF)
+\item "pois" (transformation for moment-matched marginal Poisson CDF)
+\item "neg-bin" (transformation for moment-matched marginal Negative Binomial CDF)
+\item "box-cox" (box-cox transformation with learned parameter)
 }}
-
-\item{lambda}{the nonlinear parameter for the Box-Cox transformation; otherwise ignored}
 
 \item{y_max}{a fixed and known upper bound for all observations; default is \code{Inf}}
 
-\item{sd_init}{add random noise for initialization scaled by \code{sd_init}
-times the Gaussian MLE standard deviation}
+\item{sd_init}{add random noise for EM algorithm initialization scaled by \code{sd_init}
+times the Gaussian MLE standard deviation; default is 10}
 
 \item{tol}{tolerance for stopping the EM algorithm; default is 10^-10;}
 
@@ -57,30 +68,37 @@ a list with the following elements:
 \itemize{
 \item \code{fitted.values}: the fitted values at the MLEs (training)
 \item \code{fitted.values.test}: the fitted values at the MLEs (testing)
-\item \code{sigma.hat}: the MLE of the standard deviation
-\item \code{mu.hat}: the MLE of the conditional mean (on the transformed scale)
-\item \code{z.hat}: the estimated latent variables (on the transformed scale) at the MLEs
-\item \code{residuals}: the Dunn-Smyth residuals
-\item \code{logLik}: the log-likelihood at the MLEs
+\item \code{g.hat} a function containing the (known or estimated) transformation
+\item \code{sigma.hat} the MLE of the standard deviation
+\item \code{mu.hat} the MLE of the conditional mean (on the transformed scale)
+\item \code{z.hat} the estimated latent data (on the transformed scale) at the MLEs
+\item \code{residuals} the Dunn-Smyth residuals (randomized)
+\item \code{residuals_rep} the Dunn-Smyth residuals (randomized) for 10 replicates
+\item \code{logLik} the log-likelihood at the MLEs
 \item \code{logLik0} the log-likelihood at the MLEs for the *unrounded* initialization
-\item \code{cond.pred.test}: 1000 simulated datasets at test points conditional on the MLEs
+\item \code{lambda} the Box-Cox nonlinear parameter
 \item \code{gbmObj}: the object returned by gbm() at the MLEs
 \item and other parameters that
-(i) track the parameters across EM iterations and
-(ii) record the model specifications
+(1) track the parameters across EM iterations and
+(2) record the model specifications
 }
 }
 \description{
 Compute the MLEs and log-likelihood for the Gradient Boosting Machines (GBM) STAR model.
-The STAR model requires a transformation (such as log, sqrt, or Box-Cox)
-and will estimate the conditional mean on the transformed scale using GBMs.
+The STAR model requires a *transformation* and an *estimation function* for the conditional mean
+given observed data. The transformation can be known (e.g., log or sqrt) or unknown
+(Box-Cox or estimated nonparametrically) for greater flexibility.
+The estimator in this case is a GBM.
 Standard function calls including \code{fitted()} and \code{residuals()} apply.
 }
+\details{
+STAR defines a count-valued probability model by
+(1) specifying a Gaussian model for continuous *latent* data and
+(2) connecting the latent data to the observed data via a
+*transformation and rounding* operation. The Gaussian model in
+this case is a GBM.
+}
 \note{
-For the Box-Cox transformation, a \code{NULL} value of
-\code{lambda} requires estimation of \code{lambda}. The maximum likelihood
-estimator is computed over a grid of values within the EM algorithm.
-
 Infinite latent data values may occur when the transformed
 Gaussian model is highly inadequate. In that case, the function returns
 the *indices* of the data points with infinite latent values, which are

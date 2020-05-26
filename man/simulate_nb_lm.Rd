@@ -4,8 +4,14 @@
 \alias{simulate_nb_lm}
 \title{Simulate count data from a linear regression}
 \usage{
-simulate_nb_lm(n = 100, p = 10, r_nb = 1, b_int = log(1.5),
-  b_sig = log(2), sigma_true = sqrt(2 * log(1)))
+simulate_nb_lm(
+  n = 100,
+  p = 10,
+  r_nb = 1,
+  b_int = log(1.5),
+  b_sig = log(2),
+  sigma_true = sqrt(2 * log(1))
+)
 }
 \arguments{
 \item{n}{number of observations}
@@ -47,4 +53,5 @@ overdispersion.
 # Simulate and plot the count data:
 sim_dat = simulate_nb_lm(n = 100, p = 10);
 plot(sim_dat$y)
+
 }
