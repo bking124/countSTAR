@@ -190,50 +190,6 @@ g_inv_approx = function(g, t_grid) {
   }
 }
 #----------------------------------------------------------------------------
-#' Approximate derivative of transformation
-#'
-#' Compute the (approximate) derivative of a transformation \code{g} based
-#' on a smoothed grid evaluation.
-#'
-#' @param g the transformation function
-#' @param t_grid grid of arguments at which to evaluate the transformation function
-#' @return A function which can be used for evaluations of the
-#' (approximate) derivative of the transformation function.
-#'
-#'
-#' @examples
-#' # Sample some data:
-#' y = rpois(n = 500, lambda = 5)
-#'
-#' # Empirical CDF transformation:
-#' g_np = g_cdf(y, distribution = 'np')
-#'
-#' # Grid for approximation:
-#' t_grid = seq(1, max(y), length.out = 100)
-#'
-#' # Compute the approximate derivative:
-#' g_deriv = g_deriv_approx(g = g_np, t_grid = t_grid)
-
-#' # Plot the transformation and then the derivative:
-#' plot(t_grid, g_np(t_grid))
-#' plot(t_grid, g_deriv(t_grid))
-#'
-#' @export
-g_deriv_approx = function(g, t_grid) {
-
-  # Evaluate g() on the grid:
-  g_grid = g(t_grid)
-
-  # Empirical derivative: include initial value as well
-  emp_deriv = c(
-    (g_grid[2] - g_grid[1])/(t_grid[2] - t_grid[1]),
-    diff(g_grid)/diff(t_grid)
-  )
-
-  # Fit a spline to the empirical derivative:
-  splinefun(x = t_grid, y = emp_deriv)
-}
-#----------------------------------------------------------------------------
 #' Rounding function
 #'
 #' Define the rounding operator associated with the floor function. The function

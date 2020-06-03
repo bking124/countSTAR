@@ -181,8 +181,7 @@ star_EM = function(y,
     g_inv = g_inv_approx(g = g, t_grid = t_grid)
 
     # Sum of log-derivatives (for initial log-likelihood):
-    g_deriv = g_deriv_approx(g = g, t_grid = t_grid)
-    sum_log_deriv = sum(log(pmax(g_deriv(y+1), 0.01)))
+    sum_log_deriv = sum(log(pmax(g(y+1, deriv = 1), 0.01)))
 
     # No Box-Cox transformation:
     lambda = NULL
@@ -222,7 +221,7 @@ star_EM = function(y,
   p = length(theta_hat)
 
   # Lower and upper intervals:
-  a_y = a_j(y); a_yp1 = a_j(y + 1)
+  a_y = a_j(y, y_max = y_max); a_yp1 = a_j(y + 1, y_max = y_max)
   z_lower = g(a_y); z_upper = g(a_yp1)
 
   # Store the EM trajectories:
@@ -301,13 +300,17 @@ star_EM = function(y,
 
   # Also the expected value (fitted values)
   # First, estimate an upper bound for the (infinite) summation:
-  Jmax = round_fun(g_inv(qnorm(0.9999, mean = mu_hat, sd = sigma_hat)))
-  Jmax[Jmax > 2*max(y)] = 2*max(y) # cap at 2*max(y) to avoid excessive computations
+  if(y_max < Inf){
+    Jmax = rep(y_max + 1, n)
+  } else {
+    Jmax = round_fun(g_inv(qnorm(0.9999, mean = mu_hat, sd = sigma_hat)), y_max = y_max)
+    Jmax[Jmax > 2*max(y)] = 2*max(y) # cap at 2*max(y) to avoid excessive computations
+  }
   Jmaxmax = max(Jmax) # overall max
 
   # Point prediction:
-  y_hat = expectation_gRcpp(g_a_j = g(a_j(0:Jmaxmax)),
-                            g_a_jp1 = g(a_j(1:(Jmaxmax + 1))),
+  y_hat = expectation_gRcpp(g_a_j = g(a_j(0:Jmaxmax, y_max = y_max)),
+                            g_a_jp1 = g(a_j(1:(Jmaxmax + 1), y_max = y_max)),
                             mu = mu_hat, sigma = rep(sigma_hat, n),
                             Jmax = Jmax)
 
@@ -455,10 +458,9 @@ star_EM_wls = function(y, X,
 
   if(transform_family == 'cdf'){
 
-    stop('fixme: estimate the CDFs using weights!')
-
     # Transformation function:
     g = g_cdf(y = y, distribution = transformation)
+    #F_y = function(t){sapply(t, function(t1) n/(n+1)*sum(weights[y <= t1])/sum(weights))}
 
     # Define the grid for approximations using equally-spaced + quantile points:
     t_grid = sort(unique(round(c(
@@ -469,8 +471,7 @@ star_EM_wls = function(y, X,
     g_inv = g_inv_approx(g = g, t_grid = t_grid)
 
     # Sum of log-derivatives (for initial log-likelihood):
-    g_deriv = g_deriv_approx(g = g, t_grid = t_grid)
-    sum_log_deriv = sum(log(pmax(g_deriv(y+1), 0.01)))
+    sum_log_deriv = sum(log(pmax(g(y+1, deriv = 1), 0.01)))
 
     # No Box-Cox transformation:
     lambda = NULL
@@ -491,7 +492,7 @@ star_EM_wls = function(y, X,
   theta_hat = fit$coefficients
 
   # (Initial) observation SD:
-  sigma_hat = sd(z_hat - mu_hat)
+  sigma_hat = sd(sqrt(weights)*(z_hat - mu_hat))
 
   # (Initial) log-likelihood:
   logLik0 = logLik_em0 =
@@ -499,18 +500,18 @@ star_EM_wls = function(y, X,
 
   # Randomize for EM initialization:
   if(sd_init > 0){
-    z_hat = g(y + 1) + sd_init*sigma_hat*rnorm(n = n)
+    z_hat = g(y + 1) + sd_init*sigma_hat/sqrt(weights)*rnorm(n = n)
     fit = estimator(z_hat);
     mu_hat = fit$fitted.values;
     theta_hat = fit$coefficients;
-    sigma_hat = sd(z_hat - mu_hat)
+    sigma_hat = sd(sqrt(weights)*(z_hat - mu_hat))
   }
 
   # Number of parameters (excluding sigma)
   p = length(theta_hat)
 
   # Lower and upper intervals:
-  a_y = a_j(y); a_yp1 = a_j(y + 1)
+  a_y = a_j(y, y_max = y_max); a_yp1 = a_j(y + 1, y_max = y_max)
   z_lower = g(a_y); z_upper = g(a_yp1)
 
   # Store the EM trajectories:
@@ -589,13 +590,17 @@ star_EM_wls = function(y, X,
 
   # Also the expected value (fitted values)
   # First, estimate an upper bound for the (infinite) summation:
-  Jmax = round_fun(g_inv(qnorm(0.9999, mean = mu_hat, sd = sigma_hat/sqrt(weights))))
-  Jmax[Jmax > 2*max(y)] = 2*max(y) # cap at 2*max(y) to avoid excessive computations
+  if(y_max < Inf){
+    Jmax = rep(y_max + 1, n)
+  } else {
+    Jmax = round_fun(g_inv(qnorm(0.9999, mean = mu_hat, sd = sigma_hat/sqrt(weights))), y_max = y_max)
+    Jmax[Jmax > 2*max(y)] = 2*max(y) # cap at 2*max(y) to avoid excessive computations
+  }
   Jmaxmax = max(Jmax) # overall max
 
   # Point prediction:
-  y_hat = expectation_gRcpp(g_a_j = g(a_j(0:Jmaxmax)),
-                            g_a_jp1 = g(a_j(1:(Jmaxmax + 1))),
+  y_hat = expectation_gRcpp(g_a_j = g(a_j(0:Jmaxmax, y_max = y_max)),
+                            g_a_jp1 = g(a_j(1:(Jmaxmax + 1), y_max = y_max)),
                             mu = mu_hat, sigma = sigma_hat/sqrt(weights),
                             Jmax = Jmax)
 
@@ -791,8 +796,7 @@ randomForest_star = function(y, X, X.test = NULL,
     g_inv = g_inv_approx(g = g, t_grid = t_grid)
 
     # Sum of log-derivatives (for initial log-likelihood):
-    g_deriv = g_deriv_approx(g = g, t_grid = t_grid)
-    sum_log_deriv = sum(log(pmax(g_deriv(y+1), 0.01)))
+    sum_log_deriv = sum(log(pmax(g(y+1, deriv = 1), 0.01)))
 
     # No Box-Cox transformation:
     lambda = NULL
@@ -822,7 +826,7 @@ randomForest_star = function(y, X, X.test = NULL,
   }
 
   # Lower and upper intervals:
-  a_y = a_j(y); a_yp1 = a_j(y + 1)
+  a_y = a_j(y, y_max = y_max); a_yp1 = a_j(y + 1, y_max = y_max)
   z_lower = g(a_y); z_upper = g(a_yp1)
 
   # Store the EM trajectories:
@@ -900,13 +904,17 @@ randomForest_star = function(y, X, X.test = NULL,
 
   # Also the expected value (fitted values)
   # First, estimate an upper bound for the (infinite) summation:
-  Jmax = round_fun(g_inv(qnorm(0.9999, mean = mu_hat, sd = sigma_hat)))
-  Jmax[Jmax > 2*max(y)] = 2*max(y) # cap at 2*max(y) to avoid excessive computations
+  if(y_max < Inf){
+    Jmax = rep(y_max + 1, n)
+  } else {
+    Jmax = round_fun(g_inv(qnorm(0.9999, mean = mu_hat, sd = sigma_hat)), y_max = y_max)
+    Jmax[Jmax > 2*max(y)] = 2*max(y) # cap at 2*max(y) to avoid excessive computations
+  }
   Jmaxmax = max(Jmax) # overall max
 
   # Point prediction:
-  y_hat = expectation_gRcpp(g_a_j = g(a_j(0:Jmaxmax)),
-                            g_a_jp1 = g(a_j(1:(Jmaxmax + 1))),
+  y_hat = expectation_gRcpp(g_a_j = g(a_j(0:Jmaxmax, y_max = y_max)),
+                            g_a_jp1 = g(a_j(1:(Jmaxmax + 1), y_max = y_max)),
                             mu = mu_hat, sigma = rep(sigma_hat, n),
                             Jmax = Jmax)
 
@@ -928,13 +936,17 @@ randomForest_star = function(y, X, X.test = NULL,
     mu.test = predict(fit, X.test)
 
     # Conditional expectation at test points:
-    Jmax = round_fun(g_inv(qnorm(0.9999, mean = mu.test, sd = sigma_hat)))
-    Jmax[Jmax > 2*max(y)] = 2*max(y) # cap at 2*max(y) to avoid excessive computations
+    if(y_max < Inf){
+      Jmax = rep(y_max + 1, n)
+    } else {
+      Jmax = round_fun(g_inv(qnorm(0.9999, mean = mu.test, sd = sigma_hat)), y_max = y_max)
+      Jmax[Jmax > 2*max(y)] = 2*max(y) # cap at 2*max(y) to avoid excessive computations
+    }
     Jmaxmax = max(Jmax) # overall max
 
     # Point prediction at test points:
-    fitted.values.test = expectation_gRcpp(g_a_j = g(a_j(0:Jmaxmax)),
-                                           g_a_jp1 = g(a_j(1:(Jmaxmax + 1))),
+    fitted.values.test = expectation_gRcpp(g_a_j = g(a_j(0:Jmaxmax, y_max = y_max)),
+                                           g_a_jp1 = g(a_j(1:(Jmaxmax + 1), y_max = y_max)),
                                            mu = mu.test, sigma = rep(sigma_hat, n),
                                            Jmax = Jmax)
 
@@ -1122,8 +1134,7 @@ gbm_star = function(y, X, X.test = NULL,
     g_inv = g_inv_approx(g = g, t_grid = t_grid)
 
     # Sum of log-derivatives (for initial log-likelihood):
-    g_deriv = g_deriv_approx(g = g, t_grid = t_grid)
-    sum_log_deriv = sum(log(pmax(g_deriv(y+1), 0.01)))
+    sum_log_deriv = sum(log(pmax(g(y+1, deriv = 1), 0.01)))
 
     # No Box-Cox transformation:
     lambda = NULL
@@ -1163,7 +1174,7 @@ gbm_star = function(y, X, X.test = NULL,
   }
 
   # Lower and upper intervals:
-  a_y = a_j(y); a_yp1 = a_j(y + 1)
+  a_y = a_j(y, y_max = y_max); a_yp1 = a_j(y + 1, y_max = y_max)
   z_lower = g(a_y); z_upper = g(a_yp1)
 
   # Store the EM trajectories:
@@ -1246,13 +1257,17 @@ gbm_star = function(y, X, X.test = NULL,
 
   # Also the expected value (fitted values)
   # First, estimate an upper bound for the (infinite) summation:
-  Jmax = round_fun(g_inv(qnorm(0.9999, mean = mu_hat, sd = sigma_hat)))
-  Jmax[Jmax > 2*max(y)] = 2*max(y) # cap at 2*max(y) to avoid excessive computations
+  if(y_max < Inf){
+    Jmax = rep(y_max + 1, n)
+  } else {
+    Jmax = round_fun(g_inv(qnorm(0.9999, mean = mu_hat, sd = sigma_hat)), y_max = y_max)
+    Jmax[Jmax > 2*max(y)] = 2*max(y) # cap at 2*max(y) to avoid excessive computations
+  }
   Jmaxmax = max(Jmax) # overall max
 
   # Point prediction:
-  y_hat = expectation_gRcpp(g_a_j = g(a_j(0:Jmaxmax)),
-                            g_a_jp1 = g(a_j(1:(Jmaxmax + 1))),
+  y_hat = expectation_gRcpp(g_a_j = g(a_j(0:Jmaxmax, y_max = y_max)),
+                            g_a_jp1 = g(a_j(1:(Jmaxmax + 1), y_max = y_max)),
                             mu = mu_hat, sigma = rep(sigma_hat, n),
                             Jmax = Jmax)
 
@@ -1274,13 +1289,17 @@ gbm_star = function(y, X, X.test = NULL,
     mu.test = predict(fit, data.frame(X = X.test), n.trees = n.trees)
 
     # Conditional expectation at test points:
-    Jmax = round_fun(g_inv(qnorm(0.9999, mean = mu.test, sd = sigma_hat)))
-    Jmax[Jmax > 2*max(y)] = 2*max(y) # cap at 2*max(y) to avoid excessive computations
+    if(y_max < Inf){
+      Jmax = rep(y_max + 1, n)
+    } else {
+      Jmax = round_fun(g_inv(qnorm(0.9999, mean = mu.test, sd = sigma_hat)), y_max = y_max)
+      Jmax[Jmax > 2*max(y)] = 2*max(y) # cap at 2*max(y) to avoid excessive computations
+    }
     Jmaxmax = max(Jmax) # overall max
 
     # Point prediction at test points:
-    fitted.values.test = expectation_gRcpp(g_a_j = g(a_j(0:Jmaxmax)),
-                                           g_a_jp1 = g(a_j(1:(Jmaxmax + 1))),
+    fitted.values.test = expectation_gRcpp(g_a_j = g(a_j(0:Jmaxmax, y_max = y_max)),
+                                           g_a_jp1 = g(a_j(1:(Jmaxmax + 1), y_max = y_max)),
                                            mu = mu.test, sigma = rep(sigma_hat, n),
                                            Jmax = Jmax)
 
@@ -1389,8 +1408,8 @@ star_CI = function(y, X, j,
   z2_hat = z_hat^2 # Second moment
 
   # Lower and upper intervals:
-  z_lower = g(a_j(y))
-  z_upper = g(a_j(y + 1))
+  z_lower = g(a_j(y, y_max = y_max))
+  z_upper = g(a_j(y + 1, y_max = y_max))
 
   # For s=1 comparison:
   mu_hat0 = rep(0,n);  # This will be updated to a warm-start within the loop
@@ -1585,7 +1604,7 @@ star_pred_dist = function(y, X, X.test = NULL,
   y_pred = matrix(NA, nrow = N, ncol = m)
 
   # Recurring terms:
-  a_y = a_j(y); a_yp1 = a_j(y + 1)
+  a_y = a_j(y, y_max = y_max); a_yp1 = a_j(y + 1, y_max = y_max)
   XtXinv = chol2inv(chol(crossprod(X)))
   cholS0 = chol(diag(m) + tcrossprod(X.test%*%XtXinv, X.test))
 
@@ -1607,7 +1626,7 @@ star_pred_dist = function(y, X, X.test = NULL,
       s_hat*crossprod(cholS0, rnorm(m))/sqrt(rchisq(n = 1, df = n - p - 1)/(n - p - 1))
 
     # save the (inverse) transformed and rounded sims:
-    y_pred[nsi,] = round_fun(g_inv(z_tilde))
+    y_pred[nsi,] = round_fun(g_inv(z_tilde), y_max = y_max)
   }
   y_pred
 }
