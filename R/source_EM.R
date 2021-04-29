@@ -71,7 +71,7 @@
 #' distribution function (CDF), which is fully nonparametric ('np'), or the parametric
 #' alternatives based on Poisson ('pois') or Negative-Binomial ('neg-bin')
 #' distributions. For the parametric distributions, the parameters of the distribution
-#' are estimated using momemnts (means and variances) of \code{y}. The distribution-based
+#' are estimated using moments (means and variances) of \code{y}. The distribution-based
 #' transformations approximately preserve the mean and variance of the count data \code{y}
 #' on the latent data scale, which lends interpretability to the model parameters.
 #'
@@ -339,7 +339,7 @@ star_EM = function(y,
        logLik0 = logLik0,
        lambda = lambda,
        mu_all = mu_all, theta_all = theta_all, sigma_all = sigma_all, logLik_all = logLik_all, zhat_all = zhat_all, # EM trajectory
-       transformation = transformation, y_max = y_max, tol = tol, max_iters = max_iters) # And return the info about the model as well
+       y = y, estimator = estimator, transformation = transformation, y_max = y_max, tol = tol, max_iters = max_iters) # And return the info about the model as well
 }
 #' EM Algorithm for the STAR linear model with weighted least squares
 #'
@@ -394,8 +394,6 @@ star_EM = function(y,
 #' re-running the model is one option, but care must be taken to ensure
 #' that (i) it is appropriate to treat these observations as outliers and
 #' (ii) the model is adequate for the remaining data points.
-#'
-#' @export
 star_EM_wls = function(y, X,
                    transformation = 'np',
                    y_max = Inf,
@@ -403,6 +401,9 @@ star_EM_wls = function(y, X,
                    sd_init = 10,
                    tol = 10^-10,
                    max_iters = 1000){
+
+  stop('Not yet implemented:
+       need to fix the (weighted) F_hat estimators!')
 
   # Check: currently implemented for nonnegative integers
   if(any(y < 0) || any(y != floor(y)))
@@ -629,7 +630,7 @@ star_EM_wls = function(y, X,
        logLik0 = logLik0,
        lambda = lambda,
        mu_all = mu_all, theta_all = theta_all, sigma_all = sigma_all, logLik_all = logLik_all, zhat_all = zhat_all, # EM trajectory
-       transformation = transformation, y_max = y_max, tol = tol, max_iters = max_iters) # And return the info about the model as well
+       estimator = estimator, transformation = transformation, y_max = y_max, tol = tol, max_iters = max_iters) # And return the info about the model as well
 }
 #' EM Algorithm for Random Forest STAR
 #'
@@ -1507,15 +1508,11 @@ star_CI = function(y, X, j,
 }
 #' Compute a predictive distribution for the integer-valued response
 #'
-#' A Monte Carlo approach for computing the predictive distribution for the STAR
+#' A Monte Carlo approach for estimating the (plug-in) predictive distribution for the STAR
 #' linear model. The algorithm iteratively samples (i) the latent data given the observed
 #' data, (ii) the latent predictive data given the latent data from (i), and
 #' (iii) (inverse) transforms and rounds the latent predictive data to obtain a
 #' draw from the integer-valued predictive distribution.
-#'
-#' @details
-#' Since the model for \code{z_star} is Gaussian, the prediction distribution is readily available
-#' for linear regression models.
 #'
 #' @param y \code{n x 1} vector of observed counts
 #' @param X \code{n x p} matrix of predictors
