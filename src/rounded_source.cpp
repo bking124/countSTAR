@@ -274,7 +274,7 @@ arma::mat pmaxRcpp(arma::vec v1, arma::vec v2){
     }
   }
 
-  return vm;
+  return std::move(vm);
 }
 //' pmin() in Rcpp
 //'
@@ -307,7 +307,7 @@ arma::mat pminRcpp(arma::vec v1, arma::vec v2){
     }
   }
 
-  return vm;
+  return std::move(vm);
 }
 
 

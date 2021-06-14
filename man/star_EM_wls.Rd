@@ -67,6 +67,8 @@ Compute the MLEs and log-likelihood for the STAR linear model.
 The regression coefficients are estimated using weighted least squares within
 an EM algorithm. The transformation can be known (e.g., log or sqrt) or unknown
 (Box-Cox or estimated nonparametrically) for greater flexibility.
+In the latter case, the empirical CDF is used to determine the transformation,
+and this CDF incorporates the given weights.
 Standard function calls including
 \code{coefficients()}, \code{fitted()}, and \code{residuals()} apply.
 }

@@ -6,6 +6,11 @@
 
 using namespace Rcpp;
 
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
 // expectation_gRcpp
 arma::vec expectation_gRcpp(arma::vec g_a_j, arma::vec g_a_jp1, arma::vec mu, arma::vec sigma, arma::vec Jmax);
 RcppExport SEXP _rSTAR_expectation_gRcpp(SEXP g_a_jSEXP, SEXP g_a_jp1SEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP JmaxSEXP) {

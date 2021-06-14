@@ -284,9 +284,9 @@ star_EM = function(y,
 
     # Update log-likelihood:
     logLik_em = logLikeRcpp(g_a_j = z_lower,
-                            g_a_jp1 = z_upper,
-                            mu = mu_hat,
-                            sigma = rep(sigma_hat, n))
+                           g_a_jp1 = z_upper,
+                           mu = mu_hat,
+                           sigma = rep(sigma_hat, n))
 
     # Storage:
     mu_all[s,] = mu_hat; theta_all[s,] = theta_hat; sigma_all[s] = sigma_hat; logLik_all[s] = logLik_em; zhat_all[s,] = z_hat
@@ -347,6 +347,8 @@ star_EM = function(y,
 #' The regression coefficients are estimated using weighted least squares within
 #' an EM algorithm. The transformation can be known (e.g., log or sqrt) or unknown
 #' (Box-Cox or estimated nonparametrically) for greater flexibility.
+#' In the latter case, the empirical CDF is used to determine the transformation,
+#' and this CDF incorporates the given weights.
 #' Standard function calls including
 #' \code{coefficients()}, \code{fitted()}, and \code{residuals()} apply.
 #'
@@ -394,6 +396,8 @@ star_EM = function(y,
 #' re-running the model is one option, but care must be taken to ensure
 #' that (i) it is appropriate to treat these observations as outliers and
 #' (ii) the model is adequate for the remaining data points.
+#'
+#' @export
 star_EM_wls = function(y, X,
                    transformation = 'np',
                    y_max = Inf,
@@ -401,9 +405,6 @@ star_EM_wls = function(y, X,
                    sd_init = 10,
                    tol = 10^-10,
                    max_iters = 1000){
-
-  stop('Not yet implemented:
-       need to fix the (weighted) F_hat estimators!')
 
   # Check: currently implemented for nonnegative integers
   if(any(y < 0) || any(y != floor(y)))
@@ -460,8 +461,9 @@ star_EM_wls = function(y, X,
   if(transform_family == 'cdf'){
 
     # Transformation function:
-    g = g_cdf(y = y, distribution = transformation)
-    #F_y = function(t){sapply(t, function(t1) n/(n+1)*sum(weights[y <= t1])/sum(weights))}
+    g = g_wcdf(y = y,
+               distribution = transformation,
+               weights = weights)
 
     # Define the grid for approximations using equally-spaced + quantile points:
     t_grid = sort(unique(round(c(

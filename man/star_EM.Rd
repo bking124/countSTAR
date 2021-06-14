@@ -96,7 +96,7 @@ data \code{y}. Options in this case include the empirical cumulative
 distribution function (CDF), which is fully nonparametric ('np'), or the parametric
 alternatives based on Poisson ('pois') or Negative-Binomial ('neg-bin')
 distributions. For the parametric distributions, the parameters of the distribution
-are estimated using momemnts (means and variances) of \code{y}. The distribution-based
+are estimated using moments (means and variances) of \code{y}. The distribution-based
 transformations approximately preserve the mean and variance of the count data \code{y}
 on the latent data scale, which lends interpretability to the model parameters.
 }

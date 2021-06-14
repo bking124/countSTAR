@@ -50,15 +50,11 @@ times the Gaussian MLE standard deviation}
 at the \code{m} test points
 }
 \description{
-A Monte Carlo approach for computing the predictive distribution for the STAR
+A Monte Carlo approach for estimating the (plug-in) predictive distribution for the STAR
 linear model. The algorithm iteratively samples (i) the latent data given the observed
 data, (ii) the latent predictive data given the latent data from (i), and
 (iii) (inverse) transforms and rounds the latent predictive data to obtain a
 draw from the integer-valued predictive distribution.
-}
-\details{
-Since the model for \code{z_star} is Gaussian, the prediction distribution is readily available
-for linear regression models.
 }
 \examples{
 # Simulate data with count-valued response y:

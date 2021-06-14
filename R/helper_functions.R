@@ -150,6 +150,102 @@ g_cdf = function(y, distribution = "np") {
   splinefun(t0, g0, method = 'monoH.FC')
 }
 #----------------------------------------------------------------------------
+#' Weighted cumulative distribution function (CDF)-based transformation
+#'
+#' Compute a CDF-based transformation using the observed count data.
+#' The CDF can be estimated nonparametrically or parametrically based on the
+#' Poisson or Negative-Binimial distributions. In the parametric case,
+#' the parameters are determined based on the moments of \code{y}.
+#' This function incorporates positive weights to determine the CDFs.
+#'
+#' @param y \code{n x 1} vector of observed counts
+#' @param distribution the distribution used for the CDF; must be one of
+#' \itemize{
+#' \item "np" (empirical CDF)
+#' \item "pois" (moment-matched marginal Poisson CDF)
+#' \item "neg-bin" (moment-matched marginal Negative Binomial CDF)
+#' }
+#' @param weights an optional vector of weights
+#' @return A smooth monotone function which can be used for evaluations of the transformation.
+#'
+#' @examples
+#' # Sample some data:
+#' y = rpois(n = 500, lambda = 5)
+#' # And some weights:
+#' w = runif(n = 500, min = 0, max = 10)
+#'
+#' # Empirical CDF version:
+#' g_np = g_wcdf(y, distribution = 'np', weights = w)
+#'
+#' # Poisson version:
+#' g_pois = g_wcdf(y, distribution = 'pois', weights = w)
+#'
+#' # Negative binomial version:
+#' g_negbin = g_wcdf(y, distribution = 'neg-bin', weights = w)
+#'
+#' # Plot together:
+#' t = 1:max(y) # grid
+#' plot(t, g_np(t), type='l')
+#' lines(t, g_pois(t), lty = 2)
+#' lines(t, g_negbin(t), lty = 3)
+#'
+#' @export
+g_wcdf = function(y, distribution = "np", weights = NULL) {
+
+  # Check: does the distribution make sense?
+  distribution = tolower(distribution);
+  if(!is.element(distribution, c("np", "pois", "neg-bin", "box-cox")))
+    stop("The distribution must be one of 'np', 'pois', or 'neg-bin'")
+
+  # Number of observations:
+  n = length(y)
+
+  if(is.null(weights)) weights = rep(1, n)
+  if(length(weights) != n || any(weights <= 0))
+    stop("Weights must be positive and the same length as the data vector y")
+
+  # Weighted moments of the raw counts:
+  mu_y = weighted.mean(y, weights);
+  sigma_y = sqrt(weighted.mean((y - mu_y)^2, weights))
+
+  # CDFs:
+  if(distribution == 'np') {
+    # (Scaled) weighted empirical CDF:
+    F_y = function(t) sapply(t, function(ttemp)
+      n/(n+1)*sum(weights[y <= ttemp]))/sum(weights)
+  }
+  if(distribution == 'pois'){
+    # Poisson CDF with moment-matched parameters:
+    F_y = function(t) ppois(t,
+                            lambda = mu_y)
+  }
+  if(distribution == 'neg-bin') {
+    # Negative-binomial CDF with moment-matched parameters:
+    if(mu_y >= sigma_y^2){
+      # Check: underdispersion is incompatible with Negative-Binomial
+      warning("'neg-bin' not recommended for underdispersed data")
+
+      # Force sigma_y^2 > mu_y:
+      sigma_y = 1.1*sqrt(abs(mu_y))
+    }
+    F_y = function(t) pnbinom(t,
+                              size = mu_y^2/(sigma_y^2 - mu_y),
+                              prob = mu_y/sigma_y^2)
+  }
+
+  # Input points for smoothing:
+  t0 = sort(unique(y[y!=0]))
+
+  # Initial transformation:
+  g0 = mu_y + sigma_y*qnorm(F_y(t0-1))
+
+  # Make sure we have only finite values of g0 (infinite values occur for F_y = 0 or F_y = 1)
+  t0 = t0[which(is.finite(g0))]; g0 = g0[which(is.finite(g0))]
+
+  # Return the smoothed (monotone) transformation:
+  splinefun(t0, g0, method = 'monoH.FC')
+}
+#----------------------------------------------------------------------------
 #' Approximate inverse transformation
 #'
 #' Compute the inverse function of a transformation \code{g} based on a grid search.
@@ -1060,6 +1156,6 @@ uni.slice <- function (x0, g, w=1, m=Inf, lower=-Inf, upper=+Inf, gx0=NULL)
 }
 
 # Just add these for general use:
-#' @importFrom stats optim predict constrOptim cor fitted approxfun median arima coef quantile rexp rgamma rnorm runif sd dnorm lm var qchisq rchisq pnorm splinefun qnorm rnbinom ecdf ppois pnbinom
+#' @importFrom stats optim predict constrOptim cor fitted approxfun median arima coef quantile rexp rgamma rnorm runif sd dnorm lm var qchisq rchisq pnorm splinefun qnorm rnbinom ecdf ppois pnbinom weighted.mean
 #' @importFrom graphics lines par plot polygon abline hist arrows legend axis
 NULL
