@@ -1156,6 +1156,6 @@ uni.slice <- function (x0, g, w=1, m=Inf, lower=-Inf, upper=+Inf, gx0=NULL)
 }
 
 # Just add these for general use:
-#' @importFrom stats optim predict constrOptim cor fitted approxfun median arima coef quantile rexp rgamma rnorm runif sd dnorm lm var qchisq rchisq pnorm splinefun qnorm rnbinom ecdf ppois pnbinom weighted.mean
+#' @importFrom stats optim predict constrOptim cor fitted approxfun median arima coef quantile rexp rgamma rnorm runif sd dnorm lm var qchisq rchisq pnorm splinefun smooth.spline qnorm rnbinom ecdf ppois pnbinom weighted.mean
 #' @importFrom graphics lines par plot polygon abline hist arrows legend axis
 NULL
