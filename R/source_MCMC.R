@@ -1919,8 +1919,15 @@ bart_star_np_MCMC = function(y,
 #' \item "mmle" use the marginal MLE (Note: slower!)
 #' }
 #' @param nsave number of Monte Carlo simulations
-#' @return \code{post_ytilde}: \code{nsave x n} samples
+#' @param compute_marg logical; if TRUE, compute and return the
+#' marginal likelihood
+#' @return a list with the following elements:
+#' \itemize{
+#' \item \code{post_ytilde}: \code{nsave x n} samples
 #' from the posterior predictive distribution at the observation points \code{tau}
+#' \item \code{marg_like}: the marginal likelihood (if requested; otherwise NULL)
+#' }
+#' @return
 #' @details STAR defines a count-valued probability model by
 #' (1) specifying a Gaussian model for continuous *latent* data and
 #' (2) connecting the latent data to the observed data via a
@@ -1950,7 +1957,8 @@ bart_star_np_MCMC = function(y,
 #' y = round_fun(exp(1 + rnorm(n)/4 + poly(tau, 4)%*%rnorm(n=4, sd = 4:1)))
 #'
 #' # Sample from the predictive distribution of a STAR spline model:
-#' post_ytilde = STAR_spline(y = y, tau = tau)
+#' fit_star = STAR_spline(y = y, tau = tau)
+#' post_ytilde = fit_star$post_ytilde
 #'
 #' # Compute 90% prediction intervals:
 #' pi_y = t(apply(post_ytilde, 2, quantile, c(0.05, .95)))
@@ -1973,7 +1981,8 @@ STAR_spline = function(y,
                        y_max = Inf,
                        psi = 1000,
                        method_sigma = 'mle',
-                       nsave = 1000){
+                       nsave = 1000,
+                       compute_marg = FALSE){
   #----------------------------------------------------------------------------
   # Check: currently implemented for nonnegative integers
   if(any(y < 0) || any(y != floor(y)))
@@ -2076,6 +2085,8 @@ STAR_spline = function(y,
   #----------------------------------------------------------------------------
   # Posterior predictive simulations:
 
+  print('Posterior predictive sampling...')
+
   # Covariance matrix of z:
   Sigma_z = sigma_epsilon^2*(diag(n) + psi*BBt)
 
@@ -2104,7 +2115,21 @@ STAR_spline = function(y,
   }))
   #post_ytilde = matrix(round_fun(g_inv(post_ztilde), y_max), nrow = S)
 
-  return(post_ytilde)
+  # Marginal likelihood, if requested:
+  if(compute_marg){
+    print('Computing the marginal likelihood...')
+    marg_like = TruncatedNormal::pmvnorm(
+      mu = rep(0, n),
+      sigma = sigma_epsilon^2*(diag(n) + psi*BBt),
+      lb = g_a_y,
+      ub = g_a_yp1
+    )
+  } else marg_like = NULL
+
+  print('Done!')
+
+  return(list(post_ytilde = post_ytilde,
+    marg_like = marg_like))
 }
 
 #' MCMC Algorithm for conditional Gaussian likelihood

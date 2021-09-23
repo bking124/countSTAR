@@ -11,7 +11,8 @@ STAR_spline(
   y_max = Inf,
   psi = 1000,
   method_sigma = "mle",
-  nsave = 1000
+  nsave = 1000,
+  compute_marg = FALSE
 )
 }
 \arguments{
@@ -41,10 +42,19 @@ STAR_spline(
 }}
 
 \item{nsave}{number of Monte Carlo simulations}
+
+\item{compute_marg}{logical; if TRUE, compute and return the
+marginal likelihood}
 }
 \value{
-\code{post_ytilde}: \code{nsave x n} samples
+a list with the following elements:
+\itemize{
+\item \code{post_ytilde}: \code{nsave x n} samples
 from the posterior predictive distribution at the observation points \code{tau}
+\item \code{marg_like}: the marginal likelihood (if requested; otherwise NULL)
+}
+
+
 }
 \description{
 Compute direct Monte Carlo samples from the posterior predictive
@@ -80,7 +90,8 @@ tau = seq(0,1, length.out = n)
 y = round_fun(exp(1 + rnorm(n)/4 + poly(tau, 4)\%*\%rnorm(n=4, sd = 4:1)))
 
 # Sample from the predictive distribution of a STAR spline model:
-post_ytilde = STAR_spline(y = y, tau = tau)
+fit_star = STAR_spline(y = y, tau = tau)
+post_ytilde = fit_star$post_ytilde
 
 # Compute 90\% prediction intervals:
 pi_y = t(apply(post_ytilde, 2, quantile, c(0.05, .95)))
