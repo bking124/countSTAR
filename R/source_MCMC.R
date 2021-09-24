@@ -2132,6 +2132,255 @@ STAR_spline = function(y,
     marg_like = marg_like))
 }
 
+#' Monte Carlo sampler for STAR linear regression with a g-prior
+#'
+#' Compute direct Monte Carlo samples from the posterior and predictive
+#' distributions of a STAR linear regression model with a g-prior.
+#'
+#' @param y \code{n x 1} vector of observed counts
+#' @param X \code{n x p} matrix of predictors
+#' @param X_test \code{n0 x p} matrix of predictors for test data;
+#' if NULL, use the observed covariates \code{X}
+#' @param transformation transformation to use for the latent data; must be one of
+#' \itemize{
+#' \item "identity" (identity transformation)
+#' \item "log" (log transformation)
+#' \item "sqrt" (square root transformation)
+#' \item "np" (nonparametric transformation estimated from empirical CDF)
+#' \item "pois" (transformation for moment-matched marginal Poisson CDF)
+#' \item "neg-bin" (transformation for moment-matched marginal Negative Binomial CDF)
+#' }
+#' @param y_max a fixed and known upper bound for all observations; default is \code{Inf}
+#' @param psi prior precision (g-prior)
+#' @param method_sigma method to estimate the latent data standard deviation; must be one of
+#' \itemize{
+#' \item "sd" use the sample standard deviation of the observed data
+#' \item "mle" use the MLE from the STAR EM algorithm
+#' \item "mmle" use the marginal MLE (Note: slower!)
+#' }
+#' @param nsave number of Monte Carlo simulations
+#' @param compute_marg logical; if TRUE, compute and return the
+#' marginal likelihood
+#' @return a list with the following elements:
+#' \itemize{
+#' \item \code{coefficients} the posterior mean of the regression coefficients
+#' \item \code{post_beta}: \code{nsave x p} samples from the posterior distribution
+#' of the regression coefficients
+#' \item \code{post_ytilde}: \code{nsave x n0} samples
+#' from the posterior predictive distribution at test points \code{X_test}
+#' \item \code{marg_like}: the marginal likelihood (if requested; otherwise NULL)
+#' }
+#' @return
+#' @details STAR defines a count-valued probability model by
+#' (1) specifying a Gaussian model for continuous *latent* data and
+#' (2) connecting the latent data to the observed data via a
+#' *transformation and rounding* operation. Here, the continuous
+#' latent data model is a linear regression.
+#'
+#' There are several options for the transformation. First, the transformation
+#' can belong to the *Box-Cox* family, which includes the known transformations
+#' 'identity', 'log', and 'sqrt'. Second, the transformation
+#' can be estimated (before model fitting) using the empirical distribution of the
+#' data \code{y}. Options in this case include the empirical cumulative
+#' distribution function (CDF), which is fully nonparametric ('np'), or the parametric
+#' alternatives based on Poisson ('pois') or Negative-Binomial ('neg-bin')
+#' distributions. For the parametric distributions, the parameters of the distribution
+#' are estimated using moments (means and variances) of \code{y}. The distribution-based
+#' transformations approximately preserve the mean and variance of the count data \code{y}
+#' on the latent data scale, which lends interpretability to the model parameters.
+#'
+#' The Monte Carlo sampler produces direct, discrete, and joint draws
+#' from the posterior distribution and the posterior predictive distribution
+#' of the linear regression model with a g-prior.
+#'
+#' @examples
+#' # Simulate some data:
+#' sim_dat = simulate_nb_lm(n = 100, p = 10)
+#' y = sim_dat$y; X = sim_dat$X
+#'
+#' # Fit a linear model:
+#' fit = STAR_gprior(y, X)
+#' names(fit)
+#'
+#' # Check the efficiency of the Monte Carlo samples:
+#' getEffSize(fit$post_beta)
+#'
+#' @importFrom TruncatedNormal mvrandn pmvnorm
+#' @importFrom FastGP rcpp_rmvnorm
+#' @export
+STAR_gprior = function(y, X, X_test = NULL,
+                       transformation = 'np',
+                       y_max = Inf,
+                       psi = 1000,
+                       method_sigma = 'mle',
+                       nsave = 1000,
+                       compute_marg = FALSE){
+  #----------------------------------------------------------------------------
+  # Check: currently implemented for nonnegative integers
+  if(any(y < 0) || any(y != floor(y)))
+    stop('y must be nonnegative counts')
+
+  # Check: y_max must be a true upper bound
+  if(any(y > y_max))
+    stop('y must not exceed y_max')
+
+  # Data dimensions:
+  n = length(y); p = ncol(X)
+
+  # Testing data points:
+  if(is.null(X_test)) X_test = X
+  if(!is.matrix(X_test)) X_test = matrix(X_test, nrow  = 1)
+
+  # And some checks on columns:
+  if(p >= n) stop('The g-prior requires p < n')
+  if(p != ncol(X_test)) stop('X_test and X must have the same number of columns')
+
+  # Check: does the transformation make sense?
+  transformation = tolower(transformation);
+  if(!is.element(transformation, c("identity", "log", "sqrt", "np", "pois", "neg-bin")))
+    stop("The transformation must be one of 'identity', 'log', 'sqrt', 'np', 'pois', or 'neg-bin'")
+
+  # Check: does the method for sigma make sense?
+  method_sigma = tolower(method_sigma);
+  if(!is.element(method_sigma, c("sd", "mle", "mmle")))
+    stop("The transformation must be one of 'sd', 'mle', or 'mmle'")
+
+  # Assign a family for the transformation: Box-Cox or CDF?
+  transform_family = ifelse(
+    test = is.element(transformation, c("identity", "log", "sqrt", "box-cox")),
+    yes = 'bc', no = 'cdf'
+  )
+  #----------------------------------------------------------------------------
+  # Define the transformation:
+  if(transform_family == 'bc'){
+    # Lambda value for each Box-Cox argument:
+    if(transformation == 'identity') lambda = 1
+    if(transformation == 'log') lambda = 0
+    if(transformation == 'sqrt') lambda = 1/2
+
+    # Transformation function:
+    g = function(t) g_bc(t,lambda = lambda)
+
+    # Inverse transformation function:
+    g_inv = function(s) g_inv_bc(s,lambda = lambda)
+  }
+
+  if(transform_family == 'cdf'){
+
+    # Transformation function:
+    g = g_cdf(y = y, distribution = transformation)
+
+    # Define the grid for approximations using equally-spaced + quantile points:
+    t_grid = sort(unique(round(c(
+      seq(0, min(2*max(y), y_max), length.out = 250),
+      quantile(unique(y[y < y_max] + 1), seq(0, 1, length.out = 250))), 8)))
+
+    # Inverse transformation function:
+    g_inv = g_inv_approx(g = g, t_grid = t_grid)
+  }
+
+  # Lower and upper intervals:
+  g_a_y = g(a_j(y, y_max = y_max));
+  g_a_yp1 = g(a_j(y + 1, y_max = y_max))
+  #----------------------------------------------------------------------------
+  # Key matrix quantities:
+  XtX = crossprod(X)
+  XtXinv = chol2inv(chol(XtX))
+  XtXinvXt = tcrossprod(XtXinv, X)
+  H = X%*%XtXinvXt # hat matrix
+  #----------------------------------------------------------------------------
+  # Latent data SD:
+  if(method_sigma == 'sd'){
+    sigma_epsilon = sd(y)
+  }
+
+  if(method_sigma == 'mle'){
+    sigma_epsilon = star_EM(y = y,
+                            estimator = function(y) lm(y ~ X-1),
+                            transformation = transformation,
+                            y_max = y_max)$sigma.hat
+  }
+
+  if(method_sigma == 'mmle'){
+    sigma_seq = exp(seq(log(sd(y)) - 2,
+                        log(sd(y)) + 2, length.out = 10))
+    m_sigma = rep(NA, length(sigma_seq))
+    print('Marginal MLE evaluations:')
+    for(j in 1:length(sigma_seq)){
+      m_sigma[j] = TruncatedNormal::pmvnorm(
+        mu = rep(0, n),
+        sigma = sigma_seq[j]^2*(diag(n) + psi*H),
+        lb = g_a_y,
+        ub = g_a_yp1
+      )
+      print(paste(j, 'of 10'))
+    }
+    sigma_epsilon = sigma_seq[which.max(m_sigma)]
+    #plot(sigma_seq, m_sigma); abline(v = sigma_epsilon)
+  }
+  #----------------------------------------------------------------------------
+  # Posterior simulations:
+
+  print('Posterior sampling...')
+
+  # Covariance matrix of z:
+  Sigma_z = sigma_epsilon^2*(diag(n) + psi*H)
+
+  # Sample z in this interval:
+  post_z = t(mvrandn(l = g_a_y,
+                     u = g_a_yp1,
+                     Sig = Sigma_z,
+                     n = nsave))
+
+  # Estimated coefficients:
+  beta_hat = rowMeans(tcrossprod(psi/(1+psi)*XtXinvXt, post_z))
+
+  # And sample the additional term:
+  V1 = rcpp_rmvnorm(n = nsave,
+                    mu = rep(0, p),
+                    S = sigma_epsilon^2*psi/(1+psi)*XtXinv)
+
+  # Posterior samples of the coefficients:
+  post_beta = V1 + t(tcrossprod(psi/(1+psi)*XtXinvXt, post_z))
+
+  # Predictive samples of ztilde:
+  post_ztilde = tcrossprod(post_beta, X_test) + sigma_epsilon*rnorm(n = nsave*nrow(X_test))
+
+  # Predictive samples of ytilde:
+  post_ytilde = t(apply(post_ztilde, 1, function(z){
+    round_fun(g_inv(z), y_max)
+  }))
+
+  # # Alternative way to compute the predictive draws
+  # ntilde = ncol(X_test)
+  # XtildeXtXinv = X_test%*%XtXinv
+  # Htilde = tcrossprod(XtildeXtXinv, X_test)
+  # V1tilde = rcpp_rmvnorm(n = nsave,
+  #                        mu = rep(0, ntilde),
+  #                        S = sigma_epsilon^2*(psi/(1+psi)*Htilde + diag(ntilde)))
+  # post_ztilde = V1tilde + t(tcrossprod(psi/(1+psi)*tcrossprod(XtildeXtXinv, X), post_z))
+  # post_ytilde = t(apply(post_ztilde, 1, function(z){round_fun(g_inv(z), y_max)}))
+
+  # Marginal likelihood, if requested:
+  if(compute_marg){
+    print('Computing the marginal likelihood...')
+    marg_like = TruncatedNormal::pmvnorm(
+      mu = rep(0, n),
+      sigma = Sigma_z,
+      lb = g_a_y,
+      ub = g_a_yp1
+    )
+  } else marg_like = NULL
+
+  print('Done!')
+
+  return(list(
+    coefficients = beta_hat,
+    post_beta = post_beta,
+    post_ytilde = post_ytilde,
+    marg_like = marg_like))
+}
+
 #' MCMC Algorithm for conditional Gaussian likelihood
 #'
 #' Run the MCMC algorithm for a conditional Gaussian likelihood given
