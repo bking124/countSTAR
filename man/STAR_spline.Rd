@@ -32,7 +32,7 @@ STAR_spline(
 
 \item{y_max}{a fixed and known upper bound for all observations; default is \code{Inf}}
 
-\item{psi}{prior precision (smoothing parameter)}
+\item{psi}{prior variance (1/smoothing parameter)}
 
 \item{method_sigma}{method to estimate the latent data standard deviation; must be one of
 \itemize{

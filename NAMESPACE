@@ -2,10 +2,12 @@
 
 export(Gauss_MCMC)
 export(STAR_gprior)
+export(STAR_gprior_gibbs)
 export(STAR_spline)
 export(a_j)
 export(bart_star_MCMC)
 export(bart_star_np_MCMC)
+export(comp_gprior_gibbs)
 export(credBands)
 export(ergMean)
 export(expectation2_gRcpp)
