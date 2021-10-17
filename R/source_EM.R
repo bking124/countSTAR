@@ -303,7 +303,7 @@ star_EM = function(y,
   if(y_max < Inf){
     Jmax = rep(y_max + 1, n)
   } else {
-    Jmax = round_fun(g_inv(qnorm(0.9999, mean = mu_hat, sd = sigma_hat)), y_max = y_max)
+    Jmax = round_floor(g_inv(qnorm(0.9999, mean = mu_hat, sd = sigma_hat)), y_max = y_max)
     Jmax[Jmax > 2*max(y)] = 2*max(y) # cap at 2*max(y) to avoid excessive computations
   }
   Jmaxmax = max(Jmax) # overall max
@@ -596,7 +596,7 @@ star_EM_wls = function(y, X,
   if(y_max < Inf){
     Jmax = rep(y_max + 1, n)
   } else {
-    Jmax = round_fun(g_inv(qnorm(0.9999, mean = mu_hat, sd = sigma_hat/sqrt(weights))), y_max = y_max)
+    Jmax = round_floor(g_inv(qnorm(0.9999, mean = mu_hat, sd = sigma_hat/sqrt(weights))), y_max = y_max)
     Jmax[Jmax > 2*max(y)] = 2*max(y) # cap at 2*max(y) to avoid excessive computations
   }
   Jmaxmax = max(Jmax) # overall max
@@ -910,7 +910,7 @@ randomForest_star = function(y, X, X.test = NULL,
   if(y_max < Inf){
     Jmax = rep(y_max + 1, n)
   } else {
-    Jmax = round_fun(g_inv(qnorm(0.9999, mean = mu_hat, sd = sigma_hat)), y_max = y_max)
+    Jmax = round_floor(g_inv(qnorm(0.9999, mean = mu_hat, sd = sigma_hat)), y_max = y_max)
     Jmax[Jmax > 2*max(y)] = 2*max(y) # cap at 2*max(y) to avoid excessive computations
   }
   Jmaxmax = max(Jmax) # overall max
@@ -942,7 +942,7 @@ randomForest_star = function(y, X, X.test = NULL,
     if(y_max < Inf){
       Jmax = rep(y_max + 1, n)
     } else {
-      Jmax = round_fun(g_inv(qnorm(0.9999, mean = mu.test, sd = sigma_hat)), y_max = y_max)
+      Jmax = round_floor(g_inv(qnorm(0.9999, mean = mu.test, sd = sigma_hat)), y_max = y_max)
       Jmax[Jmax > 2*max(y)] = 2*max(y) # cap at 2*max(y) to avoid excessive computations
     }
     Jmaxmax = max(Jmax) # overall max
@@ -1263,7 +1263,7 @@ gbm_star = function(y, X, X.test = NULL,
   if(y_max < Inf){
     Jmax = rep(y_max + 1, n)
   } else {
-    Jmax = round_fun(g_inv(qnorm(0.9999, mean = mu_hat, sd = sigma_hat)), y_max = y_max)
+    Jmax = round_floor(g_inv(qnorm(0.9999, mean = mu_hat, sd = sigma_hat)), y_max = y_max)
     Jmax[Jmax > 2*max(y)] = 2*max(y) # cap at 2*max(y) to avoid excessive computations
   }
   Jmaxmax = max(Jmax) # overall max
@@ -1295,7 +1295,7 @@ gbm_star = function(y, X, X.test = NULL,
     if(y_max < Inf){
       Jmax = rep(y_max + 1, n)
     } else {
-      Jmax = round_fun(g_inv(qnorm(0.9999, mean = mu.test, sd = sigma_hat)), y_max = y_max)
+      Jmax = round_floor(g_inv(qnorm(0.9999, mean = mu.test, sd = sigma_hat)), y_max = y_max)
       Jmax[Jmax > 2*max(y)] = 2*max(y) # cap at 2*max(y) to avoid excessive computations
     }
     Jmaxmax = max(Jmax) # overall max
@@ -1625,7 +1625,7 @@ star_pred_dist = function(y, X, X.test = NULL,
       s_hat*crossprod(cholS0, rnorm(m))/sqrt(rchisq(n = 1, df = n - p - 1)/(n - p - 1))
 
     # save the (inverse) transformed and rounded sims:
-    y_pred[nsi,] = round_fun(g_inv(z_tilde), y_max = y_max)
+    y_pred[nsi,] = round_floor(g_inv(z_tilde), y_max = y_max)
   }
   y_pred
 }

@@ -10,7 +10,8 @@ simulate_nb_lm(
   r_nb = 1,
   b_int = log(1.5),
   b_sig = log(2),
-  sigma_true = sqrt(2 * log(1))
+  sigma_true = sqrt(2 * log(1)),
+  ar1 = 0
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ when all predictors are zero}
 twofold increase in the expected counts for a one unit increase in x}
 
 \item{sigma_true}{standard deviation of the Gaussian innovation; default is zero.}
+
+\item{ar1}{the autoregressive coefficient among the columns of the X matrix; default is zero.}
 }
 \value{
 A named list with the simulated count response \code{y}, the simulated design matrix \code{X}

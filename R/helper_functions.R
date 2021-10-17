@@ -299,14 +299,14 @@ g_inv_approx = function(g, t_grid) {
 #' @examples
 #'
 #' # Floor function:
-#' round_fun(1.5)
-#' round_fun(0.5)
+#' round_floor(1.5)
+#' round_floor(0.5)
 #'
 #' # Special treatmeant of negative numbers:
-#' round_fun(-1)
+#' round_floor(-1)
 #'
 #' @export
-round_fun = function(z, y_max = Inf) {
+round_floor = function(z, y_max = Inf) {
   pmin(floor(z)*I(z > 0),
        y_max)
 }
@@ -345,6 +345,41 @@ a_j = function(j, y_max = Inf) {
   return(val)
 }
 #----------------------------------------------------------------------------
+#' Inverse rounding function: usual rounding + bounds
+#'
+#' Define the intervals associated with \code{y = j} based on the midpoint rounding.
+#' The function returns \code{-Inf} for \code{j < y_min} and \code{Inf} for
+#'  \code{j > y_max}, where \code{y_min} and \code{y_max} are a known bounds on the data \code{y}
+#' (if specified). Negative values are allowed.
+#'
+#' @param j the integer-valued input(s)
+#' @param y_min a fixed and known lower bound for all observations; default is \code{-Inf}
+#' @param y_max a fixed and known upper bound for all observations; default is \code{Inf}
+#' @return The (lower) interval endpoint(s) associated with \code{j}.
+#'
+#' @examples
+#' # Standard cases:
+#' a_j_round(0)
+#' a_j_round(20)
+#'
+#' # Boundary cases:
+#' a_j_round(0, y_min = 1)
+#' a_j_round(20.5, y_max = 15)
+#'
+#' @export
+a_j_round = function(j, y_min = -Inf, y_max = Inf) {
+  # a_j = j - 0.5
+  val = j - 0.5;
+
+  # a_{y_min} = -Inf
+  val[j <= y_min] = -Inf;
+
+  # a_{y_max + 1} = Inf
+  val[j >= y_max + 1] = Inf;
+
+  return(val)
+}
+#----------------------------------------------------------------------------
 #' Simulate count data from a linear regression
 #'
 #' Simulate data from a negative-binomial distribution with linear mean function.
@@ -365,6 +400,7 @@ a_j = function(j, y_max = Inf) {
 #' @param b_sig regression coefficients for true signals; default is log(2.0), which implies a
 #' twofold increase in the expected counts for a one unit increase in x
 #' @param sigma_true standard deviation of the Gaussian innovation; default is zero.
+#' @param ar1 the autoregressive coefficient among the columns of the X matrix; default is zero.
 #'
 #' @return A named list with the simulated count response \code{y}, the simulated design matrix \code{X}
 #' (including an intercept), the true expected counts \code{Ey},
@@ -386,7 +422,8 @@ simulate_nb_lm = function(n = 100,
                           r_nb = 1,
                           b_int = log(1.5),
                           b_sig = log(2.0),
-                          sigma_true = sqrt(2*log(1.0))
+                          sigma_true = sqrt(2*log(1.0)),
+                          ar1 = 0
                           ){
 
   # True regression effects:
@@ -395,8 +432,15 @@ simulate_nb_lm = function(n = 100,
                 rep(0, floor((p-1)/2)))
 
   # Simulate the design matrix:
-  X = cbind(1,
-            matrix(rnorm(n = n*(p-1)), nrow = n))
+  if(ar1 == 0){
+    X = cbind(1,
+              matrix(rnorm(n = n*(p-1)), nrow = n))
+  } else {
+    X = cbind(1,
+              t(apply(matrix(0, nr = n, nc = p-1), 1, function(x)
+                arima.sim(n = p-1, list(ar = ar1), sd = sqrt(1-ar1^2)))))
+  }
+
 
   # Log-scale effects, including Gaussian errors:
   z_star = X%*%beta_true + sigma_true*rnorm(n)
@@ -1156,6 +1200,6 @@ uni.slice <- function (x0, g, w=1, m=Inf, lower=-Inf, upper=+Inf, gx0=NULL)
 }
 
 # Just add these for general use:
-#' @importFrom stats optim predict constrOptim cor fitted approxfun median arima coef quantile rexp rgamma rnorm runif sd dnorm lm var qchisq rchisq pnorm splinefun smooth.spline qnorm rnbinom ecdf ppois pnbinom weighted.mean
+#' @importFrom stats optim predict constrOptim cor fitted approxfun median arima coef quantile rexp rgamma rnorm runif sd dnorm lm var qchisq rchisq pnorm splinefun smooth.spline qnorm rnbinom ecdf ppois pnbinom weighted.mean arima.sim kmeans
 #' @importFrom graphics lines par plot polygon abline hist arrows legend axis
 NULL

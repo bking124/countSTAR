@@ -64,8 +64,6 @@ of the regression coefficients
 \item \code{post_ytilde}: \code{nsave x n0} samples
 from the posterior predictive distribution at test points \code{X_test}
 }
-
-
 }
 \description{
 Compute MCMC samples from the posterior and predictive

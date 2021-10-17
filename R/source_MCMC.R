@@ -161,17 +161,17 @@ star_MCMC = function(y,
   if(transformation == 'log' || lambda ==0){
     # For the log transformation (lambda = 0), g(-Inf) is not defined
         # Parametrize to use g(0) = log(0) = -Inf instead
-    #round_fun = floor
+    #round_floor = floor
     #a_j = function(j) j
 
-    round_fun = function(z) pmin(floor(z), y_max)
+    round_floor = function(z) pmin(floor(z), y_max)
     a_j = function(j) {val = j; val[j==y_max+1] = Inf; val}
 
   } else {
-    #round_fun = function(z) floor(z)*I(z > 0)
+    #round_floor = function(z) floor(z)*I(z > 0)
     #a_j = function(j) {val = j; val[j==0] = -Inf; val}
 
-    round_fun = function(z) pmin(floor(z)*I(z > 0), y_max)
+    round_floor = function(z) pmin(floor(z)*I(z > 0), y_max)
     a_j = function(j) {val = j; val[j==0] = -Inf; val[j==y_max+1] = Inf; val}
   }
 
@@ -258,12 +258,12 @@ star_MCMC = function(y,
         post.coefficients[isave,] = unlist(params$coefficients)
 
         # Posterior predictive distribution:
-        post.pred[isave,] = round_fun(ginv(rnorm(n = n, mean = params$mu, sd = params$sigma),
+        post.pred[isave,] = round_floor(ginv(rnorm(n = n, mean = params$mu, sd = params$sigma),
                                                  lambda = lambda))
 
         # Conditional expectation:
         if(save_y_hat){
-          Jmax = ceiling(round_fun(ginv(
+          Jmax = ceiling(round_floor(ginv(
             qnorm(0.9999, mean = params$mu, sd = params$sigma), lambda = lambda)))
           Jmax[Jmax > 2*max(y)] = 2*max(y) # To avoid excessive computation times, cap at 2*max(y)
           Jmaxmax = max(Jmax)
@@ -434,7 +434,7 @@ star_np_MCMC = function(y,
   }
 
   # Also define the rounding function and the corresponding intervals:
-  round_fun = function(z) pmin(floor(z)*I(z > 0), y_max)
+  round_floor = function(z) pmin(floor(z)*I(z > 0), y_max)
   a_j = function(j) {val = j; val[j==0] = -Inf; val[j==y_max+1] = Inf; val}
 
   # One-time cost:
@@ -661,7 +661,7 @@ star_np_MCMC = function(y,
 
         # Posterior predictive distribution:
         u = rnorm(n = n, mean = params$mu, sd = params$sigma); g_grid = B_I_grid%*%gamma
-        post.pred[isave,] = round_fun(sapply(u, function(ui) t_grid[which.min(abs(ui - g_grid))]))
+        post.pred[isave,] = round_floor(sapply(u, function(ui) t_grid[which.min(abs(ui - g_grid))]))
 
         # Conditional expectation:
         if(save_y_hat){
@@ -808,7 +808,7 @@ star_np_MCMC2 = function(y,
   }
 
   # Also define the rounding function and the corresponding intervals:
-  round_fun = function(z) pmin(floor(z)*I(z > 0), y_max)
+  round_floor = function(z) pmin(floor(z)*I(z > 0), y_max)
   a_j = function(j) {val = j; val[j==0] = -Inf; val[j==y_max+1] = Inf; val}
 
   # One-time cost:
@@ -1002,7 +1002,7 @@ star_np_MCMC2 = function(y,
 
         # Posterior predictive distribution:
         u = rnorm(n = n, mean = params$mu, sd = params$sigma); g_grid = B_I_grid%*%gamma
-        post.pred[isave,] = round_fun(sapply(u, function(ui) t_grid[which.min(abs(ui - g_grid))]))
+        post.pred[isave,] = round_floor(sapply(u, function(ui) t_grid[which.min(abs(ui - g_grid))]))
 
         # Conditional expectation:
         if(save_y_hat){
@@ -1229,11 +1229,11 @@ bart_star_MCMC = function(y,
   if(transformation == 'log' || lambda ==0){
     # For the log transformation (lambda = 0), g(-Inf) is not defined
     # Parametrize to use g(0) = log(0) = -Inf instead
-    round_fun = function(z) pmin(floor(z), y_max)
+    round_floor = function(z) pmin(floor(z), y_max)
     a_j = function(j) {val = j; val[j==y_max+1] = Inf; val}
 
   } else {
-    round_fun = function(z) pmin(floor(z)*I(z > 0), y_max)
+    round_floor = function(z) pmin(floor(z)*I(z > 0), y_max)
     a_j = function(j) {val = j; val[j==0] = -Inf; val[j==y_max+1] = Inf; val}
   }
 
@@ -1348,13 +1348,13 @@ bart_star_MCMC = function(y,
         isave = isave + 1
 
         # Posterior predictive distribution:
-        post.pred[isave,] = round_fun(ginv(rnorm(n = n, mean = params$mu, sd = params$sigma),
+        post.pred[isave,] = round_floor(ginv(rnorm(n = n, mean = params$mu, sd = params$sigma),
                                                  lambda = lambda))
 
 
         # Conditional expectation:
         if(save_y_hat){
-          Jmax = ceiling(round_fun(ginv(
+          Jmax = ceiling(round_floor(ginv(
             qnorm(0.9999, mean = params$mu, sd = params$sigma), lambda = lambda)))
           Jmax[Jmax > 2*max(y)] = 2*max(y) # To avoid excessive computation times, cap at 2*max(y)
           Jmaxmax = max(Jmax)
@@ -1369,10 +1369,10 @@ bart_star_MCMC = function(y,
           post.mu.test[isave,] = samp$test
 
           # Posterior predictive distribution at test points:
-          post.pred.test[isave,] = round_fun(ginv(rnorm(n = n0, mean = samp$test, sd = params$sigma),
+          post.pred.test[isave,] = round_floor(ginv(rnorm(n = n0, mean = samp$test, sd = params$sigma),
                                                         lambda = lambda))
           # Conditional expectation at test points:
-          Jmax = ceiling(round_fun(ginv(
+          Jmax = ceiling(round_floor(ginv(
             qnorm(0.9999, mean = samp$test, sd = params$sigma), lambda = lambda)))
           Jmax[Jmax > 2*max(y)] = 2*max(y) # To avoid excessive computation times, cap at 2*max(y)
           Jmaxmax = max(Jmax)
@@ -1554,7 +1554,7 @@ bart_star_np_MCMC = function(y,
   }
 
   # Also define the rounding function and the corresponding intervals:
-  round_fun = function(z) pmin(floor(z)*I(z > 0), y_max)
+  round_floor = function(z) pmin(floor(z)*I(z > 0), y_max)
   a_j = function(j) {val = j; val[j==0] = -Inf; val[j==y_max+1] = Inf; val}
 
   # One-time cost:
@@ -1795,7 +1795,7 @@ bart_star_np_MCMC = function(y,
 
         # Posterior predictive distribution:
         u = rnorm(n = n, mean = params$mu, sd = params$sigma); g_grid = B_I_grid%*%gamma
-        post.pred[isave,] = round_fun(sapply(u, function(ui) t_grid[which.min(abs(ui - g_grid))]))
+        post.pred[isave,] = round_floor(sapply(u, function(ui) t_grid[which.min(abs(ui - g_grid))]))
 
         # Conditional expectation:
         if(save_y_hat){
@@ -1818,7 +1818,7 @@ bart_star_np_MCMC = function(y,
 
           # Posterior predictive distribution at test points:
           u = rnorm(n = n0, mean = samp$test, sd = params$sigma);
-          post.pred.test[isave,] = round_fun(sapply(u, function(ui) t_grid[which.min(abs(ui - g_grid))]))
+          post.pred.test[isave,] = round_floor(sapply(u, function(ui) t_grid[which.min(abs(ui - g_grid))]))
 
           # Conditional expectation at test points:
           u = qnorm(0.9999, mean = samp$test, sd = params$sigma)
@@ -1954,7 +1954,7 @@ bart_star_np_MCMC = function(y,
 #' # Simulate some data:
 #' n = 100
 #' tau = seq(0,1, length.out = n)
-#' y = round_fun(exp(1 + rnorm(n)/4 + poly(tau, 4)%*%rnorm(n=4, sd = 4:1)))
+#' y = round_floor(exp(1 + rnorm(n)/4 + poly(tau, 4)%*%rnorm(n=4, sd = 4:1)))
 #'
 #' # Sample from the predictive distribution of a STAR spline model:
 #' fit_star = STAR_spline(y = y, tau = tau)
@@ -2111,9 +2111,9 @@ STAR_spline = function(y,
 
   # Predictive samples of ytilde:
   post_ytilde = t(apply(post_ztilde, 1, function(z){
-    round_fun(g_inv(z), y_max)
+    round_floor(g_inv(z), y_max)
   }))
-  #post_ytilde = matrix(round_fun(g_inv(post_ztilde), y_max), nrow = S)
+  #post_ytilde = matrix(round_floor(g_inv(post_ztilde), y_max), nrow = S)
 
   # Marginal likelihood, if requested:
   if(compute_marg){
@@ -2348,7 +2348,7 @@ STAR_gprior = function(y, X, X_test = NULL,
 
   # Predictive samples of ytilde:
   post_ytilde = t(apply(post_ztilde, 1, function(z){
-    round_fun(g_inv(z), y_max)
+    round_floor(g_inv(z), y_max)
   }))
 
   # # Alternative way to compute the predictive draws
@@ -2359,7 +2359,7 @@ STAR_gprior = function(y, X, X_test = NULL,
   #                        mu = rep(0, ntilde),
   #                        S = sigma_epsilon^2*(psi/(1+psi)*Htilde + diag(ntilde)))
   # post_ztilde = V1tilde + t(tcrossprod(psi/(1+psi)*tcrossprod(XtildeXtXinv, X), post_z))
-  # post_ytilde = t(apply(post_ztilde, 1, function(z){round_fun(g_inv(z), y_max)}))
+  # post_ytilde = t(apply(post_ztilde, 1, function(z){round_floor(g_inv(z), y_max)}))
 
   # Marginal likelihood, if requested:
   if(compute_marg){
@@ -2602,7 +2602,7 @@ STAR_gprior_gibbs = function(y, X, X_test = NULL,
 
         # Predictive samples:
         ztilde = X_test%*%beta + sigma_epsilon*rnorm(n = nrow(X_test))
-        post_pred[isave,] = round_fun(g_inv(ztilde), y_max)
+        post_pred[isave,] = round_floor(g_inv(ztilde), y_max)
 
         # And reset the skip counter:
         skipcount = 0
@@ -2618,6 +2618,327 @@ STAR_gprior_gibbs = function(y, X, X_test = NULL,
     post_beta = post_beta,
     post_sigma = post_sigma,
     post_ytilde = post_pred))
+}
+
+#' Stochastic search for the STAR sparse means model
+#'
+#' Compute Gibbs samples from the posterior distribution
+#' of the inclusion indicators for the sparse means model.
+#' The inclusion probability is assigned a Beta(a_pi, b_pi) prior
+#' and is learned as well.
+#'
+#' @param y \code{n x 1} vector of integers
+#' @param transformation transformation to use for the latent data; must be one of
+#' \itemize{
+#' \item "identity" (signed identity transformation)
+#' \item "sqrt" (signed square root transformation)
+#' \item "np" (nonparametric transformation estimated from empirical CDF)
+#' \item "pois" (transformation for moment-matched marginal Poisson CDF)
+#' \item "neg-bin" (transformation for moment-matched marginal Negative Binomial CDF)
+#' }
+#' @param y_min a fixed and known upper bound for all observations; default is \code{-Inf}
+#' @param y_max a fixed and known upper bound for all observations; default is \code{Inf}
+#' @param psi prior variance for the slab component;
+#' if NULL, assume a Unif(0, n) prior
+#' @param a_pi prior shape1 parameter for the inclusion probability;
+#' default is 1 for uniform
+#' @param b_pi prior shape2 parameter for the inclusion probability;
+#' #' default is 1 for uniform
+#' @param sample_coefs logical; if TRUE, sample the regression
+#' coefficients (note: this is not necessary for the inclusion indicators)
+#' @param nsave number of MCMC iterations to save
+#' @param nburn number of MCMC iterations to discard
+#' @param nskip number of MCMC iterations to skip between saving iterations,
+#' i.e., save every (nskip + 1)th draw
+#' @param verbose logical; if TRUE, print time remaining
+#' @return a list with the following elements:
+#' \itemize{
+#' \item \code{post_gamma}: \code{nsave x n} samples from the posterior distribution
+#' of the inclusion indicators
+#' \item \code{post_pi}: \code{nsave} samples from the posterior distribution
+#' of the inclusion probability
+#' \item \code{post_psi}: \code{nsave} samples from the posterior distribution
+#' of the prior precision
+#' \item \code{post_theta}: \code{nsave} samples from the posterior distribution
+#' of the regression coefficients
+#' \item \code{sigma_hat}: estimate of the latent data standard deviation
+#' }
+#' @details STAR defines an integer-valued probability model by
+#' (1) specifying a Gaussian model for continuous *latent* data and
+#' (2) connecting the latent data to the observed data via a
+#' *transformation and rounding* operation. Here, the continuous
+#' latent data model is a sparse normal means model of the form
+#' z_i = theta_i + epsilon_i with a spike-and-slab prior on
+#' theta_i.
+#'
+#' There are several options for the transformation. First, the transformation
+#' can belong to the signed *Box-Cox* family, which includes the known transformations
+#' 'identity' and 'sqrt'. Second, the transformation
+#' can be estimated (before model fitting) using the empirical distribution of the
+#' data \code{y}. Options in this case include the empirical cumulative
+#' distribution function (CDF), which is fully nonparametric ('np'), or the parametric
+#' alternatives based on Poisson ('pois') or Negative-Binomial ('neg-bin')
+#' distributions. For the parametric distributions, the parameters of the distribution
+#' are estimated using moments (means and variances) of \code{y}. The distribution-based
+#' transformations approximately preserve the mean and variance of the count data \code{y}
+#' on the latent data scale, which lends interpretability to the model parameters.
+#'
+#' There are several options for the prior variance \code{psi}.
+#' First, it can be specified directly. Second, it can be assigned
+#' a Uniform(0,n) prior and sampled within the MCMC. If \code{sample_coefs}
+#' is TRUE, then \code{psi} is updated conditional on the
+#' sampled coefficients; otherwise \code{psi} is updated
+#' via griddy Gibbs using the marginal likelihood.
+#'
+#' @examples
+#' # Simulate some data:
+#' y = simulate_nb_lm(n = 200, p = 1)$y
+#'
+#' # Fit the model:
+#' fit = STAR_sparse_means(y, nsave = 100, nburn = 100) # for a quick example
+#' names(fit)
+#'
+#' # Posterior inclusion probabilities:
+#' pip = colMeans(fit$post_gamma)
+#' plot(pip, y)
+#'
+#' # Check the MCMC efficiency:
+#' getEffSize(fit$post_theta) # coefficients
+#'
+#' @import truncdist
+#' @importFrom stats rbeta
+#' @export
+STAR_sparse_means = function(y,
+                             transformation = 'np',
+                             y_min = -Inf,
+                             y_max = Inf,
+                             psi = NULL,
+                             a_pi = 1, b_pi = 1,
+                             sample_coefs = TRUE,
+                             nsave = 1000,
+                             nburn = 1000,
+                             nskip = 0,
+                             verbose = TRUE){
+  # transformation = 'identity'; psi = NULL;
+  # a_pi = 1; b_pi = 1; sample_coefs = TRUE; y_min = -Inf; y_max = Inf;  nsave = 250; nburn = 50;nskip = 0; verbose = TRUE
+  #----------------------------------------------------------------------------
+  # Check: currently implemented for nonnegative integers
+  if(any(y != floor(y)))
+    stop('y must be integer-valued')
+
+  # Check: (y_min, y_max) must be true bounds
+  if(any(y < y_min) || any(y > y_max))
+    stop('Must satisfy y_min < y < y_max')
+
+  # Data dimensions:
+  n = length(y)
+
+  # Check: does the transformation make sense?
+  transformation = tolower(transformation);
+  if(!is.element(transformation, c("identity", "sqrt", "np", "pois", "neg-bin")))
+    stop("The transformation must be one of 'identity', 'sqrt', 'np', 'pois', or 'neg-bin'")
+
+  # Check: does the count=valued transformation make sense
+  if(is.element(transformation, c("pois", "neg-bin")) & any(y<0))
+    stop("y must be nonnegative counts for 'pois' or 'neg-bin' transformations")
+
+  # Assign a family for the transformation: Box-Cox or CDF?
+  transform_family = ifelse(
+    test = is.element(transformation, c("identity", "sqrt", "box-cox")),
+    yes = 'bc', no = 'cdf'
+  )
+
+  # Sample psi?
+  if(is.null(psi)){
+    sample_psi = TRUE
+    psi = n/10 # initial value
+  } else sample_psi = FALSE
+  #----------------------------------------------------------------------------
+  # Define the transformation:
+  if(transform_family == 'bc'){
+    # Lambda value for each Box-Cox argument:
+    if(transformation == 'identity') lambda = 1
+    if(transformation == 'sqrt') lambda = 1/2
+
+    # Transformation function:
+    g = function(t) g_bc(t,lambda = lambda)
+
+    # Inverse transformation function:
+    g_inv = function(s) g_inv_bc(s,lambda = lambda)
+  }
+
+  if(transform_family == 'cdf'){
+
+    # Transformation function:
+    g = g_cdf(y = y, distribution = transformation)
+
+    # Define the grid for approximations using equally-spaced + quantile points:
+    t_grid = sort(unique(round(c(
+      seq(min(max(min(y/2), y_min), max(min(2*y), y_min)),
+          max(min(max(y/2), y_max), min(max(2*y), y_max)),
+          length.out = 500),
+      quantile(unique(y[(y >  y_min) & (y < y_max)] + 1), seq(0, 1, length.out = 500))), 8)))
+
+    # Inverse transformation function:
+    g_inv = g_inv_approx(g = g, t_grid = t_grid)
+  }
+
+  # Lower and upper intervals:
+  g_a_y = g(a_j_round(y, y_min = y_min, y_max = y_max));
+  g_a_yp1 = g(a_j_round(y + 1, y_min = y_min, y_max = y_max));
+  #----------------------------------------------------------------------------
+  # Initialize:
+  gamma = 1.0*(abs(y) > 1) #gamma = sample(c(0,1), size = n, replace = TRUE)
+  pi_inc = max(min(mean(gamma), .95), .05) # pi_inc = runif(1)
+
+  # Initialize the latent SD using MLE w/ kmeans cluster model:
+  #sigma_epsilon = sd(y)
+  fit0 = star_EM(y = y + abs(min(y)), # make sure >=0 (for this function)
+                 #estimator = function(y) lm(y ~ 1),
+                 estimator = function(y){
+                   kfit = kmeans(y, 2, iter.max = 5)
+                   val = vector('list')
+                   val$coefficients = as.numeric(kfit$centers)
+                   val$fitted.values = kfit$centers[kfit$cluster]
+                   return(val)
+                 },
+                 transformation = transformation,
+                 y_max = y_max + abs(min(y)))
+  sigma_epsilon = fit0$sigma.hat
+
+  # MCMC specs:
+  post_gamma = array(NA, c(nsave, n))
+  post_pi = post_psi = array(NA, c(nsave))
+
+  if(sample_coefs){
+    post_theta = array(NA, c(nsave, n))
+  } else post_theta = NULL
+
+  # Total number of MCMC simulations:
+  nstot = nburn+(nskip+1)*(nsave)
+  skipcount = 0; isave = 0 # For counting
+
+  # Run the MCMC:
+  if(verbose) timer0 = proc.time()[3] # For timing the sampler
+  for(nsi in 1:nstot){
+
+    # Sample the inclusion probability:
+    pi_inc = rbeta(n = 1,
+                   shape1 = a_pi + sum(gamma == 1),
+                   shape2 = b_pi + sum(gamma == 0))
+
+    # Sample each inclusion indicator (random ordering)
+    for(i in sample(1:n, n)){
+
+      # Set the indicators:
+      gamma_i0 = gamma_i1 = gamma;
+      gamma_i0[i] = 0 # version with a zero at i
+      gamma_i1[i]  = 1 # version with a one at i
+
+      # Log-likelihood at each case (zero or one)
+      log_m_y_0 = logLikeRcpp(g_a_j = g_a_y,
+                              g_a_jp1 = g_a_yp1,
+                              mu  = rep(0,n),
+                              sigma = sigma_epsilon*sqrt(1 + psi*gamma_i0))
+      log_m_y_1 = logLikeRcpp(g_a_j = g_a_y,
+                              g_a_jp1 = g_a_yp1,
+                              mu  = rep(0,n),
+                              sigma = sigma_epsilon*sqrt(1 + psi*gamma_i1))
+
+      # Log-odds:
+      log_odds = (log(pi_inc) + log_m_y_1) -
+        (log(1 - pi_inc) + log_m_y_0)
+
+      # Sample:
+      gamma[i] = 1.0*(runif(1) <
+                        exp(log_odds)/(1 + exp(log_odds)))
+    }
+    # sigma_seq = exp(seq(log(sd(y)) - 2,
+    #                     log(sd(y)) + 2, length.out = 100))
+    # log_m_sigma = sapply(sigma_seq, function(sig){
+    #   logLikeRcpp(g_a_j = g_a_y,
+    #               g_a_jp1 = g_a_yp1,
+    #               mu  = rep(0,n),
+    #               sigma = sig*sqrt(1 + psi*gamma))
+    # })
+    # sigma_epsilon = sigma_seq[which.max(log_m_sigma)]
+
+    # log_m_sigma = log_m_sigma + min(log_m_sigma[is.finite(log_m_sigma)])
+    # sample(sigma_seq, 1, prob = exp(log_m_sigma))
+    # plot(sigma_seq, log_m_sigma); abline(v = sigma_epsilon)
+    #----------------------------------------------------------------------------
+    # Sample the regression coefficients (NOTE: optional)
+    if(sample_coefs){
+      theta = rep(0, n)
+      n_nz = sum(gamma == 1)
+      if(n_nz > 0){
+        v_0i = rtruncnormRcpp(y_lower = g_a_y[gamma == 1],
+                              y_upper = g_a_yp1[gamma == 1],
+                              mu = rep(0, n_nz),
+                              sigma = rep(sigma_epsilon*sqrt(1 + psi), n_nz),
+                              u_rand = runif(n = n_nz))
+        v_1i = rnorm(n = n_nz, mean = 0, sd = sigma_epsilon*sqrt(psi/(1+psi)))
+        theta[gamma==1] = v_1i + psi/(1+psi)*v_0i
+      }
+    }
+
+    # Sample psi, the prior variance parameter:
+    if(sample_psi){
+      # If we have the coefficients, use a Gibbs step:
+      if(sample_coefs){
+        psi = 1/rtrunc(n = 1,
+                       'gamma',   # Family of distribution
+                       a = 1/n,   # Lower interval
+                       b = 1/0,   # Upper interval
+                       shape = n_nz/2 - 1/2,
+                       rate =  sum(theta[gamma==1]^2)/(2*sigma_epsilon^2))
+      } else {
+        #  Otherwise, use griddy Gibbs:
+        psi_seq = seq(0.01, n, length.out = 100)
+        log_m_psi = sapply(psi_seq, function(ps){
+          logLikeRcpp(g_a_j = g_a_y,
+                      g_a_jp1 = g_a_yp1,
+                      mu  = rep(0,n),
+                      sigma = sigma_epsilon*sqrt(1 + ps*gamma))
+        })
+        # psi = psi_seq[which.max(log_m_psi)]
+        log_m_psi = log_m_psi + min(log_m_psi[is.finite(log_m_psi)])
+        psi = sample(psi_seq, 1, prob = exp(log_m_psi))
+      }
+    }
+    #----------------------------------------------------------------------------
+    # Store the MCMC:
+    if(nsi > nburn){
+
+      # Increment the skip counter:
+      skipcount = skipcount + 1
+
+      # Save the iteration:
+      if(skipcount > nskip){
+        # Increment the save index
+        isave = isave + 1
+
+        # Posterior samples of the model parameters:
+        post_gamma[isave,] = gamma
+        post_pi[isave] = pi_inc
+        post_psi[isave] = psi
+        if(sample_coefs) post_theta[isave,] = theta
+
+        # And reset the skip counter:
+        skipcount = 0
+      }
+    }
+    if(verbose) computeTimeRemaining(nsi, timer0, nstot, nrep = 100)
+  }
+  if(verbose) print(paste('Total time: ', round((proc.time()[3] - timer0)), 'seconds'))
+
+  return(list(
+    post_gamma = post_gamma,
+    post_pi = post_pi,
+    post_psi = post_psi,
+    post_theta = post_theta,
+    sigma_hat = sigma_epsilon
+  ))
 }
 
 #' Comparison: data augmentation Gibbs sampler for STAR linear regression with a g-prior
@@ -2660,7 +2981,6 @@ STAR_gprior_gibbs = function(y, X, X_test = NULL,
 #' \item \code{post_ytilde}: \code{nsave x n0} samples
 #' from the posterior predictive distribution at test points \code{X_test}
 #' }
-#' @return
 #' @details STAR defines a count-valued probability model by
 #' (1) specifying a Gaussian model for continuous *latent* data and
 #' (2) connecting the latent data to the observed data via a
@@ -2847,7 +3167,7 @@ comp_gprior_gibbs = function(y, X, X_test = NULL,
 
   # Predictive samples of ytilde:
   post_ytilde = t(apply(post_ztilde, 1, function(z){
-    round_fun(g_inv(z), y_max)
+    round_floor(g_inv(z), y_max)
   }))
 
   return(list(

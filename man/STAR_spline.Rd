@@ -87,7 +87,7 @@ at the observed tau points.
 # Simulate some data:
 n = 100
 tau = seq(0,1, length.out = n)
-y = round_fun(exp(1 + rnorm(n)/4 + poly(tau, 4)\%*\%rnorm(n=4, sd = 4:1)))
+y = round_floor(exp(1 + rnorm(n)/4 + poly(tau, 4)\%*\%rnorm(n=4, sd = 4:1)))
 
 # Sample from the predictive distribution of a STAR spline model:
 fit_star = STAR_spline(y = y, tau = tau)
