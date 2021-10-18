@@ -368,8 +368,8 @@ a_j = function(j, y_max = Inf) {
 #'
 #' @export
 a_j_round = function(j, y_min = -Inf, y_max = Inf) {
-  # a_j = j - 0.5
-  val = j - 0.5;
+  # a_j = j + 0.5
+  val = j + 0.5;
 
   # a_{y_min} = -Inf
   val[j <= y_min] = -Inf;

@@ -2791,7 +2791,7 @@ STAR_sparse_means = function(y,
   gamma = 1.0*(abs(y) > 1) #gamma = sample(c(0,1), size = n, replace = TRUE)
   pi_inc = max(min(mean(gamma), .95), .05) # pi_inc = runif(1)
 
-  # Initialize the latent SD using MLE w/ kmeans cluster model:
+  # Estimate the latent SD using MLE w/ kmeans cluster model:
   #sigma_epsilon = sd(y)
   fit0 = star_EM(y = y + abs(min(y)), # make sure >=0 (for this function)
                  #estimator = function(y) lm(y ~ 1),
@@ -3315,6 +3315,189 @@ Gauss_MCMC = function(y,
        post.log.like.point = post.log.like.point, logLik = logLik,
        WAIC = WAIC, p_waic = p_waic)
 }
+
+#' Stochastic search for the sparse normal means model
+#'
+#' Compute Gibbs samples from the posterior distribution
+#' of the inclusion indicators for the sparse normal means model.
+#' The inclusion probability is assigned a Beta(a_pi, b_pi) prior
+#' and is learned as well.
+#'
+#' @param y \code{n x 1} data vector
+#' @param psi prior variance for the slab component;
+#' if NULL, assume a Unif(0, n) prior
+#' @param a_pi prior shape1 parameter for the inclusion probability;
+#' default is 1 for uniform
+#' @param b_pi prior shape2 parameter for the inclusion probability;
+#' #' default is 1 for uniform
+#' @param nsave number of MCMC iterations to save
+#' @param nburn number of MCMC iterations to discard
+#' @param nskip number of MCMC iterations to skip between saving iterations,
+#' i.e., save every (nskip + 1)th draw
+#' @param verbose logical; if TRUE, print time remaining
+#' @return a list with the following elements:
+#' \itemize{
+#' \item \code{post_gamma}: \code{nsave x n} samples from the posterior distribution
+#' of the inclusion indicators
+#' \item \code{post_pi}: \code{nsave} samples from the posterior distribution
+#' of the inclusion probability
+#' \item \code{post_psi}: \code{nsave} samples from the posterior distribution
+#' of the prior precision
+#' \item \code{post_theta}: \code{nsave} samples from the posterior distribution
+#' of the regression coefficients
+#' \item \code{sigma_hat}: estimate of the latent data standard deviation
+#' }
+#' @details We assume sparse normal means model of the form
+#' y_i = theta_i + epsilon_i with a spike-and-slab prior on
+#' theta_i.
+#'
+#' There are several options for the prior variance \code{psi}.
+#' First, it can be specified directly. Second, it can be assigned
+#' a Uniform(0,n) prior and sampled within the MCMC
+#' conditional on the sampled regression coefficients.
+#'
+#' @examples
+#' # Simulate some data:
+#' y = rnorm(n = 200)
+#'
+#' # Fit the model:
+#' fit = Gauss_sparse_means(y, nsave = 100, nburn = 100) # for a quick example
+#' names(fit)
+#'
+#' # Posterior inclusion probabilities:
+#' pip = colMeans(fit$post_gamma)
+#' plot(pip, y)
+#'
+#' # Check the MCMC efficiency:
+#' getEffSize(fit$post_theta) # coefficients
+#'
+#' @import truncdist
+#' @importFrom stats rbeta
+#' @export
+Gauss_sparse_means = function(y,
+                              psi = NULL,
+                              a_pi = 1, b_pi = 1,
+                              nsave = 1000,
+                              nburn = 1000,
+                              nskip = 0,
+                              verbose = TRUE){
+  # psi = NULL; a_pi = 1; b_pi = 1; nsave = 250; nburn = 50;nskip = 0; verbose = TRUE
+  #----------------------------------------------------------------------------
+  # Data dimensions:
+  n = length(y)
+
+  # Sample psi?
+  if(is.null(psi)){
+    sample_psi = TRUE
+    psi = n/10 # initial value
+  } else sample_psi = FALSE
+
+  #----------------------------------------------------------------------------
+  # Initialize:
+  gamma = 1.0*(abs(y) > 1) #gamma = sample(c(0,1), size = n, replace = TRUE)
+  pi_inc = max(min(mean(gamma), .95), .05) # pi_inc = runif(1)
+
+  # Estimate the SD using MLE w/ kmeans cluster model:
+  kfit = kmeans(y, 2, iter.max = 5)
+  sigma_epsilon = sd(y - kfit$centers[kfit$cluster])
+
+  # MCMC specs:
+  post_gamma = array(NA, c(nsave, n))
+  post_pi = post_psi = array(NA, c(nsave))
+  post_theta = array(NA, c(nsave, n))
+
+  # Total number of MCMC simulations:
+  nstot = nburn+(nskip+1)*(nsave)
+  skipcount = 0; isave = 0 # For counting
+
+  # Run the MCMC:
+  if(verbose) timer0 = proc.time()[3] # For timing the sampler
+  for(nsi in 1:nstot){
+
+    # Sample the inclusion probability:
+    pi_inc = rbeta(n = 1,
+                   shape1 = a_pi + sum(gamma == 1),
+                   shape2 = b_pi + sum(gamma == 0))
+
+    # Sample each inclusion indicator (random ordering)
+    for(i in sample(1:n, n)){
+
+      # Set the indicators:
+      gamma_i0 = gamma_i1 = gamma;
+      gamma_i0[i] = 0 # version with a zero at i
+      gamma_i1[i]  = 1 # version with a one at i
+
+      # Log-likelihood at each case (zero or one)
+      log_m_y_0 = sum(dnorm(y,
+                            mean = 0,
+                            sd = sigma_epsilon*sqrt(1 + psi*gamma_i0), log = TRUE))
+
+      log_m_y_1 = sum(dnorm(y,
+                            mean = 0,
+                            sd = sigma_epsilon*sqrt(1 + psi*gamma_i1), log = TRUE))
+
+      # Log-odds:
+      log_odds = (log(pi_inc) + log_m_y_1) -
+        (log(1 - pi_inc) + log_m_y_0)
+
+      # Sample:
+      gamma[i] = 1.0*(runif(1) <
+                        exp(log_odds)/(1 + exp(log_odds)))
+    }
+    #----------------------------------------------------------------------------
+    # Sample the regression coefficients:
+    theta = rep(0, n)
+    n_nz = sum(gamma == 1)
+    if(n_nz > 0){
+      theta[gamma==1] = rnorm(n = n_nz,
+                              mean = psi/(1+psi)*y[gamma==1],
+                              sd = sigma_epsilon*sqrt(psi/(1+psi)))
+    }
+
+    # Sample psi, the prior variance parameter:
+    if(sample_psi){
+      psi = 1/rtrunc(n = 1,
+                     'gamma',   # Family of distribution
+                     a = 1/n,   # Lower interval
+                     b = 1/0,   # Upper interval
+                     shape = n_nz/2 - 1/2,
+                     rate =  sum(theta[gamma==1]^2)/(2*sigma_epsilon^2))
+    }
+    #----------------------------------------------------------------------------
+    # Store the MCMC:
+    if(nsi > nburn){
+
+      # Increment the skip counter:
+      skipcount = skipcount + 1
+
+      # Save the iteration:
+      if(skipcount > nskip){
+        # Increment the save index
+        isave = isave + 1
+
+        # Posterior samples of the model parameters:
+        post_gamma[isave,] = gamma
+        post_pi[isave] = pi_inc
+        post_psi[isave] = psi
+        post_theta[isave,] = theta
+
+        # And reset the skip counter:
+        skipcount = 0
+      }
+    }
+    if(verbose) computeTimeRemaining(nsi, timer0, nstot, nrep = 100)
+  }
+  if(verbose) print(paste('Total time: ', round((proc.time()[3] - timer0)), 'seconds'))
+
+  return(list(
+    post_gamma = post_gamma,
+    post_pi = post_pi,
+    post_psi = post_psi,
+    post_theta = post_theta,
+    sigma_hat = sigma_epsilon
+  ))
+}
+
 #' Initialize the parameters for a simple mean-only model
 #'
 #' Initialize the parameters for the model y ~ N(mu0, sigma^2)
