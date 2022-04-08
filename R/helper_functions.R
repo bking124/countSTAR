@@ -150,6 +150,60 @@ g_cdf = function(y, distribution = "np") {
   splinefun(t0, g0, method = 'monoH.FC')
 }
 #----------------------------------------------------------------------------
+#' Bayesian bootstrap-based transformation
+#'
+#' Compute one posterior draw from the smoothed transformation
+#' implied by the Bayesian bootstrap distribution for the CDF.
+#'
+#' @param y \code{n x 1} vector of observed counts
+#' @return A smooth monotone function which can be used for evaluations of the transformation
+#' at each posterior draw.
+#'
+#' @examples
+#' # Sample some data:
+#' y = rpois(n = 200, lambda = 5)
+#'
+#' # Compute 200 draws of g on a grid:
+#' t = seq(0, max(y), length.out = 100) # grid
+#' g_post = t(sapply(1:500, function(s) g_bnp(y)(t)))
+#' # Plot together:
+#' plot(t, t, ylim = range(g_post), type='n', ylab = 'g(t)',  main = 'Bayesian bootstrap posterior: g')
+#' apply(g_post, 1, function(g) lines(t, g, col='gray'))
+#' # And the posterior mean of g:
+#' lines(t, colMeans(g_post), lwd=3)
+#' @export
+# Function to simulate g:
+g_bnp = function(y){
+
+  # Length:
+  n = length(y)
+
+  # Simulate the weights:
+  weights = rgamma(n = n, shape = 1);
+  weights  = weights/sum(weights)
+
+  # Mean, sd of y for scaling:
+  mu_y = weighted.mean(y, weights);
+  sigma_y = sqrt(weighted.mean((y - mu_y)^2, weights))
+  #mu_y = mean(y); sigma_y = sd(y);
+
+  # Input points for smoothing:
+  t0 = sort(unique(y[y!=0]))
+
+  # Bayesian bootstrap for the CDF:
+  F_y = function(t) sapply(t, function(ttemp)
+    n/(n+1)*sum(weights[y <= ttemp]))/sum(weights)
+
+  # Initial transformation:
+  g0 = mu_y + sigma_y*qnorm(F_y(t0-1))
+
+  # Make sure we have only finite values of g0 (infinite values occur for F_y = 0 or F_y = 1)
+  t0 = t0[which(is.finite(g0))]; g0 = g0[which(is.finite(g0))]
+
+  # Return the smoothed (monotone) transformation:
+  splinefun(t0, g0, method = 'monoH.FC')
+}
+#----------------------------------------------------------------------------
 #' Weighted cumulative distribution function (CDF)-based transformation
 #'
 #' Compute a CDF-based transformation using the observed count data.
@@ -437,7 +491,7 @@ simulate_nb_lm = function(n = 100,
               matrix(rnorm(n = n*(p-1)), nrow = n))
   } else {
     X = cbind(1,
-              t(apply(matrix(0, nr = n, nc = p-1), 1, function(x)
+              t(apply(matrix(0, nrow = n, ncol = p-1), 1, function(x)
                 arima.sim(n = p-1, list(ar = ar1), sd = sqrt(1-ar1^2)))))
   }
 

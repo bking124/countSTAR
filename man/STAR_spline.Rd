@@ -11,7 +11,7 @@ STAR_spline(
   y_max = Inf,
   psi = 1000,
   method_sigma = "mle",
-  nsave = 1000,
+  nsave = 500,
   compute_marg = FALSE
 )
 }
@@ -25,6 +25,7 @@ STAR_spline(
 \item "identity" (identity transformation)
 \item "log" (log transformation)
 \item "sqrt" (square root transformation)
+\item "bnp" (Bayesian nonparametric transformation using the Bayesian bootstrap)
 \item "np" (nonparametric transformation estimated from empirical CDF)
 \item "pois" (transformation for moment-matched marginal Poisson CDF)
 \item "neg-bin" (transformation for moment-matched marginal Negative Binomial CDF)
@@ -78,6 +79,9 @@ distributions. For the parametric distributions, the parameters of the distribut
 are estimated using moments (means and variances) of \code{y}. The distribution-based
 transformations approximately preserve the mean and variance of the count data \code{y}
 on the latent data scale, which lends interpretability to the model parameters.
+Lastly, the transformation can be modeled using the Bayesian bootstrap ('bnp'),
+which is a Bayesian nonparametric model and incorporates the uncertainty
+about the transformation into posterior and predictive inference.
 
 The Monte Carlo sampler produces direct, discrete, and joint draws
 from the posterior predictive distribution of the spline regression model

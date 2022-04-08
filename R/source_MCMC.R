@@ -1906,6 +1906,7 @@ bart_star_np_MCMC = function(y,
 #' \item "identity" (identity transformation)
 #' \item "log" (log transformation)
 #' \item "sqrt" (square root transformation)
+#' \item "bnp" (Bayesian nonparametric transformation using the Bayesian bootstrap)
 #' \item "np" (nonparametric transformation estimated from empirical CDF)
 #' \item "pois" (transformation for moment-matched marginal Poisson CDF)
 #' \item "neg-bin" (transformation for moment-matched marginal Negative Binomial CDF)
@@ -1945,6 +1946,9 @@ bart_star_np_MCMC = function(y,
 #' are estimated using moments (means and variances) of \code{y}. The distribution-based
 #' transformations approximately preserve the mean and variance of the count data \code{y}
 #' on the latent data scale, which lends interpretability to the model parameters.
+#' Lastly, the transformation can be modeled using the Bayesian bootstrap ('bnp'),
+#' which is a Bayesian nonparametric model and incorporates the uncertainty
+#' about the transformation into posterior and predictive inference.
 #'
 #' The Monte Carlo sampler produces direct, discrete, and joint draws
 #' from the posterior predictive distribution of the spline regression model
@@ -1981,7 +1985,7 @@ STAR_spline = function(y,
                        y_max = Inf,
                        psi = 1000,
                        method_sigma = 'mle',
-                       nsave = 1000,
+                       nsave = 500,
                        compute_marg = FALSE){
   #----------------------------------------------------------------------------
   # Check: currently implemented for nonnegative integers
@@ -1994,8 +1998,8 @@ STAR_spline = function(y,
 
   # Check: does the transformation make sense?
   transformation = tolower(transformation);
-  if(!is.element(transformation, c("identity", "log", "sqrt", "np", "pois", "neg-bin")))
-    stop("The transformation must be one of 'identity', 'log', 'sqrt', 'np', 'pois', or 'neg-bin'")
+  if(!is.element(transformation, c("identity", "log", "sqrt", "bnp", "np", "pois", "neg-bin")))
+    stop("The transformation must be one of 'identity', 'log', 'sqrt', 'bnp', 'np', 'pois', or 'neg-bin'")
 
   # Check: does the method for sigma make sense?
   method_sigma = tolower(method_sigma);
@@ -2007,6 +2011,12 @@ STAR_spline = function(y,
     test = is.element(transformation, c("identity", "log", "sqrt", "box-cox")),
     yes = 'bc', no = 'cdf'
   )
+
+  # Bayesian bootstrap?
+  if(transformation == 'bnp'){
+    useBB = TRUE # lets us know to update g, ginv during sampling
+    transformation = 'np' # makes for easier initialization
+  } else useBB = FALSE
   #----------------------------------------------------------------------------
   # Define the transformation:
   if(transform_family == 'bc'){
@@ -2085,35 +2095,14 @@ STAR_spline = function(y,
   #----------------------------------------------------------------------------
   # Posterior predictive simulations:
 
-  print('Posterior predictive sampling...')
-
   # Covariance matrix of z:
   Sigma_z = sigma_epsilon^2*(diag(n) + psi*BBt)
 
-  # Sample z in this interval:
-  post_z = t(mvrandn(l = g_a_y,
-                     u = g_a_yp1,
-                     Sig = Sigma_z,
-                     n = nsave))
-  # Important terms:
+  # Important terms for predictive draws:
   #BdBt = B%*%diag(1/(1 + psi*diagBtB))%*%t(B)
   #Bd2Bt = B%*%diag(1 - psi*diagBtB/(1 + psi*diagBtB))%*%t(B)
   BdBt = tcrossprod(t(t(B)*1/(1 + psi*diagBtB)), B)
   Bd2Bt = tcrossprod(t(t(B)*(1 - psi*diagBtB/(1 + psi*diagBtB))), B)
-
-  # And sample the additional term:
-  V1tilde = rcpp_rmvnorm(n = nsave,
-                         mu = rep(0, n),
-                         S = sigma_epsilon^2*(psi*BdBt + diag(n)))
-
-  # Predictive samples of ztilde:
-  post_ztilde = V1tilde + t(tcrossprod(psi*Bd2Bt, post_z))
-
-  # Predictive samples of ytilde:
-  post_ytilde = t(apply(post_ztilde, 1, function(z){
-    round_floor(g_inv(z), y_max)
-  }))
-  #post_ytilde = matrix(round_floor(g_inv(post_ztilde), y_max), nrow = S)
 
   # Marginal likelihood, if requested:
   if(compute_marg){
@@ -2125,6 +2114,57 @@ STAR_spline = function(y,
       ub = g_a_yp1
     )
   } else marg_like = NULL
+
+  print('Posterior predictive sampling...')
+
+  # Common term for predictive draws:
+  V1tilde = rcpp_rmvnorm(n = nsave,
+                         mu = rep(0, n),
+                         S = sigma_epsilon^2*(psi*BdBt + diag(n)))
+
+  # Bayesian bootstrap sampling:
+  if(useBB){
+    # MC draws:
+    post_ytilde = array(NA, c(nsave, n)) # storage
+    for(s in 1:nsave){
+      # Sample the transformation:
+      g = g_bnp(y)
+
+      # Update the lower and upper intervals:
+      g_a_y = g(a_j(y, y_max = y_max));
+      g_a_yp1 = g(a_j(y + 1, y_max = y_max))
+
+      # Update the inverse transformation function:
+      g_inv = g_inv_approx(g = g, t_grid = t_grid)
+
+      # Sample z in this interval:
+      z = mvrandn(l = g_a_y,
+                  u = g_a_yp1,
+                  Sig = Sigma_z,
+                  n = 1)
+
+      # Predictive samples of ztilde:
+      ztilde = V1tilde[s,] + t(crossprod(psi*Bd2Bt, z))
+
+      # Predictive samples of ytilde:
+      post_ytilde[s,] = round_floor(g_inv(ztilde), y_max)
+    }
+  } else {
+    # Sample z in this interval:
+    post_z = t(mvrandn(l = g_a_y,
+                       u = g_a_yp1,
+                       Sig = Sigma_z,
+                       n = nsave))
+
+    # Predictive samples of ztilde:
+    post_ztilde = V1tilde + t(tcrossprod(psi*Bd2Bt, post_z))
+
+    # Predictive samples of ytilde:
+    post_ytilde = t(apply(post_ztilde, 1, function(z){
+      round_floor(g_inv(z), y_max)
+    }))
+    #post_ytilde = matrix(round_floor(g_inv(post_ztilde), y_max), nrow = S)
+  }
 
   print('Done!')
 
@@ -2146,6 +2186,7 @@ STAR_spline = function(y,
 #' \item "identity" (identity transformation)
 #' \item "log" (log transformation)
 #' \item "sqrt" (square root transformation)
+#' \item "bnp" (Bayesian nonparametric transformation using the Bayesian bootstrap)
 #' \item "np" (nonparametric transformation estimated from empirical CDF)
 #' \item "pois" (transformation for moment-matched marginal Poisson CDF)
 #' \item "neg-bin" (transformation for moment-matched marginal Negative Binomial CDF)
@@ -2188,6 +2229,9 @@ STAR_spline = function(y,
 #' are estimated using moments (means and variances) of \code{y}. The distribution-based
 #' transformations approximately preserve the mean and variance of the count data \code{y}
 #' on the latent data scale, which lends interpretability to the model parameters.
+#' Lastly, the transformation can be modeled using the Bayesian bootstrap ('bnp'),
+#' which is a Bayesian nonparametric model and incorporates the uncertainty
+#' about the transformation into posterior and predictive inference.
 #'
 #' The Monte Carlo sampler produces direct, discrete, and joint draws
 #' from the posterior distribution and the posterior predictive distribution
@@ -2237,8 +2281,8 @@ STAR_gprior = function(y, X, X_test = NULL,
 
   # Check: does the transformation make sense?
   transformation = tolower(transformation);
-  if(!is.element(transformation, c("identity", "log", "sqrt", "np", "pois", "neg-bin")))
-    stop("The transformation must be one of 'identity', 'log', 'sqrt', 'np', 'pois', or 'neg-bin'")
+  if(!is.element(transformation, c("identity", "log", "sqrt", "bnp", "np", "pois", "neg-bin")))
+    stop("The transformation must be one of 'identity', 'log', 'sqrt', 'bnp', 'np', 'pois', or 'neg-bin'")
 
   # Check: does the method for sigma make sense?
   method_sigma = tolower(method_sigma);
@@ -2250,6 +2294,12 @@ STAR_gprior = function(y, X, X_test = NULL,
     test = is.element(transformation, c("identity", "log", "sqrt", "box-cox")),
     yes = 'bc', no = 'cdf'
   )
+
+  # Bayesian bootstrap?
+  if(transformation == 'bnp'){
+    useBB = TRUE # lets us know to update g, ginv during sampling
+    transformation = 'np' # makes for easier initialization
+  } else useBB = FALSE
   #----------------------------------------------------------------------------
   # Define the transformation:
   if(transform_family == 'bc'){
@@ -2321,45 +2371,8 @@ STAR_gprior = function(y, X, X_test = NULL,
   #----------------------------------------------------------------------------
   # Posterior simulations:
 
-  print('Posterior sampling...')
-
   # Covariance matrix of z:
   Sigma_z = sigma_epsilon^2*(diag(n) + psi*H)
-
-  # Sample z in this interval:
-  post_z = t(mvrandn(l = g_a_y,
-                     u = g_a_yp1,
-                     Sig = Sigma_z,
-                     n = nsave))
-
-  # Estimated coefficients:
-  beta_hat = rowMeans(tcrossprod(psi/(1+psi)*XtXinvXt, post_z))
-
-  # And sample the additional term:
-  V1 = rcpp_rmvnorm(n = nsave,
-                    mu = rep(0, p),
-                    S = sigma_epsilon^2*psi/(1+psi)*XtXinv)
-
-  # Posterior samples of the coefficients:
-  post_beta = V1 + t(tcrossprod(psi/(1+psi)*XtXinvXt, post_z))
-
-  # Predictive samples of ztilde:
-  post_ztilde = tcrossprod(post_beta, X_test) + sigma_epsilon*rnorm(n = nsave*nrow(X_test))
-
-  # Predictive samples of ytilde:
-  post_ytilde = t(apply(post_ztilde, 1, function(z){
-    round_floor(g_inv(z), y_max)
-  }))
-
-  # # Alternative way to compute the predictive draws
-  # ntilde = ncol(X_test)
-  # XtildeXtXinv = X_test%*%XtXinv
-  # Htilde = tcrossprod(XtildeXtXinv, X_test)
-  # V1tilde = rcpp_rmvnorm(n = nsave,
-  #                        mu = rep(0, ntilde),
-  #                        S = sigma_epsilon^2*(psi/(1+psi)*Htilde + diag(ntilde)))
-  # post_ztilde = V1tilde + t(tcrossprod(psi/(1+psi)*tcrossprod(XtildeXtXinv, X), post_z))
-  # post_ytilde = t(apply(post_ztilde, 1, function(z){round_floor(g_inv(z), y_max)}))
 
   # Marginal likelihood, if requested:
   if(compute_marg){
@@ -2371,6 +2384,76 @@ STAR_gprior = function(y, X, X_test = NULL,
       ub = g_a_yp1
     )
   } else marg_like = NULL
+
+  print('Posterior sampling...')
+
+  # Common term:
+  V1 = rcpp_rmvnorm(n = nsave,
+                    mu = rep(0, p),
+                    S = sigma_epsilon^2*psi/(1+psi)*XtXinv)
+
+  if(useBB){
+    # MC draws:
+    post_beta = array(NA, c(nsave,p))
+    post_z = post_ytilde = array(NA, c(nsave, n)) # storage
+    for(s in 1:nsave){
+      # Sample the transformation:
+      g = g_bnp(y)
+
+      # Update the lower and upper intervals:
+      g_a_y = g(a_j(y, y_max = y_max));
+      g_a_yp1 = g(a_j(y + 1, y_max = y_max))
+
+      # Update the inverse transformation function:
+      g_inv = g_inv_approx(g = g, t_grid = t_grid)
+
+      # Sample z in this interval:
+      post_z[s,] = mvrandn(l = g_a_y,
+                  u = g_a_yp1,
+                  Sig = Sigma_z,
+                  n = 1)
+
+      # Posterior samples of the coefficients:
+      post_beta[s,] = V1[s,] + tcrossprod(psi/(1+psi)*XtXinvXt, t(post_z[s,]))
+
+      # Predictive samples of ztilde:
+      ztilde = tcrossprod(post_beta[s,], X_test) + sigma_epsilon*rnorm(n = nrow(X_test))
+
+      # Predictive samples of ytilde:
+      post_ytilde[s,] = round_floor(g_inv(ztilde), y_max)
+    }
+
+  } else {
+    # Sample z in this interval:
+    post_z = t(mvrandn(l = g_a_y,
+                       u = g_a_yp1,
+                       Sig = Sigma_z,
+                       n = nsave))
+
+    # Posterior samples of the coefficients:
+    post_beta = V1 + t(tcrossprod(psi/(1+psi)*XtXinvXt, post_z))
+
+    # Predictive samples of ztilde:
+    post_ztilde = tcrossprod(post_beta, X_test) + sigma_epsilon*rnorm(n = nsave*nrow(X_test))
+
+    # Predictive samples of ytilde:
+    post_ytilde = t(apply(post_ztilde, 1, function(z){
+      round_floor(g_inv(z), y_max)
+    }))
+  }
+
+  # Estimated coefficients:
+  beta_hat = rowMeans(tcrossprod(psi/(1+psi)*XtXinvXt, post_z))
+
+  # # Alternative way to compute the predictive draws
+  # ntilde = ncol(X_test)
+  # XtildeXtXinv = X_test%*%XtXinv
+  # Htilde = tcrossprod(XtildeXtXinv, X_test)
+  # V1tilde = rcpp_rmvnorm(n = nsave,
+  #                        mu = rep(0, ntilde),
+  #                        S = sigma_epsilon^2*(psi/(1+psi)*Htilde + diag(ntilde)))
+  # post_ztilde = V1tilde + t(tcrossprod(psi/(1+psi)*tcrossprod(XtildeXtXinv, X), post_z))
+  # post_ytilde = t(apply(post_ztilde, 1, function(z){round_floor(g_inv(z), y_max)}))
 
   print('Done!')
 
@@ -2398,6 +2481,7 @@ STAR_gprior = function(y, X, X_test = NULL,
 #' \item "identity" (identity transformation)
 #' \item "log" (log transformation)
 #' \item "sqrt" (square root transformation)
+#' \item "bnp" (Bayesian nonparametric transformation using the Bayesian bootstrap)
 #' \item "np" (nonparametric transformation estimated from empirical CDF)
 #' \item "pois" (transformation for moment-matched marginal Poisson CDF)
 #' \item "neg-bin" (transformation for moment-matched marginal Negative Binomial CDF)
@@ -2437,7 +2521,9 @@ STAR_gprior = function(y, X, X_test = NULL,
 #' are estimated using moments (means and variances) of \code{y}. The distribution-based
 #' transformations approximately preserve the mean and variance of the count data \code{y}
 #' on the latent data scale, which lends interpretability to the model parameters.
-#'
+#' Lastly, the transformation can be modeled using the Bayesian bootstrap ('bnp'),
+#' which is a Bayesian nonparametric model and incorporates the uncertainty
+#' about the transformation into posterior and predictive inference.
 #'
 #' @examples
 #' # Simulate some data:
@@ -2484,14 +2570,20 @@ STAR_gprior_gibbs = function(y, X, X_test = NULL,
 
   # Check: does the transformation make sense?
   transformation = tolower(transformation);
-  if(!is.element(transformation, c("identity", "log", "sqrt", "np", "pois", "neg-bin")))
-    stop("The transformation must be one of 'identity', 'log', 'sqrt', 'np', 'pois', or 'neg-bin'")
+  if(!is.element(transformation, c("identity", "log", "sqrt", "bnp", "np", "pois", "neg-bin")))
+    stop("The transformation must be one of 'identity', 'log', 'sqrt', 'bnp', 'np', 'pois', or 'neg-bin'")
 
   # Assign a family for the transformation: Box-Cox or CDF?
   transform_family = ifelse(
     test = is.element(transformation, c("identity", "log", "sqrt", "box-cox")),
     yes = 'bc', no = 'cdf'
   )
+
+  # Bayesian bootstrap?
+  if(transformation == 'bnp'){
+    useBB = TRUE # lets us know to update g, ginv during sampling
+    transformation = 'np' # makes for easier initialization
+  } else useBB = FALSE
   #----------------------------------------------------------------------------
   # Define the transformation:
   if(transform_family == 'bc'){
@@ -2552,6 +2644,19 @@ STAR_gprior_gibbs = function(y, X, X_test = NULL,
   if(verbose) timer0 = proc.time()[3] # For timing the sampler
   for(nsi in 1:nstot){
 
+    #----------------------------------------------------------------------------
+    # Block 0: sample the transformation (if bnp)
+    if(useBB){
+      # Sample the transformation:
+      g = g_bnp(y)
+
+      # Update the lower and upper intervals:
+      g_a_y = g(a_j(y, y_max = y_max));
+      g_a_yp1 = g(a_j(y + 1, y_max = y_max))
+
+      # Update the inverse transformation function:
+      g_inv = g_inv_approx(g = g, t_grid = t_grid)
+    }
     #----------------------------------------------------------------------------
     # Block 1: sample the z_star
     z_star = rtruncnormRcpp(y_lower = g_a_y,
@@ -2632,6 +2737,7 @@ STAR_gprior_gibbs = function(y, X, X_test = NULL,
 #' \itemize{
 #' \item "identity" (signed identity transformation)
 #' \item "sqrt" (signed square root transformation)
+#' \item "bnp" (Bayesian nonparametric transformation using the Bayesian bootstrap)
 #' \item "np" (nonparametric transformation estimated from empirical CDF)
 #' \item "pois" (transformation for moment-matched marginal Poisson CDF)
 #' \item "neg-bin" (transformation for moment-matched marginal Negative Binomial CDF)
@@ -2682,6 +2788,9 @@ STAR_gprior_gibbs = function(y, X, X_test = NULL,
 #' are estimated using moments (means and variances) of \code{y}. The distribution-based
 #' transformations approximately preserve the mean and variance of the count data \code{y}
 #' on the latent data scale, which lends interpretability to the model parameters.
+#' Lastly, the transformation can be modeled using the Bayesian bootstrap ('bnp'),
+#' which is a Bayesian nonparametric model and incorporates the uncertainty
+#' about the transformation into posterior and predictive inference.
 #'
 #' There are several options for the prior variance \code{psi}.
 #' First, it can be specified directly. Second, it can be assigned
@@ -2735,8 +2844,8 @@ STAR_sparse_means = function(y,
 
   # Check: does the transformation make sense?
   transformation = tolower(transformation);
-  if(!is.element(transformation, c("identity", "sqrt", "np", "pois", "neg-bin")))
-    stop("The transformation must be one of 'identity', 'sqrt', 'np', 'pois', or 'neg-bin'")
+  if(!is.element(transformation, c("identity", "log", "sqrt", "bnp", "np", "pois", "neg-bin")))
+    stop("The transformation must be one of 'identity', 'log', 'sqrt', 'bnp', 'np', 'pois', or 'neg-bin'")
 
   # Check: does the count=valued transformation make sense
   if(is.element(transformation, c("pois", "neg-bin")) & any(y<0))
@@ -2753,6 +2862,12 @@ STAR_sparse_means = function(y,
     sample_psi = TRUE
     psi = n/10 # initial value
   } else sample_psi = FALSE
+
+  # Bayesian bootstrap?
+  if(transformation == 'bnp'){
+    useBB = TRUE # lets us know to update g, ginv during sampling
+    transformation = 'np' # makes for easier initialization
+  } else useBB = FALSE
   #----------------------------------------------------------------------------
   # Define the transformation:
   if(transform_family == 'bc'){
@@ -2822,12 +2937,26 @@ STAR_sparse_means = function(y,
   if(verbose) timer0 = proc.time()[3] # For timing the sampler
   for(nsi in 1:nstot){
 
-    # Sample the inclusion probability:
+    #----------------------------------------------------------------------------
+    # Block 0: sample the transformation (if bnp)
+    if(useBB){
+      # Sample the transformation:
+      g = g_bnp(y)
+
+      # Update the lower and upper intervals:
+      g_a_y = g(a_j(y, y_max = y_max));
+      g_a_yp1 = g(a_j(y + 1, y_max = y_max))
+
+      # Update the inverse transformation function:
+      g_inv = g_inv_approx(g = g, t_grid = t_grid)
+    }
+    #----------------------------------------------------------------------------
+    # Block 1: sample the inclusion probability:
     pi_inc = rbeta(n = 1,
                    shape1 = a_pi + sum(gamma == 1),
                    shape2 = b_pi + sum(gamma == 0))
-
-    # Sample each inclusion indicator (random ordering)
+    #----------------------------------------------------------------------------
+    # Block 2: sample each inclusion indicator (random ordering)
     for(i in sample(1:n, n)){
 
       # Set the indicators:
@@ -2867,7 +2996,7 @@ STAR_sparse_means = function(y,
     # sample(sigma_seq, 1, prob = exp(log_m_sigma))
     # plot(sigma_seq, log_m_sigma); abline(v = sigma_epsilon)
     #----------------------------------------------------------------------------
-    # Sample the regression coefficients (NOTE: optional)
+    # Block 3 (optional): sample the regression coefficients
     if(sample_coefs){
       theta = rep(0, n)
       n_nz = sum(gamma == 1)
@@ -2881,8 +3010,8 @@ STAR_sparse_means = function(y,
         theta[gamma==1] = v_1i + psi/(1+psi)*v_0i
       }
     }
-
-    # Sample psi, the prior variance parameter:
+    #----------------------------------------------------------------------------
+    # Block 4: sample psi, the prior variance parameter:
     if(sample_psi){
       # If we have the coefficients, use a Gibbs step:
       if(sample_coefs){
@@ -2957,6 +3086,7 @@ STAR_sparse_means = function(y,
 #' \item "identity" (identity transformation)
 #' \item "log" (log transformation)
 #' \item "sqrt" (square root transformation)
+#' \item "bnp" (Bayesian nonparametric transformation using the Bayesian bootstrap)
 #' \item "np" (nonparametric transformation estimated from empirical CDF)
 #' \item "pois" (transformation for moment-matched marginal Poisson CDF)
 #' \item "neg-bin" (transformation for moment-matched marginal Negative Binomial CDF)
@@ -2998,6 +3128,9 @@ STAR_sparse_means = function(y,
 #' are estimated using moments (means and variances) of \code{y}. The distribution-based
 #' transformations approximately preserve the mean and variance of the count data \code{y}
 #' on the latent data scale, which lends interpretability to the model parameters.
+#' Lastly, the transformation can be modeled using the Bayesian bootstrap ('bnp'),
+#' which is a Bayesian nonparametric model and incorporates the uncertainty
+#' about the transformation into posterior and predictive inference.
 #'
 #'
 #' @examples
@@ -3044,8 +3177,8 @@ comp_gprior_gibbs = function(y, X, X_test = NULL,
 
   # Check: does the transformation make sense?
   transformation = tolower(transformation);
-  if(!is.element(transformation, c("identity", "log", "sqrt", "np", "pois", "neg-bin")))
-    stop("The transformation must be one of 'identity', 'log', 'sqrt', 'np', 'pois', or 'neg-bin'")
+  if(!is.element(transformation, c("identity", "log", "sqrt", "bnp", "np", "pois", "neg-bin")))
+    stop("The transformation must be one of 'identity', 'log', 'sqrt', 'bnp', 'np', 'pois', or 'neg-bin'")
 
   # Check: does the method for sigma make sense?
   method_sigma = tolower(method_sigma);
@@ -3057,6 +3190,12 @@ comp_gprior_gibbs = function(y, X, X_test = NULL,
     test = is.element(transformation, c("identity", "log", "sqrt", "box-cox")),
     yes = 'bc', no = 'cdf'
   )
+
+  # Bayesian bootstrap?
+  if(transformation == 'bnp'){
+    useBB = TRUE # lets us know to update g, ginv during sampling
+    transformation = 'np' # makes for easier initialization
+  } else useBB = FALSE
   #----------------------------------------------------------------------------
   # Define the transformation:
   if(transform_family == 'bc'){
@@ -3115,6 +3254,7 @@ comp_gprior_gibbs = function(y, X, X_test = NULL,
 
   # Store MCMC output:
   post_beta = array(NA, c(nsave, p))
+  post_ytilde = array(NA, c(nsave, n))
 
   # Total number of MCMC simulations:
   nstot = nburn+(nskip+1)*(nsave)
@@ -3124,6 +3264,19 @@ comp_gprior_gibbs = function(y, X, X_test = NULL,
   if(verbose) timer0 = proc.time()[3] # For timing the sampler
   for(nsi in 1:nstot){
 
+    #----------------------------------------------------------------------------
+    # Block 0: sample the transformation (if bnp)
+    if(useBB){
+      # Sample the transformation:
+      g = g_bnp(y)
+
+      # Update the lower and upper intervals:
+      g_a_y = g(a_j(y, y_max = y_max));
+      g_a_yp1 = g(a_j(y + 1, y_max = y_max))
+
+      # Update the inverse transformation function:
+      g_inv = g_inv_approx(g = g, t_grid = t_grid)
+    }
     #----------------------------------------------------------------------------
     # Block 1: sample the z_star
     z_star = rtruncnormRcpp(y_lower = g_a_y,
@@ -3154,6 +3307,12 @@ comp_gprior_gibbs = function(y, X, X_test = NULL,
         # Posterior samples of the model parameters:
         post_beta[isave,] = beta
 
+        # Predictive samples of ztilde:
+        ztilde = tcrossprod(post_beta[isave,], X_test) + sigma_epsilon*rnorm(n = nrow(X_test))
+
+        # Predictive samples of ytilde:
+        post_ytilde[isave,] = round_floor(g_inv(ztilde), y_max)
+
         # And reset the skip counter:
         skipcount = 0
       }
@@ -3161,14 +3320,6 @@ comp_gprior_gibbs = function(y, X, X_test = NULL,
     if(verbose) computeTimeRemaining(nsi, timer0, nstot, nrep = 5000)
   }
   if(verbose) print(paste('Total time: ', round((proc.time()[3] - timer0)), 'seconds'))
-
-  # Predictive samples of ztilde:
-  post_ztilde = tcrossprod(post_beta, X_test) + sigma_epsilon*rnorm(n = nsave*nrow(X_test))
-
-  # Predictive samples of ytilde:
-  post_ytilde = t(apply(post_ztilde, 1, function(z){
-    round_floor(g_inv(z), y_max)
-  }))
 
   return(list(
     coefficients = colMeans(post_beta),
