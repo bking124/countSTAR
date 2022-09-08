@@ -69,6 +69,7 @@ g_inv_bc = function(s, lambda) {
 #' The CDF can be estimated nonparametrically or parametrically based on the
 #' Poisson or Negative-Binimial distributions. In the parametric case,
 #' the parameters are determined based on the moments of \code{y}.
+#' Note that this is a fixed quantity and does not come with uncertainty quantification.
 #'
 #' @param y \code{n x 1} vector of observed counts
 #' @param distribution the distribution used for the CDF; must be one of
@@ -141,7 +142,8 @@ g_cdf = function(y, distribution = "np") {
   t0 = sort(unique(y[y!=0]))
 
   # Initial transformation:
-  g0 = mu_y + sigma_y*qnorm(F_y(t0-1))
+  g0 = qnorm(F_y(t0-1))
+  #g0 = mu_y + sigma_y*qnorm(F_y(t0-1))
 
   # Make sure we have only finite values of g0 (infinite values occur for F_y = 0 or F_y = 1)
   t0 = t0[which(is.finite(g0))]; g0 = g0[which(is.finite(g0))]
@@ -153,16 +155,24 @@ g_cdf = function(y, distribution = "np") {
 #' Bayesian bootstrap-based transformation
 #'
 #' Compute one posterior draw from the smoothed transformation
-#' implied by the Bayesian bootstrap distribution for the CDF.
+#' implied by (separate) Bayesian bootstrap models for the CDFs
+#' of \code{y} and \code{X}.
 #'
 #' @param y \code{n x 1} vector of observed counts
+#' @param zgrid optional vector of grid points for evaluating the CDF
+#' of z (\code{Fz})
+#' @param xtSigmax \code{n x 1} vector of \code{t(X_i) Sigma_theta X_i},
+#' where \code{Sigma_theta} is the prior variance
+#' @param sigma_epsilon latent standard deviation
+#' @param approx_Fz logical; if TRUE, use a normal approximation for \code{Fz},
+#' the marginal CDF of the latent z, which is faster and more stable
 #' @return A smooth monotone function which can be used for evaluations of the transformation
 #' at each posterior draw.
 #'
 #' @examples
+#' \dontrun{
 #' # Sample some data:
 #' y = rpois(n = 200, lambda = 5)
-#'
 #' # Compute 200 draws of g on a grid:
 #' t = seq(0, max(y), length.out = 100) # grid
 #' g_post = t(sapply(1:500, function(s) g_bnp(y)(t)))
@@ -171,45 +181,192 @@ g_cdf = function(y, distribution = "np") {
 #' apply(g_post, 1, function(g) lines(t, g, col='gray'))
 #' # And the posterior mean of g:
 #' lines(t, colMeans(g_post), lwd=3)
+#' }
 #' @export
 # Function to simulate g:
-g_bnp = function(y){
+g_bnp = function(y,
+                 xtSigmax = rep(0, length(y)),
+                 zgrid = NULL,
+                 sigma_epsilon = 1,
+                 approx_Fz = FALSE
+){
 
   # Length:
   n = length(y)
 
-  # Simulate the weights:
-  weights = rgamma(n = n, shape = 1);
-  weights  = weights/sum(weights)
+  # Bayesian bootstrap for the CDF of y
 
-  # Mean, sd of y for scaling:
-  mu_y = weighted.mean(y, weights);
-  sigma_y = sqrt(weighted.mean((y - mu_y)^2, weights))
-  #mu_y = mean(y); sigma_y = sd(y);
+  # Dirichlet(1) weights:
+  weights_y = rgamma(n = n, shape = 1)
+  weights_y  = weights_y/sum(weights_y)
 
-  # Input points for smoothing:
-  t0 = sort(unique(y[y!=0]))
-
-  # Bayesian bootstrap for the CDF:
+  # CDF as a function:
   F_y = function(t) sapply(t, function(ttemp)
-    n/(n+1)*sum(weights[y <= ttemp]))/sum(weights)
+    n/(n+1)*sum(weights_y[y <= ttemp]))/sum(weights_y)
+
+  if(approx_Fz){
+    # Use a fast normal approximation for the CDF of z
+
+    # Pick a "representative" SD; faster than approximating Fz directly
+    sigma_approx = median(sqrt(sigma_epsilon^2 + xtSigmax))
+
+    # Approximate inverse function:
+    Fzinv = function(s) qnorm(s, sd = sigma_approx)
+
+  } else {
+    # Bayesian bootstrap for the CDF of z
+
+    # Dirichlet(1) weights:
+    weights_x = rgamma(n = n, shape = 1)
+    weights_x  = weights_x/sum(weights_x) # dirichlet weights
+
+    # Compute the CDF Fz on a grid:
+    if(is.null(zgrid)){
+      zgrid = sort(unique(sapply(range(xtSigmax), function(xtemp){
+        qnorm(seq(0.001, 0.999, length.out = 250),
+              mean = 0,
+              sd = sqrt(sigma_epsilon^2 + xtemp))
+
+      })))
+    }
+
+    # CDF on the grid:
+    Fz = rowSums(sapply(1:n, function(i){
+      weights_x[i]*pnorm(zgrid,
+                         mean = 0,# assuming prior mean zero
+                         sd = sqrt(sigma_epsilon^2 + xtSigmax[i])
+      )
+    }))
+
+    # Inverse function:
+    Fzinv = function(s) stats::spline(Fz, zgrid,
+                                      method = "hyman",
+                                      xout = s)$y
+    # https://stats.stackexchange.com/questions/390931/compute-quantile-function-from-a-mixture-of-normal-distribution/390936#390936
+
+    # Check the inverse:
+    # plot(zgrid, Fzinv(Fz)); abline(0,1)
+  }
+
+  # Apply the function g(), including some smoothing
+    # (the smoothing is necessary to avoid g_a_y = g_a_yp1 for *unobserved* y-values)
+  t0 = sort(unique(y)) # point for smoothing
 
   # Initial transformation:
-  g0 = mu_y + sigma_y*qnorm(F_y(t0-1))
+  g0 = Fzinv(F_y(t0-1))
 
   # Make sure we have only finite values of g0 (infinite values occur for F_y = 0 or F_y = 1)
   t0 = t0[which(is.finite(g0))]; g0 = g0[which(is.finite(g0))]
 
   # Return the smoothed (monotone) transformation:
-  splinefun(t0, g0, method = 'monoH.FC')
+  return(splinefun(t0, g0, method = 'monoH.FC'))
+}
+#----------------------------------------------------------------------------
+#' Bayesian bootstrap-based transformation for sparse means
+#'
+#' Compute one posterior draw from the smoothed transformation
+#' implied by (separate) Bayesian bootstrap models for the CDFs
+#' of \code{y} and \code{X}.
+#' This function is for the special case of the sparse means model.
+#'
+#' @param y \code{n x 1} vector of observed counts
+#' @param psi prior variance for the slab component
+#' @param pi_inc prior inclusion  probability
+#' @param zgrid optional vector of grid points for evaluating the CDF
+#' of z (\code{Fz})
+#' @param sigma_epsilon latent standard deviation; set to one for identifiability
+#' @param approx_Fz logical; if TRUE, use a normal approximation for \code{Fz},
+#' the marginal CDF of the latent z, which is faster and more stable
+#' @return A smooth monotone function which can be used for evaluations of the transformation
+#' at each posterior draw.
+#'
+#' @export
+# Function to simulate g:
+g_bnp_sparse_means = function(y,
+                              psi,
+                              pi_inc,
+                              zgrid = NULL,
+                              sigma_epsilon = 1,
+                              approx_Fz = FALSE
+){
+
+  # Length:
+  n = length(y)
+
+  # Bayesian bootstrap for the CDF of y
+
+  # Dirichlet(1) weights:
+  weights_y = rgamma(n = n, shape = 1)
+  weights_y  = weights_y/sum(weights_y)
+
+  # CDF as a function:
+  F_y = function(t) sapply(t, function(ttemp)
+    n/(n+1)*sum(weights_y[y <= ttemp]))/sum(weights_y)
+
+  if(approx_Fz){
+    # Use a fast normal approximation for the CDF of z
+
+    # Pick a "representative" SD; faster than approximating Fz directly
+    sigma_approx = median(c(sigma_epsilon,
+                            sigma_epsilon*sqrt(psi)))
+
+    # Approximate inverse function:
+    Fzinv = function(s) qnorm(s, sd = sigma_approx)
+
+  } else {
+
+    # Bayesian bootstrap for the CDF of z
+
+    # Dirichlet(1) weights:
+    weights_x = rgamma(n = n, shape = 1)
+    weights_x  = weights_x/sum(weights_x) # dirichlet weights
+
+    # Two component mixture:
+    # p(z) = (1 - pi_inc)*N(0, sigma_epsilon^2) +  pi_inc*N(0, psi*sigma_epsilon^2)
+    Fz_fun = function(z){
+      (1 - pi_inc)*pnorm(z, mean = 0, sd = sigma_epsilon) +
+        pi_inc*pnorm(z, mean = 0, sd = sigma_epsilon*sqrt(psi))
+    }
+
+    # Compute Fz() on a grid:
+    if(is.null(zgrid)){
+      zgrid = sort(unique(sapply(c(1, psi), function(xtemp){
+        qnorm(seq(0.001, 0.999, length.out = 250),
+              mean = 0,
+              sd = sigma_epsilon*sqrt(xtemp))
+      })))
+    }
+
+    # CDF on the grid:
+    Fz = Fz_fun(zgrid)
+
+    # Inverse function:
+    Fzinv = function(s) stats::spline(Fz, zgrid,
+                                      method = "hyman",
+                                      xout = s)$y
+  }
+
+  # Apply the function g(), including some smoothing
+  # (this is necessary to avoid g_a_y = g_a_yp1 for *unobserved* y-values)
+  t0 = sort(unique(y)) # point for smoothing
+
+  # Initial transformation:
+  g0 = Fzinv(F_y(t0-1))
+
+  # Make sure we have only finite values of g0 (infinite values occur for F_y = 0 or F_y = 1)
+  t0 = t0[which(is.finite(g0))]; g0 = g0[which(is.finite(g0))]
+
+  # Return the smoothed (monotone) transformation:
+  return(splinefun(t0, g0, method = 'monoH.FC'))
 }
 #----------------------------------------------------------------------------
 #' Weighted cumulative distribution function (CDF)-based transformation
 #'
 #' Compute a CDF-based transformation using the observed count data.
 #' The CDF can be estimated nonparametrically or parametrically based on the
-#' Poisson or Negative-Binimial distributions. In the parametric case,
+#' Poisson or Negative-Binomial distributions. In the parametric case,
 #' the parameters are determined based on the moments of \code{y}.
+#' Note that this is a fixed quantity and does not come with uncertainty quantification.
 #' This function incorporates positive weights to determine the CDFs.
 #'
 #' @param y \code{n x 1} vector of observed counts
@@ -291,7 +448,8 @@ g_wcdf = function(y, distribution = "np", weights = NULL) {
   t0 = sort(unique(y[y!=0]))
 
   # Initial transformation:
-  g0 = mu_y + sigma_y*qnorm(F_y(t0-1))
+  g0 = qnorm(F_y(t0-1))
+  #g0 = mu_y + sigma_y*qnorm(F_y(t0-1))
 
   # Make sure we have only finite values of g0 (infinite values occur for F_y = 0 or F_y = 1)
   t0 = t0[which(is.finite(g0))]; g0 = g0[which(is.finite(g0))]
@@ -308,7 +466,6 @@ g_wcdf = function(y, distribution = "np", weights = NULL) {
 #' @param t_grid grid of arguments at which to evaluate the transformation function
 #' @return A function which can be used for evaluations of the
 #' (approximate) inverse transformation function.
-#'
 #'
 #' @examples
 #' # Sample some data:

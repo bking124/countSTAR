@@ -7,11 +7,13 @@
 STAR_gprior(
   y,
   X,
-  X_test = NULL,
+  X_test = X,
   transformation = "np",
   y_max = Inf,
   psi = 1000,
   method_sigma = "mle",
+  approx_Fz = FALSE,
+  approx_Fy = FALSE,
   nsave = 1000,
   compute_marg = FALSE
 )
@@ -22,7 +24,7 @@ STAR_gprior(
 \item{X}{\code{n x p} matrix of predictors}
 
 \item{X_test}{\code{n0 x p} matrix of predictors for test data;
-if NULL, use the observed covariates \code{X}}
+default is the observed covariates \code{X}}
 
 \item{transformation}{transformation to use for the latent data; must be one of
 \itemize{
@@ -41,10 +43,15 @@ if NULL, use the observed covariates \code{X}}
 
 \item{method_sigma}{method to estimate the latent data standard deviation; must be one of
 \itemize{
-\item "sd" use the sample standard deviation of the observed data
 \item "mle" use the MLE from the STAR EM algorithm
 \item "mmle" use the marginal MLE (Note: slower!)
 }}
+
+\item{approx_Fz}{logical; in BNP transformation, apply a (fast and stable)
+normal approximation for the marginal CDF of the latent data}
+
+\item{approx_Fy}{logical; in BNP transformation, approximate
+the marginal CDF of \code{y} using the empirical CDF}
 
 \item{nsave}{number of Monte Carlo simulations}
 
@@ -59,6 +66,8 @@ a list with the following elements:
 of the regression coefficients
 \item \code{post_ytilde}: \code{nsave x n0} samples
 from the posterior predictive distribution at test points \code{X_test}
+\item \code{post_g}: \code{nsave} posterior samples of the transformation
+evaluated at the unique \code{y} values (only applies for 'bnp' transformations)
 \item \code{marg_like}: the marginal likelihood (if requested; otherwise NULL)
 }
 
@@ -93,6 +102,13 @@ about the transformation into posterior and predictive inference.
 The Monte Carlo sampler produces direct, discrete, and joint draws
 from the posterior distribution and the posterior predictive distribution
 of the linear regression model with a g-prior.
+}
+\note{
+The 'bnp' transformation (without the \code{Fy} approximation) is
+slower than the other transformations because of the way
+the \code{TruncatedNormal} sampler must be updated as the lower and upper
+limits change (due to the sampling of \code{g}). Thus, computational
+improvements are likely available.
 }
 \examples{
 # Simulate some data:

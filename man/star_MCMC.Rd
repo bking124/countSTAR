@@ -8,8 +8,7 @@ star_MCMC(
   y,
   sample_params,
   init_params,
-  transformation = "log",
-  lambda = NULL,
+  transformation = "np",
   y_max = Inf,
   nsave = 5000,
   nburn = 5000,
@@ -33,15 +32,16 @@ distribution of \code{coefficients} and \code{sigma} (and updates \code{mu})}
 \item{init_params}{an initializing function that inputs data \code{y}
 and initializes the named list \code{params} of \code{mu}, \code{sigma}, and \code{coefficients}}
 
-\item{transformation}{transformation to use for the latent process; must be one of
+\item{transformation}{transformation to use for the latent data; must be one of
 \itemize{
 \item "identity" (identity transformation)
 \item "log" (log transformation)
 \item "sqrt" (square root transformation)
-\item "box-cox" (box-cox transformation)
+\item "np" (nonparametric transformation estimated from empirical CDF)
+\item "pois" (transformation for moment-matched marginal Poisson CDF)
+\item "neg-bin" (transformation for moment-matched marginal Negative Binomial CDF)
+\item "box-cox" (box-cox transformation with learned parameter)
 }}
-
-\item{lambda}{the nonlinear parameter for the Box-Cox transformation; if NULL, model as unknown}
 
 \item{y_max}{a fixed and known upper bound for all observations; default is \code{Inf}}
 
@@ -79,9 +79,29 @@ Run the MCMC algorithm for STAR given
 \item a function to initialize model parameters; and
 \item a function to sample (i.e., update) model parameters.
 }
-The transformation is from the Box-Cox family of transformations,
-including identity, square-root, and logarthmic, as well as the Box-Cox
-transformation with unknown parameter.
+The transformation can be known (e.g., log or sqrt) or unknown
+(Box-Cox or estimated nonparametrically) for greater flexibility.
+}
+\details{
+STAR defines a count-valued probability model by
+(1) specifying a Gaussian model for continuous *latent* data and
+(2) connecting the latent data to the observed data via a
+*transformation and rounding* operation.
+
+Posterior and predictive inference is obtained via a Gibbs sampler
+that combines (i) a latent data augmentation step (like in probit regression)
+and (ii) an existing sampler for a continuous data model.
+
+There are several options for the transformation. First, the transformation
+can belong to the *Box-Cox* family, which includes the known transformations
+'identity', 'log', and 'sqrt', as well as a version in which the Box-Cox parameter
+is inferred within the MCMC sampler ('box-cox'). Second, the transformation
+can be estimated (before model fitting) using the empirical distribution of the
+data \code{y}. Options in this case include the empirical cumulative
+distribution function (CDF), which is fully nonparametric ('np'), or the parametric
+alternatives based on Poisson ('pois') or Negative-Binomial ('neg-bin')
+distributions. For the parametric distributions, the parameters of the distribution
+are estimated using moments (means and variances) of \code{y}.
 }
 \examples{
 \dontrun{
@@ -90,40 +110,41 @@ sim_dat = simulate_nb_lm(n = 100, p = 5)
 y = sim_dat$y; X = sim_dat$X
 
 # STAR: log-transformation:
-fit_star_log = star_MCMC(y = y,
+fit_log = star_MCMC(y = y,
                          sample_params = function(y, params) sample_params_lm(y, X, params),
                          init_params = function(y) init_params_lm(y, X),
                          transformation = 'log')
 # Posterior mean of each coefficient:
-coef(fit_star_log)
+coef(fit_log)
 
 # WAIC for STAR-log:
-fit_star_log$WAIC
+fit_log$WAIC
 
 # MCMC diagnostics:
-plot(as.ts(fit_star_log$post.coefficients[,1:3]))
+plot(as.ts(fit_log$post.coefficients[,1:3]))
 
 # Posterior predictive check:
-hist(apply(fit_star_log$post.pred, 1,
+hist(apply(fit_log$post.pred, 1,
            function(x) mean(x==0)), main = 'Proportion of Zeros', xlab='');
 abline(v = mean(y==0), lwd=4, col ='blue')
 
-# STAR: unknown Box-Cox transformation
-fit_star_bc = star_MCMC(y = y,
-                        sample_params = function(y, params) sample_params_lm(y, X, params),
-                        init_params = function(y) init_params_lm(y, X),
-                        transformation = 'box-cox')
-# Posterior mean of each coefficient:
-coef(fit_star_bc)
+# STAR: nonparametric transformation
+fit = star_MCMC(y = y,
+                sample_params = function(y, params) sample_params_lm(y, X, params),
+                init_params = function(y) init_params_lm(y, X),
+                transformation = 'np')
 
-# WAIC for STAR-bx:
-fit_star_bc$WAIC
+# Posterior mean of each coefficient:
+coef(fit)
+
+# WAIC:
+fit$WAIC
 
 # MCMC diagnostics:
-plot(as.ts(fit_star_bc$post.coefficients[,1:3]))
+plot(as.ts(fit$post.coefficients[,1:3]))
 
 # Posterior predictive check:
-hist(apply(fit_star_bc$post.pred, 1,
+hist(apply(fit$post.pred, 1,
            function(x) mean(x==0)), main = 'Proportion of Zeros', xlab='');
 abline(v = mean(y==0), lwd=4, col ='blue')
 

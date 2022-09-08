@@ -2,15 +2,14 @@
 % Please edit documentation in R/source_MCMC.R
 \name{bart_star_MCMC}
 \alias{bart_star_MCMC}
-\title{MCMC Algorithm for BART-STAR Model}
+\title{MCMC Algorithm for BART-STAR}
 \usage{
 bart_star_MCMC(
   y,
   X,
   X_test = NULL,
   y_test = NULL,
-  transformation = "log",
-  lambda = NULL,
+  transformation = "np",
   y_max = Inf,
   n.trees = 200,
   sigest = NULL,
@@ -41,10 +40,11 @@ computing log-predictive scores)}
 \item "identity" (identity transformation)
 \item "log" (log transformation)
 \item "sqrt" (square root transformation)
-\item "box-cox" (box-cox transformation)
+\item "np" (nonparametric transformation estimated from empirical CDF)
+\item "pois" (transformation for moment-matched marginal Poisson CDF)
+\item "neg-bin" (transformation for moment-matched marginal Negative Binomial CDF)
+\item "box-cox" (box-cox transformation with learned parameter)
 }}
-
-\item{lambda}{the nonlinear parameter for the Box-Cox transformation; if NULL, model as unknown}
 
 \item{y_max}{a fixed and known upper bound for all observations; default is \code{Inf}}
 
@@ -97,9 +97,30 @@ a list with the following elements:
 }
 \description{
 Run the MCMC algorithm for a BART model for count-valued responses using STAR.
-The transformation is from the Box-Cox family of transformations,
-including identity, square-root, and logarthmic, as well as the Box-Cox
-transformation with unknown parameter.
+The transformation can be known (e.g., log or sqrt) or unknown
+(Box-Cox or estimated nonparametrically) for greater flexibility.
+}
+\details{
+STAR defines a count-valued probability model by
+(1) specifying a Gaussian model for continuous *latent* data and
+(2) connecting the latent data to the observed data via a
+*transformation and rounding* operation. Here, the model in (1)
+is a Bayesian additive regression tree (BART) model.
+
+Posterior and predictive inference is obtained via a Gibbs sampler
+that combines (i) a latent data augmentation step (like in probit regression)
+and (ii) an existing sampler for a continuous data model.
+
+There are several options for the transformation. First, the transformation
+can belong to the *Box-Cox* family, which includes the known transformations
+'identity', 'log', and 'sqrt', as well as a version in which the Box-Cox parameter
+is inferred within the MCMC sampler ('box-cox'). Second, the transformation
+can be estimated (before model fitting) using the empirical distribution of the
+data \code{y}. Options in this case include the empirical cumulative
+distribution function (CDF), which is fully nonparametric ('np'), or the parametric
+alternatives based on Poisson ('pois') or Negative-Binomial ('neg-bin')
+distributions. For the parametric distributions, the parameters of the distribution
+are estimated using moments (means and variances) of \code{y}.
 }
 \examples{
 \dontrun{
@@ -108,40 +129,42 @@ sim_dat = simulate_nb_friedman(n = 100, p = 10)
 y = sim_dat$y; X = sim_dat$X
 
 # BART-STAR with log-transformation:
-fit_bart_star_log = bart_star_MCMC(y = y, X = X, transformation = 'log')
+fit_log = bart_star_MCMC(y = y, X = X,
+                         transformation = 'log', save_y_hat = TRUE)
 
 # Fitted values
 plot_fitted(y = sim_dat$Ey,
-            post_y = fit_bart_star_log$post.fitted.values,
+            post_y = fit_log$post.fitted.values,
             main = 'Fitted Values: BART-STAR-log')
 
 # WAIC for BART-STAR-log:
-fit_bart_star_log$WAIC
+fit_log$WAIC
 
 # MCMC diagnostics:
-plot(as.ts(fit_bart_star_log$post.fitted.values[,1:10]))
+plot(as.ts(fit_log$post.fitted.values[,1:10]))
 
 # Posterior predictive check:
-hist(apply(fit_bart_star_log$post.pred, 1,
+hist(apply(fit_log$post.pred, 1,
            function(x) mean(x==0)), main = 'Proportion of Zeros', xlab='');
 abline(v = mean(y==0), lwd=4, col ='blue')
 
-# BART-STAR with Box-Cox transformation:
-fit_bart_star_bc = bart_star_MCMC(y = y, X = X, transformation = 'box-cox')
+# BART-STAR with nonparametric transformation:
+fit = bart_star_MCMC(y = y, X = X,
+                     transformation = 'np', save_y_hat = TRUE)
 
 # Fitted values
 plot_fitted(y = sim_dat$Ey,
-            post_y = fit_bart_star_bc$post.fitted.values,
-            main = 'Fitted Values: BART-STAR-bc')
+            post_y = fit$post.fitted.values,
+            main = 'Fitted Values: BART-STAR-np')
 
-# WAIC for BART-STAR-bc:
-fit_bart_star_bc$WAIC
+# WAIC for BART-STAR-np:
+fit$WAIC
 
 # MCMC diagnostics:
-plot(as.ts(fit_bart_star_bc$post.fitted.values[,1:10]))
+plot(as.ts(fit$post.fitted.values[,1:10]))
 
 # Posterior predictive check:
-hist(apply(fit_bart_star_bc$post.pred, 1,
+hist(apply(fit$post.pred, 1,
            function(x) mean(x==0)), main = 'Proportion of Zeros', xlab='');
 abline(v = mean(y==0), lwd=4, col ='blue')
 }

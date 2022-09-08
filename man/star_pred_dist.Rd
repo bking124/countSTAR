@@ -56,6 +56,11 @@ data, (ii) the latent predictive data given the latent data from (i), and
 (iii) (inverse) transforms and rounds the latent predictive data to obtain a
 draw from the integer-valued predictive distribution.
 }
+\note{
+The ``plug-in" predictive distribution is a crude approximation. Better
+approaches are available using the Bayesian models, which provide samples
+from the posterior predictive distribution.
+}
 \examples{
 # Simulate data with count-valued response y:
 x = seq(0, 1, length.out = 100)

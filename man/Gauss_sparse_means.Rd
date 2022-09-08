@@ -68,7 +68,8 @@ conditional on the sampled regression coefficients.
 }
 \examples{
 # Simulate some data:
-y = rnorm(n = 200)
+y = c(rnorm(n = 100, mean = 0),
+      rnorm(n = 100, mean = 2))
 
 # Fit the model:
 fit = Gauss_sparse_means(y, nsave = 100, nburn = 100) # for a quick example

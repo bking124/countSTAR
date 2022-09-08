@@ -7,10 +7,12 @@
 STAR_gprior_gibbs(
   y,
   X,
-  X_test = NULL,
+  X_test = X,
   transformation = "np",
   y_max = Inf,
   psi = 1000,
+  approx_Fz = FALSE,
+  approx_Fy = FALSE,
   nsave = 1000,
   nburn = 1000,
   nskip = 0,
@@ -23,7 +25,7 @@ STAR_gprior_gibbs(
 \item{X}{\code{n x p} matrix of predictors}
 
 \item{X_test}{\code{n0 x p} matrix of predictors for test data;
-if NULL, use the observed covariates \code{X}}
+default is the observed covariates \code{X}}
 
 \item{transformation}{transformation to use for the latent data; must be one of
 \itemize{
@@ -39,6 +41,12 @@ if NULL, use the observed covariates \code{X}}
 \item{y_max}{a fixed and known upper bound for all observations; default is \code{Inf}}
 
 \item{psi}{prior variance (g-prior)}
+
+\item{approx_Fz}{logical; in BNP transformation, apply a (fast and stable)
+normal approximation for the marginal CDF of the latent data}
+
+\item{approx_Fy}{logical; in BNP transformation, approximate
+the marginal CDF of \code{y} using the empirical CDF}
 
 \item{nsave}{number of MCMC iterations to save}
 
@@ -59,6 +67,8 @@ of the regression coefficients
 of the latent data standard deviation
 \item \code{post_ytilde}: \code{nsave x n0} samples
 from the posterior predictive distribution at test points \code{X_test}
+\item \code{post_g}: \code{nsave} posterior samples of the transformation
+evaluated at the unique \code{y} values (only applies for 'bnp' transformations)
 }
 
 
@@ -91,6 +101,10 @@ on the latent data scale, which lends interpretability to the model parameters.
 Lastly, the transformation can be modeled using the Bayesian bootstrap ('bnp'),
 which is a Bayesian nonparametric model and incorporates the uncertainty
 about the transformation into posterior and predictive inference.
+}
+\note{
+The 'bnp' transformation simply calls \code{STAR_gprior}, since
+the latent data SD is not identified anyway.
 }
 \examples{
 # Simulate some data:

@@ -6,13 +6,14 @@
 \usage{
 STAR_sparse_means(
   y,
-  transformation = "np",
+  transformation = "identity",
   y_min = -Inf,
   y_max = Inf,
   psi = NULL,
   a_pi = 1,
   b_pi = 1,
-  sample_coefs = TRUE,
+  approx_Fz = FALSE,
+  approx_Fy = FALSE,
   nsave = 1000,
   nburn = 1000,
   nskip = 0,
@@ -45,8 +46,11 @@ default is 1 for uniform}
 \item{b_pi}{prior shape2 parameter for the inclusion probability;
 #' default is 1 for uniform}
 
-\item{sample_coefs}{logical; if TRUE, sample the regression
-coefficients (note: this is not necessary for the inclusion indicators)}
+\item{approx_Fz}{logical; in BNP transformation, apply a (fast and stable)
+normal approximation for the marginal CDF of the latent data}
+
+\item{approx_Fy}{logical; in BNP transformation, approximate
+the marginal CDF of \code{y} using the empirical CDF}
 
 \item{nsave}{number of MCMC iterations to save}
 
@@ -65,10 +69,11 @@ of the inclusion indicators
 \item \code{post_pi}: \code{nsave} samples from the posterior distribution
 of the inclusion probability
 \item \code{post_psi}: \code{nsave} samples from the posterior distribution
-of the prior precision
+of the prior variance
 \item \code{post_theta}: \code{nsave} samples from the posterior distribution
 of the regression coefficients
-\item \code{sigma_hat}: estimate of the latent data standard deviation
+\item \code{post_g}: \code{nsave} posterior samples of the transformation
+evaluated at the unique \code{y} values (only applies for 'bnp' transformations)
 }
 }
 \description{
@@ -103,14 +108,12 @@ about the transformation into posterior and predictive inference.
 
 There are several options for the prior variance \code{psi}.
 First, it can be specified directly. Second, it can be assigned
-a Uniform(0,n) prior and sampled within the MCMC. If \code{sample_coefs}
-is TRUE, then \code{psi} is updated conditional on the
-sampled coefficients; otherwise \code{psi} is updated
-via griddy Gibbs using the marginal likelihood.
+a Uniform(0,n) prior and sampled within the MCMC.
 }
 \examples{
 # Simulate some data:
-y = simulate_nb_lm(n = 200, p = 1)$y
+y = round(c(rnorm(n = 100, mean = 0),
+            rnorm(n = 100, mean = 2)))
 
 # Fit the model:
 fit = STAR_sparse_means(y, nsave = 100, nburn = 100) # for a quick example

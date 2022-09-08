@@ -71,9 +71,7 @@
 #' distribution function (CDF), which is fully nonparametric ('np'), or the parametric
 #' alternatives based on Poisson ('pois') or Negative-Binomial ('neg-bin')
 #' distributions. For the parametric distributions, the parameters of the distribution
-#' are estimated using moments (means and variances) of \code{y}. The distribution-based
-#' transformations approximately preserve the mean and variance of the count data \code{y}
-#' on the latent data scale, which lends interpretability to the model parameters.
+#' are estimated using moments (means and variances) of \code{y}.
 #'
 #' @note Infinite latent data values may occur when the transformed
 #' Gaussian model is highly inadequate. In that case, the function returns
@@ -1538,6 +1536,10 @@ star_CI = function(y, X, j,
 #'
 #' @return \code{N x m} samples from the posterior predictive distribution
 #' at the \code{m} test points
+#'
+#' @note The ``plug-in" predictive distribution is a crude approximation. Better
+#' approaches are available using the Bayesian models, which provide samples
+#' from the posterior predictive distribution.
 #'
 #' @examples
 #' # Simulate data with count-valued response y:
