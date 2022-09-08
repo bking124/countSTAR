@@ -370,4 +370,6 @@ abline(v = mean(y==0), lwd=4, col ='blue')
     (BART) `bart_star_MCMC`
 
   - Posterior samplers for STAR with unknown and nonparametric
-    transformation \(g\), `star_np_MCMC` and `bart_star_np_MCMC`
+    transformation \(g\) 
+    
+  - Monte Carlo samplers for posterior and predictive inference with linear regression and spline regression
