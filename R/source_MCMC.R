@@ -277,12 +277,12 @@ star_MCMC = function(y,
         post.coefficients[isave,] = unlist(params$coefficients)
 
         # Posterior predictive distribution:
-        post.pred[isave,] = round_floor(g_inv(rnorm(n = n, mean = params$mu, sd = params$sigma)))
+        post.pred[isave,] = round_floor(g_inv(rnorm(n = n, mean = params$mu, sd = params$sigma)), y_max=y_max)
 
         # Conditional expectation:
         if(save_y_hat){
           Jmax = ceiling(round_floor(g_inv(
-            qnorm(0.9999, mean = params$mu, sd = params$sigma))))
+            qnorm(0.9999, mean = params$mu, sd = params$sigma)), y_max=y_max))
           Jmax[Jmax > 2*max(y)] = 2*max(y) # To avoid excessive computation times, cap at 2*max(y)
           Jmaxmax = max(Jmax)
           post.fitted.values[isave,] = expectation_gRcpp(g_a_j = g(a_j(0:Jmaxmax)),
@@ -1051,12 +1051,12 @@ bart_star_MCMC = function(y,
         isave = isave + 1
 
         # Posterior predictive distribution:
-        post.pred[isave,] = round_floor(g_inv(rnorm(n = n, mean = params$mu, sd = params$sigma)))
+        post.pred[isave,] = round_floor(g_inv(rnorm(n = n, mean = params$mu, sd = params$sigma)), y_max=y_max)
 
         # Conditional expectation:
         if(save_y_hat){
           Jmax = ceiling(round_floor(g_inv(
-            qnorm(0.9999, mean = params$mu, sd = params$sigma))))
+            qnorm(0.9999, mean = params$mu, sd = params$sigma)), y_max=y_max))
           Jmax[Jmax > 2*max(y)] = 2*max(y) # To avoid excessive computation times, cap at 2*max(y)
           Jmaxmax = max(Jmax)
           post.fitted.values[isave,] = expectation_gRcpp(g_a_j = g(a_j(0:Jmaxmax)),
@@ -1070,10 +1070,10 @@ bart_star_MCMC = function(y,
           post.mu.test[isave,] = samp$test
 
           # Posterior predictive distribution at test points:
-          post.pred.test[isave,] = round_floor(g_inv(rnorm(n = n0, mean = samp$test, sd = params$sigma)))
+          post.pred.test[isave,] = round_floor(g_inv(rnorm(n = n0, mean = samp$test, sd = params$sigma)), y_max=y_max)
           # Conditional expectation at test points:
           Jmax = ceiling(round_floor(g_inv(
-            qnorm(0.9999, mean = samp$test, sd = params$sigma))))
+            qnorm(0.9999, mean = samp$test, sd = params$sigma)), y_max=y_max))
           Jmax[Jmax > 2*max(y)] = 2*max(y) # To avoid excessive computation times, cap at 2*max(y)
           Jmaxmax = max(Jmax)
           post.fitted.values.test[isave,] = expectation_gRcpp(g_a_j = g(a_j(0:Jmaxmax)),
