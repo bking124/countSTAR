@@ -1,0 +1,549 @@
+#' Fitting frequentist STAR linear model via EM algorithm
+#'
+#' Compute the MLEs and log-likelihood for the STAR linear model.
+#' The regression coefficients are estimated using least squares within
+#' an EM algorithm. The transformation can be known (e.g., log or sqrt) or unknown
+#' (Box-Cox or estimated nonparametrically) for greater flexibility.
+#' In the latter case, the empirical CDF is used to determine the transformation.
+#' Standard function calls including
+#' \code{\link{coefficients}}, \code{\link{fitted}}, and \code{\link{residuals}} apply.
+#'
+#' @param y \code{n x 1} vector of observed counts
+#' @param X \code{n x p} matrix of predictors
+#' @param transformation transformation to use for the latent data; must be one of
+#' \itemize{
+#' \item "identity" (identity transformation)
+#' \item "log" (log transformation)
+#' \item "sqrt" (square root transformation)
+#' \item "np" (nonparametric transformation estimated from empirical CDF)
+#' \item "pois" (transformation for moment-matched marginal Poisson CDF)
+#' \item "neg-bin" (transformation for moment-matched marginal Negative Binomial CDF)
+#' \item "box-cox" (box-cox transformation with learned parameter)
+#' }
+#' @param y_max a fixed and known upper bound for all observations; default is \code{Inf}
+#' @param sd_init add random noise for EM algorithm initialization scaled by \code{sd_init}
+#' times the Gaussian MLE standard deviation; default is 10
+#' @param tol tolerance for stopping the EM algorithm; default is 10^-10;
+#' @param max_iters maximum number of EM iterations before stopping; default is 1000
+#' @return an object of \code{class} "lmstar", which is a list with the following elements:
+#' \itemize{
+#' \item \code{coefficients} the MLEs of the coefficients
+#' \item \code{fitted.values} the fitted values at the MLEs
+#' \item \code{g.hat} a function containing the (known or estimated) transformation
+#' \item \code{sigma.hat} the MLE of the standard deviation
+#' \item \code{mu.hat} the MLE of the conditional mean (on the transformed scale)
+#' \item \code{z.hat} the estimated latent data (on the transformed scale) at the MLEs
+#' \item \code{residuals} the Dunn-Smyth residuals (randomized)
+#' \item \code{residuals_rep} the Dunn-Smyth residuals (randomized) for 10 replicates
+#' \item \code{logLik} the log-likelihood at the MLEs
+#' \item \code{logLik0} the log-likelihood at the MLEs for the *unrounded* initialization
+#' \item \code{lambda} the Box-Cox nonlinear parameter
+#' \item and other parameters that
+#' (1) track the parameters across EM iterations and
+#' (2) record the model specifications
+#' }
+#'
+#' @note Infinite latent data values may occur when the transformed
+#' Gaussian model is highly inadequate. In that case, the function returns
+#' the *indices* of the data points with infinite latent values, which are
+#' significant outliers under the model. Deletion of these indices and
+#' re-running the model is one option, but care must be taken to ensure
+#' that (i) it is appropriate to treat these observations as outliers and
+#' (ii) the model is adequate for the remaining data points.
+#'
+#' @export
+lm_star = function(y, X, transformation = 'np',
+                   y_max = Inf,
+                   sd_init = 10,
+                   tol = 10^-10,
+                   max_iters = 1000){
+
+  # Check: currently implemented for nonnegative integers only
+  if(any(y < 0) || any(y != floor(y)))
+    stop('y must be nonnegative counts')
+
+  # Check: y_max must be a true upper bound
+  if(any(y > y_max))
+    stop('y must not exceed y_max')
+
+  # Check: does the transformation make sense?
+  transformation = tolower(transformation);
+  if(!is.element(transformation, c("identity", "log", "sqrt", "np", "pois", "neg-bin", "box-cox")))
+    stop("The transformation must be one of 'identity', 'log', 'sqrt', 'np', 'pois', 'neg-bin', or 'box-cox'")
+
+  # Assign a family for the transformation: Box-Cox or CDF?
+  transform_family = ifelse(
+    test = is.element(transformation, c("identity", "log", "sqrt", "box-cox")),
+    yes = 'bc', no = 'cdf'
+  )
+
+  # Define estimator
+  estimator = function(y) lm(y ~ X - 1)
+
+  # Number of observations:
+  n = length(y)
+
+  # Define the transformation:
+  if(transform_family == 'bc'){
+    # Lambda value for each Box-Cox argument:
+    if(transformation == 'identity') lambda = 1
+    if(transformation == 'log') lambda = 0
+    if(transformation == 'sqrt') lambda = 1/2
+    if(transformation == 'box-cox') lambda = runif(n = 1) # random init on (0,1)
+
+    # Transformation function:
+    g = function(t) g_bc(t,lambda = lambda)
+
+    # Inverse transformation function:
+    g_inv = function(s) g_inv_bc(s,lambda = lambda)
+
+    # Sum of log-derivatives (for initial log-likelihood):
+    #g_deriv = function(t) t^(lambda - 1)
+    sum_log_deriv = (lambda - 1)*sum(log(y+1))
+  }
+
+  if(transform_family == 'cdf'){
+
+    # Transformation function:
+    g = g_cdf(y = y, distribution = transformation)
+
+    # Define the grid for approximations using equally-spaced + quantile points:
+    t_grid = sort(unique(round(c(
+      seq(0, min(2*max(y), y_max), length.out = 250),
+      quantile(unique(y[y < y_max] + 1), seq(0, 1, length.out = 250))), 8)))
+
+    # Inverse transformation function:
+    g_inv = g_inv_approx(g = g, t_grid = t_grid)
+
+    # Sum of log-derivatives (for initial log-likelihood):
+    sum_log_deriv = sum(log(pmax(g(y+1, deriv = 1), 0.01)))
+
+    # No Box-Cox transformation:
+    lambda = NULL
+  }
+
+  # Initialize the parameters: add 1 in case of zeros
+  z_hat = g(y + 1)
+  fit = estimator(z_hat);
+
+  # Check: does the estimator make sense?
+  if(is.null(fit$fitted.values) || is.null(fit$coefficients))
+    stop("The estimator() function must return 'fitted.values' and 'coefficients'")
+
+  # (Initial) Fitted values:
+  mu_hat = fit$fitted.values
+
+  # (Initial) Coefficients:
+  theta_hat = fit$coefficients
+
+  # (Initial) observation SD:
+  sigma_hat = sd(z_hat - mu_hat)
+
+  # (Initial) log-likelihood:
+  logLik0 = logLik_em0 =
+    sum_log_deriv + sum(dnorm(z_hat, mean = mu_hat, sd = sigma_hat, log = TRUE))
+
+  # Randomize for EM initialization:
+  if(sd_init > 0){
+    z_hat = g(y + 1) + sd_init*sigma_hat*rnorm(n = n)
+    fit = estimator(z_hat);
+    mu_hat = fit$fitted.values;
+    theta_hat = fit$coefficients;
+    sigma_hat = sd(z_hat - mu_hat)
+  }
+
+  # Number of parameters (excluding sigma)
+  p = length(theta_hat)
+
+  # Lower and upper intervals:
+  a_y = a_j(y, y_max = y_max); a_yp1 = a_j(y + 1, y_max = y_max)
+  z_lower = g(a_y); z_upper = g(a_yp1)
+
+  # Store the EM trajectories:
+  mu_all = zhat_all = array(0, c(max_iters, n))
+  theta_all = array(0, c(max_iters, p)) # Parameters (coefficients)
+  sigma_all = numeric(max_iters) # SD
+  logLik_all = numeric(max_iters) # Log-likelihood
+
+  for(s in 1:max_iters){
+
+    # ----------------------------------
+    ## E-step: impute the latent data
+    # ----------------------------------
+    # First and second moments of latent variables:
+    z_mom = truncnorm_mom(a = z_lower, b = z_upper, mu = mu_hat, sig = sigma_hat)
+    z_hat = z_mom$m1; z2_hat= z_mom$m2;
+
+    # Check: if any infinite z_hat values, return these indices and stop
+    if(any(is.infinite(z_hat))){
+      warning('Infinite z_hat values: returning the problematic indices')
+      return(list(error_inds = which(is.infinite(z_hat))))
+    }
+    # ----------------------------------
+    ## M-step: estimation
+    # ----------------------------------
+    fit = estimator(z_hat)
+    mu_hat = fit$fitted.values
+    theta_hat = fit$coefficients
+    sigma_hat = sqrt((sum(z2_hat) + sum(mu_hat^2) - 2*sum(z_hat*mu_hat))/n)
+
+    # If estimating lambda:
+    if(transformation == 'box-cox'){
+
+      # Negative log-likelihood function
+      ff <- function(l_bc){
+        sapply(l_bc, function(l_bc){
+          -logLikeRcpp(g_a_j = g_bc(a_y, lambda = l_bc),
+                       g_a_jp1 = g_bc(a_yp1, lambda = l_bc),
+                       mu = mu_hat,
+                       sigma = rep(sigma_hat, n))})
+      }
+
+      # Set the search interval
+      a = 0; b = 1.0;
+      # Brent method will get in error if the function value is infinite
+      # A simple (but not too rigorous) way to restrict the search interval
+      while (ff(b) == Inf){
+        b = b * 0.8
+      }
+      # Tune tolorence if needed
+      lambda = BrentMethod(a, b, fcn = ff, tol = .Machine$double.eps^0.2)$x
+
+      # Update the transformation and inverse transformation function:
+      g = function(t) g_bc(t, lambda = lambda)
+      g_inv = function(s) g_inv_bc(s, lambda = lambda)
+
+      # Update the lower and upper limits:
+      z_lower = g(a_y); z_upper = g(a_yp1)
+    }
+
+    # Update log-likelihood:
+    logLik_em = logLikeRcpp(g_a_j = z_lower,
+                            g_a_jp1 = z_upper,
+                            mu = mu_hat,
+                            sigma = rep(sigma_hat, n))
+
+    # Storage:
+    mu_all[s,] = mu_hat; theta_all[s,] = theta_hat; sigma_all[s] = sigma_hat; logLik_all[s] = logLik_em; zhat_all[s,] = z_hat
+
+    # Check whether to stop:
+    if((logLik_em - logLik_em0)^2 < tol) break
+    logLik_em0 = logLik_em
+  }
+  # Subset trajectory to the estimated values:
+  mu_all = mu_all[1:s,]; theta_all = theta_all[1:s,]; sigma_all = sigma_all[1:s];
+  logLik_all = logLik_all[1:s]; zhat_all = zhat_all[1:s,]
+
+  # Also the expected value (fitted values)
+  # First, estimate an upper bound for the (infinite) summation:
+  if(y_max < Inf){
+    Jmax = rep(y_max + 1, n)
+  } else {
+    Jmax = round_floor(g_inv(qnorm(0.9999, mean = mu_hat, sd = sigma_hat)), y_max = y_max)
+    Jmax[Jmax > 2*max(y)] = 2*max(y) # cap at 2*max(y) to avoid excessive computations
+  }
+  Jmaxmax = max(Jmax) # overall max
+
+  # Point prediction:
+  y_hat = expectation_gRcpp(g_a_j = g(a_j(0:Jmaxmax, y_max = y_max)),
+                            g_a_jp1 = g(a_j(1:(Jmaxmax + 1), y_max = y_max)),
+                            mu = mu_hat, sigma = rep(sigma_hat, n),
+                            Jmax = Jmax)
+
+  # Dunn-Smyth residuals:
+  resids_ds = qnorm(runif(n)*(pnorm((z_upper - mu_hat)/sigma_hat) -
+                                pnorm((z_lower - mu_hat)/sigma_hat)) +
+                      pnorm((z_lower - mu_hat)/sigma_hat))
+
+  # Replicates of Dunn-Smyth residuals:
+  resids_ds_rep = sapply(1:10, function(...)
+    qnorm(runif(n)*(pnorm((z_upper - mu_hat)/sigma_hat) -
+                      pnorm((z_lower - mu_hat)/sigma_hat)) +
+            pnorm((z_lower - mu_hat)/sigma_hat))
+  )
+
+  # Return:
+  z <- list(coefficients = theta_hat,
+            fitted.values = y_hat,
+            g.hat = g,
+            sigma.hat = sigma_hat,
+            mu.hat = mu_hat,
+            z.hat = z_hat,
+            residuals = resids_ds,
+            residuals_rep = resids_ds_rep,
+            logLik = logLik_em,
+            logLik0 = logLik0,
+            lambda = lambda,
+            mu_all = mu_all, theta_all = theta_all, sigma_all = sigma_all, logLik_all = logLik_all, zhat_all = zhat_all, # EM trajectory
+            y = y, X=X, estimator = estimator, transformation = transformation, y_max = y_max, tol = tol, max_iters = max_iters) # And return the info about the model as well
+  class(z) <- c("lmstar")
+  return(z)
+}
+
+#' Compute a predictive distribution for the integer-valued response in STAR linear model
+#'
+#' A Monte Carlo approach for estimating the (plug-in) predictive distribution for the STAR
+#' linear model. The algorithm iteratively samples (i) the latent data given the observed
+#' data, (ii) the latent predictive data given the latent data from (i), and
+#' (iii) (inverse) transforms and rounds the latent predictive data to obtain a
+#' draw from the integer-valued predictive distribution.
+#'
+#' @param object Object of class "lmstar" as output by \code{\link{lm_star}}
+#' @param newdata An optional \code{m x p} matrix with out-of-sample predictors. If omitted, the fitted values are used.
+#' @param N number of Monte Carlo samples from the posterior predictive distribution; default is 1000
+#'
+#' @return \code{N x m} samples from the posterior predictive distribution
+#' at the \code{m} test points
+#'
+#' @note The ``plug-in" predictive distribution is a crude approximation. Better
+#' approaches are available using the Bayesian models, which provide samples
+#' from the posterior predictive distribution.
+#'
+#' @examples
+#' # Simulate data with count-valued response y:
+#' x = seq(0, 1, length.out = 100)
+#' y = rpois(n = length(x), lambda = exp(1.5 + 5*(x -.5)^2))
+#'
+#' # Assume a quadratic effect (better for illustration purposes):
+#' X = cbind(1,x, x^2)
+#'
+#' # Estimate model
+#' fit = lm_star(y, X, transformation = 'sqrt')
+#'
+#' #Compute the predictive draws for the test points (same as observed points here)
+#' y_pred = predict(fit)
+#'
+#' # Using these draws, compute prediction intervals for STAR:
+#' PI_y = t(apply(y_pred, 2, quantile, c(0.05, 1 - 0.05)))
+#'
+#' # Plot the results: PIs and CIs
+#' plot(x, y, ylim = range(y, PI_y), main = 'STAR: 90% Prediction Intervals')
+#' lines(x, PI_y[,1], col='darkgray', type='s', lwd=4);
+#' lines(x, PI_y[,2], col='darkgray', type='s', lwd=4)
+#' @export
+predict.lmstar <- function(object, newdata = NULL, N=1000){
+  if (!inherits(object, "lmstar"))
+    stop("Not a lmstar object")
+
+  #Get data from object
+  y <- object$y
+  y_max <- object$y_max
+  X <- object$X
+  g <- object$g.hat
+
+  # Sample size:
+  n = length(y)
+
+  # If no test set, use the original design points:
+  if (missing(newdata) || is.null(newdata)) {
+    X.test = X
+  } else {
+    X.test = newdata
+  }
+
+  # Number of test points:
+  m = nrow(X.test)
+
+  # Check:
+  if(ncol(X.test) != ncol(X))
+    stop('newdata must have the same (number of) predictors as X')
+
+  # Number of predictors:
+  p = ncol(X)
+
+  # Define the grid for approximations using equally-spaced + quantile points:
+  t_grid = sort(unique(round(c(
+    seq(0, min(2*max(y), y_max), length.out = 250),
+    quantile(unique(y[y < y_max] + 1), seq(0, 1, length.out = 250))), 8)))
+
+  # (Approximate) inverse transformation function:
+  g_inv = g_inv_approx(g = g, t_grid = t_grid)
+
+  # Sample z_star from the posterior distribution:
+  y_pred = matrix(NA, nrow = N, ncol = m)
+
+  # Recurring terms:
+  a_y = a_j(y, y_max = y_max); a_yp1 = a_j(y + 1, y_max = y_max)
+  XtXinv = chol2inv(chol(crossprod(X)))
+  cholS0 = chol(diag(m) + tcrossprod(X.test%*%XtXinv, X.test))
+
+  for(nsi in 1:N){
+    # sample [z* | y]
+    z_star_s = rtruncnormRcpp(y_lower = g(a_y),
+                              y_upper = g(a_yp1),
+                              mu = object$mu.hat,
+                              sigma = rep(object$sigma.hat, n),
+                              u_rand = runif(n = n))
+
+    # sample [z~ | z*]:
+    # first, estimate the lm using z* as data:
+    beta_hat = XtXinv%*%crossprod(X, z_star_s)
+    mu_hat = X.test%*%beta_hat
+    s_hat = sqrt(sum((z_star_s - X%*%beta_hat)^2/(n - p - 1)))
+    # next, sample z~:
+    z_tilde = mu_hat +
+      s_hat*crossprod(cholS0, rnorm(m))/sqrt(rchisq(n = 1, df = n - p - 1)/(n - p - 1))
+
+    # save the (inverse) transformed and rounded sims:
+    y_pred[nsi,] = round_floor(g_inv(z_tilde), y_max = y_max)
+  }
+  y_pred
+}
+
+#' Compute asymptotic confidence intervals for STAR linear regression
+#'
+#' For a linear regression model within the STAR framework,
+#' compute (asymptotic) confidence intervals for a regression coefficient of interest.
+#' Confidence intervals are computed by inverting the likelihood ratio test and
+#' profiling the log-likelihood.
+#'
+#' @param object Object of class "lmstar" as output by \code{\link{lm_star}}
+#' @param j the scalar column index for the desired confidence interval
+#' @param level confidence level; default is 0.95
+#' @param include_plot logical; if TRUE, include a plot of the profile likelihood
+#' @return the upper and lower endpoints of the confidence interval
+#'
+#' @note The design matrix \code{X} should include an intercept.
+#'
+#' @examples
+#' # Simulate data with count-valued response y:
+#' sim_dat = simulate_nb_lm(n = 100, p = 2)
+#' y = sim_dat$y; X = sim_dat$X
+#'
+#' # Select a transformation:
+#' transformation = 'np'
+#'
+#' #Estimate model
+#' fit = lm_star(y, X, transformation)
+#'
+#' # Confidence interval for the intercept:
+#' ci_beta_0 = confint(fit, j = 1)
+#' ci_beta_0
+#'
+#' # Confidence interval for the slope:
+#' ci_beta_1 = confint(fit, j = 2)
+#' ci_beta_1
+#'
+#' @importFrom stats splinefun
+#' @export
+confint.lmstar = function(object, j,
+                          level = 0.95,
+                          include_plot = TRUE){
+  if (!inherits(object, "lmstar"))
+    stop("Not a lmstar object")
+
+  # Get values from object
+  transformation = object$transformation
+  g = object$g.hat
+  y= object$y
+  X = object$X
+  y_max = object$y_max
+  z_hat = object$z.hat
+  theta_all = object$theta_all
+  max_iters = object$max_iters
+  tol = object$tol
+
+  # Dimensions:
+  n = length(y);
+
+  # Initialization:
+  z2_hat = z_hat^2 # Second moment
+
+  # Lower and upper intervals:
+  z_lower = g(a_j(y, y_max = y_max))
+  z_upper = g(a_j(y + 1, y_max = y_max))
+
+  # For s=1 comparison:
+  mu_hat0 = rep(0,n);  # This will be updated to a warm-start within the loop
+
+  # Construct a sequence of theta values for predictor j:
+  n_coarse = 50 # Length of sequence
+  # Max distance from the MLE in the EM sequence:
+  d_max = max(coef(object)[j] - min(theta_all[,j]),
+              max(theta_all[,j]) - coef(object)[j])
+  theta_seq_coarse = seq(from = coef(object)[j] - 2*d_max - 2*diff(range(theta_all[,j])),
+                         to = coef(object)[j] + 2*d_max + 2*diff(range(theta_all[,j])),
+                         length.out = n_coarse)
+
+  # Store the profile log-likelihood:
+  prof.logLik = numeric(n_coarse)
+
+  # Note: could call the EM algorithm directly, but this does not allow for a "warm start"
+  # prof.logLik = sapply(theta_seq_coarse, function(theta_j){
+  #  star_EM(y = y, estimator = function(y) lm(y ~ -1 + X[,-j] + offset(theta_j*X[,j])),
+  #          transformation = transformation, y_max = y_max,
+  #          sd_init = sd_init, tol = tol, max_iters = max_iters)$logLik
+  # })
+
+  # theta_j's with log-like's that exceed this threshold will belong to the confidence set
+  conf_thresh = object$logLik - qchisq(1 - level, df = 1, lower.tail = FALSE)/2
+
+  ng = 1;
+  while(ng <= n_coarse){
+
+    # theta_j is fixed:
+    theta_j = theta_seq_coarse[ng]
+
+    for(s in 1:max_iters){
+      # Estimation (with the jth coefficient fixed at theta_j)
+      fit = lm(z_hat ~ -1 + X[,-j] + offset(theta_j*X[,j]))
+      mu_hat = fit$fitted.values
+      sigma_hat = sqrt((sum(z2_hat) + sum(mu_hat^2) - 2*sum(z_hat*mu_hat))/n)
+
+      # First and second moments of latent variables:
+      z_mom = truncnorm_mom(a = z_lower, b = z_upper, mu = mu_hat, sig = sigma_hat)
+      z_hat = z_mom$m1; z2_hat= z_mom$m2;
+
+      # Check whether to stop:
+      if(mean((mu_hat - mu_hat0)^2) < tol) break
+      mu_hat0 = mu_hat
+    }
+
+    prof.logLik[ng] = logLikeRcpp(g_a_j = z_lower,
+                                  g_a_jp1 = z_upper,
+                                  mu = mu_hat,
+                                  sigma = rep(sigma_hat,n))
+
+    # Check at the final iteration:
+    if(ng == n_coarse){
+      # Bad lower endpoint:
+      if(prof.logLik[which.min(theta_seq_coarse)] >= conf_thresh - 5){
+        # Expand theta downward:
+        theta_seq_coarse = c(theta_seq_coarse,
+                             min(theta_seq_coarse) - 2*median(abs(diff(theta_seq_coarse))))
+      }
+      # Bad upper endpoint:
+      if(prof.logLik[which.max(theta_seq_coarse)] >= conf_thresh - 5){
+        # Expand theta upward:
+        theta_seq_coarse = c(theta_seq_coarse,
+                             max(theta_seq_coarse) + 2*median(abs(diff(theta_seq_coarse))))
+
+      }
+
+      # Update: lengthen prof.logLik and increase n_coarse accordingly
+      temp = prof.logLik;
+      prof.logLik = numeric(length(theta_seq_coarse));
+      prof.logLik[1:n_coarse] = temp
+      n_coarse = length(theta_seq_coarse)
+    }
+
+    ng = ng + 1
+  }
+
+  # Smooth on a finer grid:
+  theta_seq_fine = seq(min(theta_seq_coarse), max(theta_seq_coarse), length.out = 10^3)
+  prof.logLik_hat = splinefun(theta_seq_coarse, prof.logLik)(theta_seq_fine)
+  ci_all = theta_seq_fine[prof.logLik_hat > conf_thresh]
+
+  # Summary plot:
+  if(include_plot){
+    plot(theta_seq_coarse, prof.logLik, type='n', xlab = expression(theta[j]), main = paste('Profile Likelihood, j =',j));
+    abline(v = ci_all, lwd=4, col='gray');
+    lines(theta_seq_coarse, prof.logLik, type='p')
+    lines(theta_seq_fine, prof.logLik_hat, lwd=4)
+    abline(h = object$logLik); abline(v = coef(object)[j], lwd=4)
+  }
+
+  # Interval:
+  range(ci_all)
+}
