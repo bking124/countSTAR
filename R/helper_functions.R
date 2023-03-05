@@ -1410,6 +1410,50 @@ uni.slice <- function (x0, g, w=1, m=Inf, lower=-Inf, upper=+Inf, gx0=NULL)
 
 }
 
+#----------------------------------------------------------------------------
+#' Compute the first and second moment of a truncated normal
+#'
+#' Given lower and upper endpoints and the mean and standard deviation
+#' of a (non-truncated) normal distribution, compute the first and second
+#' moment of the truncated normal distribution. All inputs may be scalars
+#' or vectors.
+#'
+#' @param a lower endpoint
+#' @param b upper endpoint
+#' @param mu expected value of the non-truncated normal distribution
+#' @param sig standard deviation of the non-truncated normal distribution
+#'
+#' @return a list containing the first moment \code{m1} and the second moment \code{m2}
+#'
+#' @examples
+#' truncnorm_mom(-1, 1, 0, 1)
+#'
+#' @importFrom stats dnorm pnorm
+#' @export
+truncnorm_mom = function(a, b, mu, sig){
+  # Standardize the bounds:
+  a_std = (a - mu)/sig; b_std = (b - mu)/sig
+
+  # Recurring terms:
+  dnorm_lower = dnorm(a_std)
+  dnorm_upper = dnorm(b_std)
+  pnorm_diff = (pnorm(b_std) - pnorm(a_std))
+  dnorm_pnorm_ratio = (dnorm_lower - dnorm_upper)/pnorm_diff
+  a_dnorm_lower = a_std*dnorm_lower; a_dnorm_lower[is.infinite(a_std)] = 0
+  b_dnorm_upper = b_std*dnorm_upper; b_dnorm_upper[is.infinite(b_std)] = 0
+
+  # First moment:
+  m1 = mu + sig*dnorm_pnorm_ratio
+
+  # Second moment:
+  m2 = mu*(mu + 2*sig*dnorm_pnorm_ratio) +
+    sig^2*(1 + (a_dnorm_lower - b_dnorm_upper)/pnorm_diff)
+
+  # Return:
+  list(m1 = m1, m2 = m2)
+}
+
+
 # Just add these for general use:
 #' @importFrom stats optim predict constrOptim cor fitted approxfun median arima coef quantile rexp rgamma rnorm runif sd dnorm lm var qchisq rchisq pnorm splinefun smooth.spline qnorm rnbinom ecdf ppois pnbinom weighted.mean arima.sim kmeans
 #' @importFrom graphics lines par plot polygon abline hist arrows legend axis
