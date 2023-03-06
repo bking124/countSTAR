@@ -1632,7 +1632,7 @@ bart_star_MCMC_ispline = function(y,
 #' from the posterior predictive distribution at the observation points \code{tau}
 #' \item \code{marg_like}: the marginal likelihood (if requested; otherwise NULL)
 #' }
-#' @return
+#'
 #' @details STAR defines a count-valued probability model by
 #' (1) specifying a Gaussian model for continuous *latent* data and
 #' (2) connecting the latent data to the observed data via a
@@ -1933,7 +1933,7 @@ STAR_spline = function(y,
 #' @param verbose logical; if TRUE, print time remaining
 #' @return  \code{post_ytilde}: \code{nsave x n} samples
 #' from the posterior predictive distribution at the observation points \code{tau}
-#' @return
+#'
 #' @details STAR defines a count-valued probability model by
 #' (1) specifying a Gaussian model for continuous *latent* data and
 #' (2) connecting the latent data to the observed data via a
@@ -2223,7 +2223,7 @@ STAR_spline_gibbs = function(y,
 #' evaluated at the unique \code{y} values (only applies for 'bnp' transformations)
 #' \item \code{marg_like}: the marginal likelihood (if requested; otherwise NULL)
 #' }
-#' @return
+#'
 #' @details STAR defines a count-valued probability model by
 #' (1) specifying a Gaussian model for continuous *latent* data and
 #' (2) connecting the latent data to the observed data via a
@@ -2563,7 +2563,7 @@ STAR_gprior = function(y, X, X_test = X,
 #' \item \code{post_g}: \code{nsave} posterior samples of the transformation
 #' evaluated at the unique \code{y} values (only applies for 'bnp' transformations)
 #' }
-#' @return
+#'
 #' @details STAR defines a count-valued probability model by
 #' (1) specifying a Gaussian model for continuous *latent* data and
 #' (2) connecting the latent data to the observed data via a
@@ -4940,3 +4940,5 @@ sample_params_additive0 = function(y,
 
   list(mu = mu, sigma = sigma, coefficients = coefficients)
 }
+
+

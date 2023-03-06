@@ -70,8 +70,6 @@ from the posterior predictive distribution at test points \code{X_test}
 \item \code{post_g}: \code{nsave} posterior samples of the transformation
 evaluated at the unique \code{y} values (only applies for 'bnp' transformations)
 }
-
-
 }
 \description{
 Compute MCMC samples from the posterior and predictive

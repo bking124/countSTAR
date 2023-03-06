@@ -70,8 +70,6 @@ from the posterior predictive distribution at test points \code{X_test}
 evaluated at the unique \code{y} values (only applies for 'bnp' transformations)
 \item \code{marg_like}: the marginal likelihood (if requested; otherwise NULL)
 }
-
-
 }
 \description{
 Compute direct Monte Carlo samples from the posterior and predictive

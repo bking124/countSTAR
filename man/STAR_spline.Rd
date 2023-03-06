@@ -61,8 +61,6 @@ a list with the following elements:
 from the posterior predictive distribution at the observation points \code{tau}
 \item \code{marg_like}: the marginal likelihood (if requested; otherwise NULL)
 }
-
-
 }
 \description{
 Compute direct Monte Carlo samples from the posterior predictive

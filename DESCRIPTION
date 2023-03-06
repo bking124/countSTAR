@@ -2,8 +2,8 @@ Package: rSTAR
 Type: Package
 Title: MCMC and EM algorithms for Simultaneous Transformation and Rounding (STAR) Models
 Version: 0.1.0
-Author: Daniel R. Kowal
-Maintainer: Daniel R. Kowal <daniel.kowal@rice.edu>
+Author: Daniel R. Kowal, Brian King
+Maintainer: Brian King <brianking387@gmail.com>
 Description: For Bayesian and classical inference and prediction with integer-valued data,
     Simultaneous Transformation and Rounding (STAR) Models provide a flexible, interpretable,
     and easy-to-use approach. STAR models the observed count data using a rounded 
@@ -23,4 +23,4 @@ Encoding: UTF-8
 LazyData: true
 LinkingTo: Rcpp, RcppArmadillo
 Imports: coda, dbarts, FastGP, gbm, graphics, grDevices, gtools, Matrix, spikeSlabGAM, splines2, randomForest, Rcpp, RcppArmadillo, TruncatedNormal, truncdist
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.3

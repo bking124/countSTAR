@@ -56,8 +56,6 @@ i.e., save every (nskip + 1)th draw}
 \value{
 \code{post_ytilde}: \code{nsave x n} samples
 from the posterior predictive distribution at the observation points \code{tau}
-
-
 }
 \description{
 Compute MCMC samples from the predictive
