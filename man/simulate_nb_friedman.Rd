@@ -2,7 +2,7 @@
 % Please edit documentation in R/helper_functions.R
 \name{simulate_nb_friedman}
 \alias{simulate_nb_friedman}
-\title{Simulate count data a Friedman's nonlinear regression}
+\title{Simulate count data from Friedman's nonlinear regression}
 \usage{
 simulate_nb_friedman(
   n = 100,
@@ -16,7 +16,7 @@ simulate_nb_friedman(
 \arguments{
 \item{n}{number of observations}
 
-\item{p}{number of predictors (including the intercept)}
+\item{p}{number of predictors}
 
 \item{r_nb}{the dispersion parameter of the Negative Binomial dispersion;
 smaller values imply greater overdispersion, while larger values approximate the Poisson distribution.}
@@ -28,16 +28,15 @@ smaller values imply greater overdispersion, while larger values approximate the
 \item{sigma_true}{standard deviation of the Gaussian innovation; default is zero.}
 }
 \value{
-A named list with the simulated count response \code{y}, the simulated design matrix \code{X}
-(including an intercept), and the true expected counts \code{Ey}.
+A named list with the simulated count response \code{y}, the simulated design matrix \code{X},
+and the true expected counts \code{Ey}.
 }
 \description{
 Simulate data from a negative-binomial distribution with nonlinear mean function.
 }
 \details{
 The log-expected counts are modeled using the Friedman (1991) nonlinear function
-with interactions, which
-linear function of covariates, possibly
+with interactions, possibly
 with additional Gaussian noise (on the log-scale). We assume that half of the predictors
 are associated with the response, i.e., true signals. For sufficiently large dispersion
 parameter \code{r_nb}, the distribution will approximate a Poisson distribution.
