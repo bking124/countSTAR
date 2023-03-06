@@ -11,7 +11,8 @@ simulate_nb_lm(
   b_int = log(1.5),
   b_sig = log(2),
   sigma_true = sqrt(2 * log(1)),
-  ar1 = 0
+  ar1 = 0,
+  intercept = FALSE
 )
 }
 \arguments{
@@ -31,10 +32,13 @@ twofold increase in the expected counts for a one unit increase in x}
 \item{sigma_true}{standard deviation of the Gaussian innovation; default is zero.}
 
 \item{ar1}{the autoregressive coefficient among the columns of the X matrix; default is zero.}
+
+\item{intercept}{a Boolean indicating whether an intercept column should be included
+in the returned design matrix; default is FALSE}
 }
 \value{
 A named list with the simulated count response \code{y}, the simulated design matrix \code{X}
-(including an intercept), the true expected counts \code{Ey},
+(possibly including the intercept), the true expected counts \code{Ey},
 and the true regression coefficients \code{beta_true}.
 }
 \description{
