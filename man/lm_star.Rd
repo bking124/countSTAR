@@ -5,8 +5,8 @@
 \title{Fitting frequentist STAR linear model via EM algorithm}
 \usage{
 lm_star(
-  y,
-  X,
+  formula,
+  data = NULL,
   transformation = "np",
   y_max = Inf,
   sd_init = 10,
@@ -15,9 +15,11 @@ lm_star(
 )
 }
 \arguments{
-\item{y}{\code{n x 1} vector of observed counts}
+\item{formula}{an object of class "\code{\link{formula}}" (see \code{\link{lm}} for details on model specification)}
 
-\item{X}{\code{n x p} matrix of predictors}
+\item{data}{an optional data frame, list or environment (or object coercible by as.data.frame to a data frame)
+containing the variables in the model; like \code{\link{lm}}, if not found in data,
+the variables are taken from \code{environment(formula)}}
 
 \item{transformation}{transformation to use for the latent data; must be one of
 \itemize{
@@ -75,4 +77,22 @@ significant outliers under the model. Deletion of these indices and
 re-running the model is one option, but care must be taken to ensure
 that (i) it is appropriate to treat these observations as outliers and
 (ii) the model is adequate for the remaining data points.
+}
+\examples{
+# Simulate data with count-valued response y:
+sim_dat = simulate_nb_lm(n = 100, p = 3)
+y = sim_dat$y; X = sim_dat$X
+
+# Fit model
+fit_em = lm_star(y~X)
+
+# Fitted coefficients:
+coef(fit_em)
+# Fitted values:
+y_hat = fitted(fit_em)
+plot(y_hat, y);
+
+# Residuals:
+plot(residuals(fit_em))
+qqnorm(residuals(fit_em)); qqline(residuals(fit_em))
 }

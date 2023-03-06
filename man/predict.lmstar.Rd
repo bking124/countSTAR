@@ -34,11 +34,8 @@ from the posterior predictive distribution.
 x = seq(0, 1, length.out = 100)
 y = rpois(n = length(x), lambda = exp(1.5 + 5*(x -.5)^2))
 
-# Assume a quadratic effect (better for illustration purposes):
-X = cbind(1,x, x^2)
-
-# Estimate model
-fit = lm_star(y, X, transformation = 'sqrt')
+# Estimate model--assume a quadratic effect (better for illustration purposes)
+fit = lm_star(y~x+I(x^2), transformation = 'sqrt')
 
 #Compute the predictive draws for the test points (same as observed points here)
 y_pred = predict(fit)

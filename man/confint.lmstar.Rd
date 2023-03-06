@@ -24,9 +24,6 @@ compute (asymptotic) confidence intervals for a regression coefficient of intere
 Confidence intervals are computed by inverting the likelihood ratio test and
 profiling the log-likelihood.
 }
-\note{
-The design matrix \code{X} should include an intercept.
-}
 \examples{
 # Simulate data with count-valued response y:
 sim_dat = simulate_nb_lm(n = 100, p = 2)
