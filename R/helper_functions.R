@@ -612,9 +612,11 @@ a_j_round = function(j, y_min = -Inf, y_max = Inf) {
 #' twofold increase in the expected counts for a one unit increase in x
 #' @param sigma_true standard deviation of the Gaussian innovation; default is zero.
 #' @param ar1 the autoregressive coefficient among the columns of the X matrix; default is zero.
+#' @param intercept a Boolean indicating whether an intercept column should be included
+#' in the returned design matrix; default is FALSE
 #'
 #' @return A named list with the simulated count response \code{y}, the simulated design matrix \code{X}
-#' (including an intercept), the true expected counts \code{Ey},
+#' (possibly including the intercept), the true expected counts \code{Ey},
 #' and the true regression coefficients \code{beta_true}.
 #'
 #' @note Specifying \code{sigma_true = sqrt(2*log(1 + a))} implies that the expected counts are
@@ -634,7 +636,8 @@ simulate_nb_lm = function(n = 100,
                           b_int = log(1.5),
                           b_sig = log(2.0),
                           sigma_true = sqrt(2*log(1.0)),
-                          ar1 = 0
+                          ar1 = 0,
+                          intercept = FALSE
                           ){
 
   # True regression effects:
@@ -652,7 +655,6 @@ simulate_nb_lm = function(n = 100,
                 arima.sim(n = p-1, list(ar = ar1), sd = sqrt(1-ar1^2)))))
   }
 
-
   # Log-scale effects, including Gaussian errors:
   z_star = X%*%beta_true + sigma_true*rnorm(n)
 
@@ -664,6 +666,11 @@ simulate_nb_lm = function(n = 100,
   # Conditional expectation:
   Ey = exp(X%*%beta_true)*exp(sigma_true^2/2)
 
+  #Get rid of intercept
+  if(!intercept){
+    X = X[,-1]
+  }
+
   list(
     y = y,
     X = X,
@@ -672,29 +679,28 @@ simulate_nb_lm = function(n = 100,
   )
 }
 #----------------------------------------------------------------------------
-#' Simulate count data a Friedman's nonlinear regression
+#' Simulate count data from Friedman's nonlinear regression
 #'
 #' Simulate data from a negative-binomial distribution with nonlinear mean function.
 #'
 #' @details
 #' The log-expected counts are modeled using the Friedman (1991) nonlinear function
-#' with interactions, which
-#' linear function of covariates, possibly
+#' with interactions, possibly
 #' with additional Gaussian noise (on the log-scale). We assume that half of the predictors
 #' are associated with the response, i.e., true signals. For sufficiently large dispersion
 #' parameter \code{r_nb}, the distribution will approximate a Poisson distribution.
 #' Here, the predictor variables are simulated from independent uniform distributions.
 #'
 #' @param n number of observations
-#' @param p number of predictors (including the intercept)
+#' @param p number of predictors
 #' @param r_nb the dispersion parameter of the Negative Binomial dispersion;
 #' smaller values imply greater overdispersion, while larger values approximate the Poisson distribution.
 #' @param b_int intercept; default is log(1.5).
 #' @param b_sig regression coefficients for true signals; default is log(5.0).
 #' @param sigma_true standard deviation of the Gaussian innovation; default is zero.
 #'
-#' @return A named list with the simulated count response \code{y}, the simulated design matrix \code{X}
-#' (including an intercept), and the true expected counts \code{Ey}.
+#' @return A named list with the simulated count response \code{y}, the simulated design matrix \code{X},
+#' and the true expected counts \code{Ey}.
 #'
 #' @note Specifying \code{sigma_true = sqrt(2*log(1 + a))} implies that the expected counts are
 #' inflated by \code{100*a}\% (relative to \code{exp(X*beta)}), in addition to providing additional
