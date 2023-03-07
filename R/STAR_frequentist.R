@@ -307,7 +307,7 @@ lm_star = function(formula, data=NULL, transformation = 'np',
             logLik0 = logLik0,
             lambda = lambda,
             mu_all = mu_all, theta_all = theta_all, sigma_all = sigma_all, logLik_all = logLik_all, zhat_all = zhat_all, # EM trajectory
-            y = y, X=X, lmfit = estimator, transformation = transformation, y_max = y_max, tol = tol, max_iters = max_iters) # And return the info about the model as well
+            y = y, X=X, lmfit = fit, transformation = transformation, y_max = y_max, tol = tol, max_iters = max_iters) # And return the info about the model as well
   class(z) <- c("lmstar")
   return(z)
 }
@@ -441,7 +441,7 @@ predict.lmstar <- function(object, newdata = NULL, N=1000){
 #' transformation = 'np'
 #'
 #' #Estimate model
-#' fit = lm_star(y, X, transformation)
+#' fit = lm_star(y~X, transformation=transformation)
 #'
 #' # Confidence interval for the intercept:
 #' ci_beta_0 = confint(fit, j = 1)
@@ -573,6 +573,61 @@ confint.lmstar = function(object, j,
 
   # Interval:
   range(ci_all)
+}
+
+#' Compute coefficient p-values for STAR linear regression using likelihood ratio test
+#'
+#' For a linear regression model within the STAR framework,
+#' compute p-values for regression coefficients using a likelihood ratio test.
+#' It also computes a p-value for excluding all predictors, akin to a (partial)
+#' F test.
+#'
+#' @param object Object of class "lmstar" as output by \code{\link{lm_star}}
+#' @return a list of p+1 p-values, one for each predictor as well as the joint
+#' p-value excluding all predictors
+#'
+#' @examples
+#' # Simulate data with count-valued response y:
+#' sim_dat = simulate_nb_lm(n = 100, p = 2)
+#' y = sim_dat$y; X = sim_dat$X
+#'
+#' # Select a transformation:
+#' transformation = 'np'
+#'
+#' #Estimate model
+#' fit = lm_star(y~X, transformation = transformation)
+#'
+#' #Compute p-values
+#' pvals(fit)
+#'
+#' @export
+pvals <- function(object){
+  if (!inherits(object, "lmstar"))
+    stop("Not a lmstar object")
+
+  X <- object$X
+  y <- object$y
+  p = ncol(X)
+  logLik = object$logLik
+  pvals = array(0, p+1)
+  for(i in 1:p){
+    #If there's an intercept
+    if(all(X[,i]==1)){
+      fit_curr <- lm_star(y ~ X[,-i]-1, transformation = object$transformation, y_max=object$y_max,
+                          tol = object$tol, max_iters=object$max_iters)
+    } else{  #All others
+      fit_curr <- lm_star(y ~ X[,-i], transformation = object$transformation, y_max=object$y_max,
+                          tol = object$tol, max_iters=object$max_iters)
+    }
+    pvals[i] = pchisq(-2*(fit_curr$logLik - logLik), df = 1, lower.tail = FALSE)
+  }
+
+  #Get p-value for any effects
+  fit_curr <- lm_star(y ~ 1, transformation = object$transformation, y_max=object$y_max,
+                      tol = object$tol, max_iters=object$max_iters)
+  pvals[p+1] = pchisq(-2*(fit_curr$logLik - logLik), df = p-1, lower.tail = FALSE)
+  names(pvals) = c(colnames(X), "Any linear effects")
+  return(pvals)
 }
 
 
