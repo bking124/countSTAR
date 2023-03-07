@@ -2,8 +2,9 @@ Package: rSTAR
 Type: Package
 Title: MCMC and EM algorithms for Simultaneous Transformation and Rounding (STAR) Models
 Version: 1.0.0
-Author: Daniel R. Kowal, Brian King
-Maintainer: Brian King <brianking387@gmail.com>
+Authors@R: c(
+    person("Brian", "King", email = "brianking387@gmail.com", role = c("aut", "cre")),
+    person("Daniel", "Kowal", email = "daniel.kowal@rice.edu", role = "aut"))
 Description: For Bayesian and classical inference and prediction with integer-valued data,
     Simultaneous Transformation and Rounding (STAR) Models provide a flexible, interpretable,
     and easy-to-use approach. STAR models the observed count data using a rounded 
