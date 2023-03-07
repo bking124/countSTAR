@@ -24,3 +24,8 @@ LazyData: true
 LinkingTo: Rcpp, RcppArmadillo
 Imports: coda, dbarts, FastGP, gbm, graphics, grDevices, gtools, Matrix, spikeSlabGAM, splines2, randomForest, Rcpp, RcppArmadillo, TruncatedNormal, truncdist
 RoxygenNote: 7.2.3
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
+URL: https://bking124.github.io/rSTAR/

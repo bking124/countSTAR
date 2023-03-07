@@ -2,3 +2,7 @@
 ^\.Rproj\.user$
 ^dev$
 ^R/experimental_functions\.R$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^\.github$
