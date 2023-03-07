@@ -53,6 +53,11 @@
 #' that (i) it is appropriate to treat these observations as outliers and
 #' (ii) the model is adequate for the remaining data points.
 #'
+#' @references
+#' Kowal, D. R., & Wu, B. (2021).
+#' Semiparametric count data regression for self‐reported mental health.
+#' \emph{Biometrics}. \doi{10.1111/biom.13617}
+#'
 #' @examples
 #' # Simulate data with count-valued response y:
 #' sim_dat = simulate_nb_lm(n = 100, p = 3)
@@ -330,6 +335,7 @@ lm_star = function(formula, data=NULL, transformation = 'np',
 #' @note The ``plug-in" predictive distribution is a crude approximation. Better
 #' approaches are available using the Bayesian models, which provide samples
 #' from the posterior predictive distribution.
+#'
 #'
 #' @examples
 #' # Simulate data with count-valued response y:
@@ -706,6 +712,11 @@ pvals <- function(object){
 #' that (i) it is appropriate to treat these observations as outliers and
 #' (ii) the model is adequate for the remaining data points.
 #'
+#' @references
+#' Kowal, D. R., & Wu, B. (2021).
+#' Semiparametric count data regression for self‐reported mental health.
+#' \emph{Biometrics}. \doi{10.1111/biom.13617}
+#'
 #' @examples
 #' \dontrun{
 #' # Simulate data with count-valued response y:
@@ -1044,6 +1055,11 @@ randomForest_star = function(y, X, X.test = NULL,
 #' re-running the model is one option, but care must be taken to ensure
 #' that (i) it is appropriate to treat these observations as outliers and
 #' (ii) the model is adequate for the remaining data points.
+#'
+#' @references
+#' Kowal, D. R., & Wu, B. (2021).
+#' Semiparametric count data regression for self‐reported mental health.
+#' \emph{Biometrics}. \doi{10.1111/biom.13617}
 #'
 #' @examples
 #' # Simulate data with count-valued response y:
@@ -1409,6 +1425,11 @@ gbm_star = function(y, X, X.test = NULL,
 #' re-running the model is one option, but care must be taken to ensure
 #' that (i) it is appropriate to treat these observations as outliers and
 #' (ii) the model is adequate for the remaining data points.
+#'
+#' @references
+#' Kowal, D. R., & Wu, B. (2021).
+#' Semiparametric count data regression for self‐reported mental health.
+#' \emph{Biometrics}. \doi{10.1111/biom.13617}
 #'
 #' @examples
 #' # Simulate data with count-valued response y:

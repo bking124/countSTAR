@@ -131,3 +131,8 @@ qqnorm(residuals(fit_em)); qqline(residuals(fit_em))
 fit_em$logLik
 
 }
+\references{
+Kowal, D. R., & Wu, B. (2021).
+Semiparametric count data regression for self‐reported mental health.
+\emph{Biometrics}. \doi{10.1111/biom.13617}
+}
