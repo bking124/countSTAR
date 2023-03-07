@@ -1,4 +1,6 @@
 url: https://bking124.github.io/rSTAR/
 template:
   bootstrap: 5
-
+authors:
+  Daniel R. Kowal:
+    href: http://www.danielrkowal.com/
