@@ -15,8 +15,8 @@ censored. Flexible and interpretable models for *integer-valued
 processes* are therefore highly useful in practice.
 
 As an illustration, consider the `roaches` data from Gelman and Hill
-(2006). The response variable, \(y_i\), is the number of roaches caught
-in traps in apartment \(i\), with \(i=1,\ldots, n = 262\).
+(2006). The response variable, $y_i$, is the number of roaches caught in
+traps in apartment $i$, with $i=1,\ldots, n = 262$.
 
 ``` r
 # Source: http://mc-stan.org/rstanarm/articles/count.html
@@ -53,18 +53,6 @@ apartment building is restricted to elderly residents, and the number of
 days for which the traps were exposed. We are interested in modeling how
 the roach incidence varies with these predictors.
 
-``` r
-# Construct a design matrix:
-X = model.matrix(y ~ roach1 + treatment + senior + log(exposure2),
-                 data = roaches)
-
-# Rename:
-colnames(X)[2]= 'Pre-treat #Roaches'
-
-# Dimensions:
-n = nrow(X); p = ncol(X)
-```
-
 There are two main modeling frameworks for this kind of data:
 
 1.  *Poisson and extensions*: the Poisson distribution is a valid
@@ -84,14 +72,14 @@ There are two main modeling frameworks for this kind of data:
     continuous data models. For example, one might consider the
     transformed regression model
 
-\[
+$$
 z_i = \log(y_i + 1), \quad
 y_i = x_i'\beta + \epsilon_i, \quad \epsilon_i \stackrel{iid}{\sim}N(0, \sigma^2)
-\] The transformation helps model the skewness often found in count
+$$ The transformation helps model the skewness often found in count
 data, while the regression model incorporates a simple and well-known
 continuous data model. However, this approach has two major flaws: (i)
-the transformation \(z_i = \log(y_i + 1)\) requires the inclusion of an
-artificial constant to accommodate \(y_i=0\), which is arbitrary and may
+the transformation $z_i = \log(y_i + 1)$ requires the inclusion of an
+artificial constant to accommodate $y_i=0$, which is arbitrary and may
 introduce bias, and more importantly (ii) the implied data-generating
 process is *not* integer-valued, which induces a fundamental discrepancy
 between the data and the model.
@@ -100,25 +88,25 @@ between the data and the model.
 
 STAR models build upon the continuous data model to provide a *valid
 integer-valued data-generating process*. An example STAR model for
-linear regression is as follows:  The latent data \(y_i^*\) act as a
-*continuous proxy* for the count data \(y_i\), which is easier to model
+linear regression is as follows: The latent data $y_i^*$ act as a
+*continuous proxy* for the count data $y_i$, which is easier to model
 yet has a simple mapping via the floor function to the observed data.
-The latent data \(y_i^*\) are transformed to \(z_i^*\), as in common
+The latent data $y_i^*$ are transformed to $z_i^*$, as in common
 practice, and modeled using Gaussian linear regression. This model
 inherits the same structure as before, but the data-generating process
 is now integer-valued.
 
-More generally, STAR models are defined via a *rounding operator* \(h\),
-a (known or unknown) *transformation* \(g\), and a *continuous data
-model* \(\Pi_\theta\) with unknown parameters \(\theta\):  Importantly,
-STAR models are highly flexible integer-valued processes, and provide
-the capability to model (i) discrete data, (ii) zero-inflation, (iii)
-over- or under-dispersion, and (iv) bounded or censored data.
+More generally, STAR models are defined via a *rounding operator* $h$, a
+(known or unknown) *transformation* $g$, and a *continuous data model*
+$\Pi_\theta$ with unknown parameters $\theta$: Importantly, STAR models
+are highly flexible integer-valued processes, and provide the capability
+to model (i) discrete data, (ii) zero-inflation, (iii) over- or
+under-dispersion, and (iv) bounded or censored data.
 
-We focus on conditionally Gaussian models of the form \[
+We focus on conditionally Gaussian models of the form $$
 z^*(x) = \mu_\theta(x) + \epsilon(x), \quad \epsilon(x) \stackrel{iid}{\sim}N(0, \sigma^2)
-\] where \(\mu_\theta(x)\) is the conditional expectation of the
-transformed latent data with unknown parameters \(\theta\). Examples
+$$ where $\mu_\theta(x)$ is the conditional expectation of the
+transformed latent data with unknown parameters $\theta$. Examples
 include linear, additive, and tree-based regression models.
 
 Estimation, inference, and prediction for STAR are available for both
@@ -130,125 +118,93 @@ provided in the `rSTAR` package.
 Frequentist (or classical) estimation and inference for STAR models is
 provided by an EM algorithm. Sufficient for estimation is an `estimator`
 function which solves the least squares (or Gaussian maximum likelihood)
-problem associated with \(\mu_\theta\)—or in other words, the estimator
+problem associated with $\mu_\theta$—or in other words, the estimator
 that *would* be used for Gaussian or continuous data. Specifically,
 `estimator` inputs data and outputs a list with two elements: the
-estimated `coefficients` \(\hat \theta\) and the `fitted.values`
-\(\hat \mu_\theta(x_i) = \mu_{\hat \theta}(x_i)\). The EM algorithm
+estimated `coefficients` $\hat \theta$ and the `fitted.values`
+$\hat \mu_\theta(x_i) = \mu_{\hat \theta}(x_i)$. The EM algorithm
 updates the parameters until convergence to the maximum likelihood
 estimators (MLEs), and is implemented in `star_EM`:
 
 ``` r
-# Define the estimator function:
-estimator = function(y) lm(y ~ X - 1)
-
 # Select a transformation:
 transformation = 'log' # Log transformation
 # transformation = 'np' # Estimated transformation using empirical CDF
 
 # EM algorithm for STAR (using the log-link)
-fit_em = star_EM(y = y, 
-                 estimator = estimator, 
-                 transformation = transformation)
+fit_em = lm_star(y ~ roach1 + treatment + senior + log(exposure2),
+                 data = roaches, transformation = transformation)
+
+
+# Dimensions:
+n = nrow(fit_em$X); p = ncol(fit_em$X)
 
 # Fitted coefficients:
 round(coef(fit_em), 3)
 ```
 
-    ##        X(Intercept) XPre-treat #Roaches          Xtreatment             Xsenior 
-    ##               1.260               0.015              -0.715              -0.912 
-    ##     Xlog(exposure2) 
-    ##               0.560
+    ##    (Intercept)         roach1      treatment         senior log(exposure2) 
+    ##          1.260          0.015         -0.715         -0.912          0.560
 
 Here the `log` transformation was used, but other options are available;
-see `?star_EM` for details.
+see `?lm_star` for details.
 
 Based on the fitted STAR model, we may further obtain *confidence
-intervals* for the estimated coefficients using `star_CI`:
+intervals* for the estimated coefficients using `confint`:
 
 ``` r
 # Confidence interval for the j=2 column:
 j = 2
-ci_j = star_CI(y = y, X = X, level = 0.95,
+ci_j = confint(fit_em, level = 0.95,
         j = j,
-        transformation = transformation, 
         include_plot = FALSE)
-names(ci_j) = paste(colnames(X)[j], c('(Lower)', '(Upper)'))
 print(round(ci_j, 3))
 ```
 
-    ## Pre-treat #Roaches (Lower) Pre-treat #Roaches (Upper) 
-    ##                      0.012                      0.019
+    ## [1] 0.012 0.019
 
 ``` r
 # Confidence for all columns:
 ci_all = sapply(1:p, function(j)
-  star_CI(y = y, X = X, level = 0.95,
+  confint(fit_em, level = 0.95,
         j = j,
-        transformation = transformation, 
         include_plot = FALSE))
-colnames(ci_all) = colnames(X); 
+colnames(ci_all) = colnames(fit_em$X); 
 rownames(ci_all) = c('Lower', 'Upper')
 print(t(round(ci_all, 3)))
 ```
 
-    ##                     Lower  Upper
-    ## (Intercept)         0.791  1.729
-    ## Pre-treat #Roaches  0.012  0.019
-    ## treatment          -1.263 -0.175
-    ## senior             -1.517 -0.322
-    ## log(exposure2)     -0.556  1.696
+    ##                 Lower  Upper
+    ## (Intercept)     0.785  1.711
+    ## roach1          0.012  0.019
+    ## treatment      -1.259 -0.171
+    ## senior         -1.524 -0.319
+    ## log(exposure2) -0.558  1.697
 
 Similarly, *p-values* are available using likelihood ratio tests, which
 can be applied for individual coefficients,
 
-\[
+$$
 H_0: \beta_j= 0 \quad \mbox{vs} \quad H_1: \beta_j \ne 0
-\]
-
-``` r
-# p-value for the treatment effect
-j = 3 # the jth covariate
-
-# Note that the null model estimator *does not* include X[,j]:
-fit_em_0 = star_EM(y = y,
-                   estimator = function(y) lm(y ~ X[,-j] - 1), 
-                   transformation = transformation)
-# P-values:
-p_val_j = pchisq(-2*(fit_em_0$logLik - fit_em$logLik),
-       df = 1, lower.tail = FALSE)
-
-# Rename and print:
-names(p_val_j) = colnames(X)[j]
-print(p_val_j)
-```
-
-    ##  treatment 
-    ## 0.01027887
+$$
 
 or for joint sets of variables, analogous to a (partial) F-test:
 
-\[
+$$
 H_0: \beta_1=\ldots=\beta_p = 0, \quad \mbox{vs.} \quad H_1: \beta_j \ne 0 \mbox{ for some } j=1,\ldots,p
-\]
+$$
 
 ``` r
 # p-value for *any* effects
 # Note that the null model estimator *does not* include any X:
-fit_em_0 = star_EM(y = y,
-                   estimator = function(y) lm(y ~ 1), # no x-variable
-                   transformation = transformation)
 # P-values:
-p_val_all = pchisq(-2*(fit_em_0$logLik - fit_em$logLik),
-       df = p - 1, lower.tail = FALSE)
-
-# Rename and print:
-names(p_val_all) = 'Any linear effects'
-print(p_val_all)
+print(pvals(fit_em))
 ```
 
-    ## Any linear effects 
-    ##       1.078663e-17
+    ##        (Intercept)             roach1          treatment             senior 
+    ##       1.705446e-06       2.980643e-16       1.027886e-02       3.090892e-03 
+    ##     log(exposure2) Any linear effects 
+    ##       3.263339e-01       1.078662e-17
 
 # Bayesian inference for STAR models
 
@@ -256,15 +212,21 @@ For a Bayesian model, STAR requires only an algorithm for *initializing
 and sampling* from the posterior distribution under a *continuous data
 model*. More specifically, posterior inference under STAR is based on a
 Gibbs sampler, which augments the aforementioned continuous sampler with
-a draw from \([z^* | y, \theta]\). When \(\Pi_\theta\) is conditionally
-Gaussian, \([z^* | y, \theta]\) is a truncated Gaussian distribution.
+a draw from $[z^* | y, \theta]$. When $\Pi_\theta$ is conditionally
+Gaussian, $[z^* | y, \theta]$ is a truncated Gaussian distribution.
 
-As an illustration, consider the Bayesian linear regression model  With
+As an illustration, consider the Bayesian linear regression model With
 STAR and a log transformation, posterior samples for
-\((\beta, \sigma_\beta, \sigma)\) are obtained using `star_MCMC` as
+$(\beta, \sigma_\beta, \sigma)$ are obtained using `star_MCMC` as
 follows:
 
 ``` r
+X = model.matrix(y ~ roach1 + treatment + senior + log(exposure2),
+                 data = roaches)
+
+# Dimensions:
+n = nrow(X); p = ncol(X)
+
 fit_mcmc = star_MCMC(y = y,
                           sample_params = function(y, params)
                             sample_params_lm(y, X, params),
@@ -276,10 +238,10 @@ fit_mcmc = star_MCMC(y = y,
 The function `sample_params` computes a single draw of the parameters
 `params` conditional on continuous data. Here, the update is for
 Bayesian linear Gaussian regression, which samples from the posterior of
-\((\beta, \sigma_\beta, \sigma)\) conditional on the continuous latent
-data \(z^*\). The function `init_params` simply initializes the
-parameters `params`. Posterior expectations and posterior credible
-intervals are available as follows:
+$(\beta, \sigma_\beta, \sigma)$ conditional on the continuous latent
+data $z^*$. The function `init_params` simply initializes the parameters
+`params`. Posterior expectations and posterior credible intervals are
+available as follows:
 
 ``` r
 # Posterior mean of each coefficient:
@@ -287,9 +249,9 @@ round(coef(fit_mcmc),3)
 ```
 
     ##       beta1       beta2       beta3       beta4       beta5 sigma_beta1 
-    ##       1.127       0.016      -0.599      -0.754       0.349    1000.000 
+    ##       1.131       0.015      -0.597      -0.753       0.344    1000.000 
     ## sigma_beta2 sigma_beta3 sigma_beta4 sigma_beta5 
-    ##       0.901       0.901       0.901       0.901
+    ##       0.905       0.905       0.905       0.905
 
 ``` r
 # Credible intervals for regression coefficients
@@ -301,12 +263,12 @@ colnames(ci_all_bayes) = colnames(X); rownames(ci_all_bayes) = c('Lower', 'Upper
 print(t(round(ci_all_bayes, 3)))
 ```
 
-    ##                     Lower  Upper
-    ## (Intercept)         0.589  1.635
-    ## Pre-treat #Roaches  0.012  0.019
-    ## treatment          -1.167 -0.049
-    ## senior             -1.381 -0.127
-    ## log(exposure2)     -0.498  1.335
+    ##                 Lower  Upper
+    ## (Intercept)     0.577  1.648
+    ## roach1          0.012  0.019
+    ## treatment      -1.161 -0.035
+    ## senior         -1.398 -0.088
+    ## log(exposure2) -0.527  1.311
 
 We may further evaluate the model based on posterior diagnostics and
 posterior predictive checks on the simulated versus observed proportion
@@ -329,7 +291,7 @@ getEffSize(post.coef)
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##    3719    4162    4554    4457    4849    5000
+    ##    3127    3157    3888    3976    4706    5000
 
 ``` r
 # Posterior predictive check:
@@ -342,34 +304,35 @@ abline(v = mean(y==0), lwd=4, col ='blue')
 
 # Additional features in `rSTAR`
 
-  - A fixed upper bound, `y_max`, with \(y(x) \le \mbox{}\) `y_max` for
-    all \(x\)
+- A fixed upper bound, `y_max`, with $y(x) \le \mbox{}$ `y_max` for all
+  $x$
 
-  - Residual diagnostics in `star_EM`
+- Residual diagnostics in `star_EM`
 
-  - Log-likelihood at MLEs in `star_EM` for model comparison and
-    information criteria (AIC or BIC)
+- Log-likelihood at MLEs in `star_EM` for model comparison and
+  information criteria (AIC or BIC)
 
-  - Customized functions for STAR with gradient boosting `gbm_star` and
-    STAR with random forests `randomForest_star`
+- Customized functions for STAR with gradient boosting `gbm_star` and
+  STAR with random forests `randomForest_star`
 
-  - Fitted values \(\hat y(x) = E\{y(x)\}\) and posterior samples from
-    \([\hat y(x) | y]\) in `star_MCMC`
+- Fitted values $\hat y(x) = E\{y(x)\}$ and posterior samples from
+  $[\hat y(x) | y]$ in `star_MCMC`
 
-  - Samples from the *integer-valued* posterior predictive distribution
-    \([\tilde y(x) | y]\) in `star_MCMC`, where \(\tilde y\) denotes
-    future or unobserved data
+- Samples from the *integer-valued* posterior predictive distribution
+  $[\tilde y(x) | y]$ in `star_MCMC`, where $\tilde y$ denotes future or
+  unobserved data
 
-  - Customized samplers for Bayesian additive models
-    `sample_params_additive` and linear models with horseshoe priors
-    `sample_params_lm_hs`
+- Customized samplers for Bayesian additive models
+  `sample_params_additive` and linear models with horseshoe priors
+  `sample_params_lm_hs`
 
-  - WAIC and pointwise log-likelihoods for (Bayesian) model comparisons
+- WAIC and pointwise log-likelihoods for (Bayesian) model comparisons
 
-  - A customized STAR model for Bayesian additive regression trees
-    (BART) `bart_star_MCMC`
+- A customized STAR model for Bayesian additive regression trees (BART)
+  `bart_star_MCMC`
 
-  - Posterior samplers for STAR with unknown and nonparametric
-    transformation \(g\) 
-    
-  - Monte Carlo samplers for posterior and predictive inference with linear regression and spline regression
+- Posterior samplers for STAR with unknown and nonparametric
+  transformation $g$
+
+- Monte Carlo samplers for posterior and predictive inference with
+  linear regression and spline regression
