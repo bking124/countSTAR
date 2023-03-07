@@ -33,7 +33,7 @@ y = sim_dat$y; X = sim_dat$X
 transformation = 'np'
 
 #Estimate model
-fit = lm_star(y, X, transformation)
+fit = lm_star(y~X, transformation=transformation)
 
 # Confidence interval for the intercept:
 ci_beta_0 = confint(fit, j = 1)
