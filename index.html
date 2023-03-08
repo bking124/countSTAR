@@ -82,10 +82,12 @@
   </div>
 </nav><div class="container template-home">
 <div class="row">
-  <main id="main" class="col-md-9"><p>STAR: Simultaneous Transformation and Rounding for Modeling Integer-Valued Data ================ Daniel R. Kowal 05/20/2020</p>
-<div class="section level1">
-<div class="page-header"><h1 id="background-integer-valued-data">Background: integer-valued data<a class="anchor" aria-label="anchor" href="#background-integer-valued-data"></a>
+  <main id="main" class="col-md-9"><div class="section level1">
+<div class="page-header"><h1 id="star-simultaneous-transformation-and-rounding-for-modeling-integer-valued-data">STAR: Simultaneous Transformation and Rounding for Modeling Integer-Valued Data<a class="anchor" aria-label="anchor" href="#star-simultaneous-transformation-and-rounding-for-modeling-integer-valued-data"></a>
 </h1></div>
+<div class="section level2">
+<h2 id="background-integer-valued-data">Background: integer-valued data<a class="anchor" aria-label="anchor" href="#background-integer-valued-data"></a>
+</h2>
 <p>Integer-valued or count data are common in many fields. Frequently, integer-valued data are observed jointly with predictors, over time intervals, or across spatial locations. Integer-valued data also exhibit a variety of distributional features, including zero-inflation, skewness, over- and underdispersion, and in some cases may be bounded or censored. Flexible and interpretable models for <em>integer-valued processes</em> are therefore highly useful in practice.</p>
 <p>As an illustration, consider the <code>roaches</code> data from Gelman and Hill (2006). The response variable, <span class="math inline"><em>y</em><sub><em>i</em></sub></span>, is the number of roaches caught in traps in apartment <span class="math inline"><em>i</em></span>, with <span class="math inline"><em>i</em> = 1, …, <em>n</em> = 262</span>.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
@@ -125,9 +127,9 @@ z_i = \log(y_i + 1), \quad
 y_i = x_i'\beta + \epsilon_i, \quad \epsilon_i \stackrel{iid}{\sim}N(0, \sigma^2)
 $$</span> The transformation helps model the skewness often found in count data, while the regression model incorporates a simple and well-known continuous data model. However, this approach has two major flaws: (i) the transformation <span class="math inline"><em>z</em><sub><em>i</em></sub> = log (<em>y</em><sub><em>i</em></sub>+1)</span> requires the inclusion of an artificial constant to accommodate <span class="math inline"><em>y</em><sub><em>i</em></sub> = 0</span>, which is arbitrary and may introduce bias, and more importantly (ii) the implied data-generating process is <em>not</em> integer-valued, which induces a fundamental discrepancy between the data and the model.</p>
 </div>
-<div class="section level1">
-<h1 id="simultaneous-transformation-and-rounding-star-models">Simultaneous Transformation and Rounding (STAR) Models<a class="anchor" aria-label="anchor" href="#simultaneous-transformation-and-rounding-star-models"></a>
-</h1>
+<div class="section level2">
+<h2 id="simultaneous-transformation-and-rounding-star-models">Simultaneous Transformation and Rounding (STAR) Models<a class="anchor" aria-label="anchor" href="#simultaneous-transformation-and-rounding-star-models"></a>
+</h2>
 <p>STAR models build upon the continuous data model to provide a <em>valid integer-valued data-generating process</em>. An example STAR model for linear regression is as follows: The latent data <span class="math inline"><em>y</em><sub><em>i</em></sub><sup>*</sup></span> act as a <em>continuous proxy</em> for the count data <span class="math inline"><em>y</em><sub><em>i</em></sub></span>, which is easier to model yet has a simple mapping via the floor function to the observed data. The latent data <span class="math inline"><em>y</em><sub><em>i</em></sub><sup>*</sup></span> are transformed to <span class="math inline"><em>z</em><sub><em>i</em></sub><sup>*</sup></span>, as in common practice, and modeled using Gaussian linear regression. This model inherits the same structure as before, but the data-generating process is now integer-valued.</p>
 <p>More generally, STAR models are defined via a <em>rounding operator</em> <span class="math inline"><em>h</em></span>, a (known or unknown) <em>transformation</em> <span class="math inline"><em>g</em></span>, and a <em>continuous data model</em> <span class="math inline"><em>Π</em><sub><em>θ</em></sub></span> with unknown parameters <span class="math inline"><em>θ</em></span>: Importantly, STAR models are highly flexible integer-valued processes, and provide the capability to model (i) discrete data, (ii) zero-inflation, (iii) over- or under-dispersion, and (iv) bounded or censored data.</p>
 <p>We focus on conditionally Gaussian models of the form <span class="math display">$$
@@ -135,9 +137,9 @@ z^*(x) = \mu_\theta(x) + \epsilon(x), \quad \epsilon(x) \stackrel{iid}{\sim}N(0,
 $$</span> where <span class="math inline"><em>μ</em><sub><em>θ</em></sub>(<em>x</em>)</span> is the conditional expectation of the transformed latent data with unknown parameters <span class="math inline"><em>θ</em></span>. Examples include linear, additive, and tree-based regression models.</p>
 <p>Estimation, inference, and prediction for STAR are available for both <em>Bayesian</em> and <em>frequentist</em> models. Implementation in both cases is provided in the <code>rSTAR</code> package.</p>
 </div>
-<div class="section level1">
-<h1 id="frequentist-inference-for-star-models">Frequentist inference for STAR models<a class="anchor" aria-label="anchor" href="#frequentist-inference-for-star-models"></a>
-</h1>
+<div class="section level2">
+<h2 id="frequentist-inference-for-star-models">Frequentist inference for STAR models<a class="anchor" aria-label="anchor" href="#frequentist-inference-for-star-models"></a>
+</h2>
 <p>Frequentist (or classical) estimation and inference for STAR models is provided by an EM algorithm. Sufficient for estimation is an <code>estimator</code> function which solves the least squares (or Gaussian maximum likelihood) problem associated with <span class="math inline"><em>μ</em><sub><em>θ</em></sub></span>—or in other words, the estimator that <em>would</em> be used for Gaussian or continuous data. Specifically, <code>estimator</code> inputs data and outputs a list with two elements: the estimated <code>coefficients</code> <span class="math inline"><em>θ̂</em></span> and the <code>fitted.values</code> <span class="math inline"><em>μ̂</em><sub><em>θ</em></sub>(<em>x</em><sub><em>i</em></sub>) = <em>μ</em><sub><em>θ̂</em></sub>(<em>x</em><sub><em>i</em></sub>)</span>. The EM algorithm updates the parameters until convergence to the maximum likelihood estimators (MLEs), and is implemented in <code>star_EM</code>:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Select a transformation:</span></span>
@@ -176,11 +178,11 @@ $$</span> where <span class="math inline"><em>μ</em><sub><em>θ</em></sub>(<em>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">ci_all</span><span class="op">)</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'Lower'</span>, <span class="st">'Upper'</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">ci_all</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb7"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="do">##                 Lower  Upper</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="do">## (Intercept)     0.785  1.711</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="do">## (Intercept)     0.782  1.715</span></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="do">## roach1          0.012  0.019</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="do">## treatment      -1.259 -0.171</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="do">## senior         -1.524 -0.319</span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="do">## log(exposure2) -0.558  1.697</span></span></code></pre></div>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="do">## treatment      -1.261 -0.180</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="do">## senior         -1.517 -0.323</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="do">## log(exposure2) -0.559  1.697</span></span></code></pre></div>
 <p>Similarly, <em>p-values</em> are available using likelihood ratio tests, which can be applied for individual coefficients,</p>
 <p><span class="math display"><em>H</em><sub>0</sub> : <em>β</em><sub><em>j</em></sub> = 0  vs  <em>H</em><sub>1</sub> : <em>β</em><sub><em>j</em></sub> ≠ 0</span></p>
 <p>or for joint sets of variables, analogous to a (partial) F-test:</p>
@@ -191,13 +193,13 @@ $$</span> where <span class="math inline"><em>μ</em><sub><em>θ</em></sub>(<em>
 <span><span class="co"># P-values:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="reference/pvals.html">pvals</a></span><span class="op">(</span><span class="va">fit_em</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb9"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="do">##        (Intercept)             roach1          treatment             senior </span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="do">##       1.705446e-06       2.980643e-16       1.027886e-02       3.090892e-03 </span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="do">##       1.705448e-06       2.980644e-16       1.027887e-02       3.090894e-03 </span></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="do">##     log(exposure2) Any linear effects </span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="do">##       3.263339e-01       1.078662e-17</span></span></code></pre></div>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="do">##       3.263341e-01       1.078664e-17</span></span></code></pre></div>
 </div>
-<div class="section level1">
-<h1 id="bayesian-inference-for-star-models">Bayesian inference for STAR models<a class="anchor" aria-label="anchor" href="#bayesian-inference-for-star-models"></a>
-</h1>
+<div class="section level2">
+<h2 id="bayesian-inference-for-star-models">Bayesian inference for STAR models<a class="anchor" aria-label="anchor" href="#bayesian-inference-for-star-models"></a>
+</h2>
 <p>For a Bayesian model, STAR requires only an algorithm for <em>initializing and sampling</em> from the posterior distribution under a <em>continuous data model</em>. More specifically, posterior inference under STAR is based on a Gibbs sampler, which augments the aforementioned continuous sampler with a draw from <span class="math inline">[<em>z</em><sup>*</sup>|<em>y</em>,<em>θ</em>]</span>. When <span class="math inline"><em>Π</em><sub><em>θ</em></sub></span> is conditionally Gaussian, <span class="math inline">[<em>z</em><sup>*</sup>|<em>y</em>,<em>θ</em>]</span> is a truncated Gaussian distribution.</p>
 <p>As an illustration, consider the Bayesian linear regression model With STAR and a log transformation, posterior samples for <span class="math inline">(<em>β</em>,<em>σ</em><sub><em>β</em></sub>,<em>σ</em>)</span> are obtained using <code>star_MCMC</code> as follows:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
@@ -218,9 +220,9 @@ $$</span> where <span class="math inline"><em>μ</em><sub><em>θ</em></sub>(<em>
 <code class="sourceCode R"><span><span class="co"># Posterior mean of each coefficient:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit_mcmc</span><span class="op">)</span>,<span class="fl">3</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb12"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="do">##       beta1       beta2       beta3       beta4       beta5 sigma_beta1 </span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="do">##       1.131       0.015      -0.597      -0.753       0.344    1000.000 </span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="do">##       1.126       0.015      -0.600      -0.751       0.357    1000.000 </span></span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="do">## sigma_beta2 sigma_beta3 sigma_beta4 sigma_beta5 </span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="do">##       0.905       0.905       0.905       0.905</span></span></code></pre></div>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="do">##       0.912       0.912       0.912       0.912</span></span></code></pre></div>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Credible intervals for regression coefficients</span></span>
 <span><span class="va">ci_all_bayes</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">fit_mcmc</span><span class="op">$</span><span class="va">post.coefficients</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="va">p</span><span class="op">]</span>,</span>
@@ -230,11 +232,11 @@ $$</span> where <span class="math inline"><em>μ</em><sub><em>θ</em></sub>(<em>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">ci_all_bayes</span><span class="op">)</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span>; <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">ci_all_bayes</span><span class="op">)</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'Lower'</span>, <span class="st">'Upper'</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">ci_all_bayes</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb14"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="do">##                 Lower  Upper</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="do">## (Intercept)     0.577  1.648</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="do">## (Intercept)     0.581  1.631</span></span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="do">## roach1          0.012  0.019</span></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="do">## treatment      -1.161 -0.035</span></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="do">## senior         -1.398 -0.088</span></span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="do">## log(exposure2) -0.527  1.311</span></span></code></pre></div>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="do">## treatment      -1.158 -0.052</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="do">## senior         -1.382 -0.128</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="do">## log(exposure2) -0.512  1.333</span></span></code></pre></div>
 <p>We may further evaluate the model based on posterior diagnostics and posterior predictive checks on the simulated versus observed proportion of zeros:</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Posterior draws of the regression coefficients:</span></span>
@@ -248,7 +250,7 @@ $$</span> where <span class="math inline"><em>μ</em><sub><em>θ</em></sub>(<em>
 <code class="sourceCode R"><span><span class="co"># (Summary of) effective sample sizes across coefficients:</span></span>
 <span><span class="fu"><a href="reference/getEffSize.html">getEffSize</a></span><span class="op">(</span><span class="va">post.coef</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb17"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="do">##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="do">##    3127    3157    3888    3976    4706    5000</span></span></code></pre></div>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="do">##    3611    3830    4314    4310    4793    5000</span></span></code></pre></div>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Posterior predictive check:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html" class="external-link">hist</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">fit_mcmc</span><span class="op">$</span><span class="va">post.pred</span>, <span class="fl">1</span>,</span>
@@ -256,10 +258,10 @@ $$</span> where <span class="math inline"><em>μ</em><sub><em>θ</em></sub>(<em>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>v <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">y</span><span class="op">==</span><span class="fl">0</span><span class="op">)</span>, lwd<span class="op">=</span><span class="fl">4</span>, col <span class="op">=</span><span class="st">'blue'</span><span class="op">)</span></span></code></pre></div>
 <p><img src="README_files/figure-gfm/diag-2.png"><!-- --></p>
 </div>
-<div class="section level1">
-<h1 id="additional-features-in-rstar">Additional features in <code>rSTAR</code>
+<div class="section level2">
+<h2 id="additional-features-in-rstar">Additional features in <code>rSTAR</code>
 <a class="anchor" aria-label="anchor" href="#additional-features-in-rstar"></a>
-</h1>
+</h2>
 <ul>
 <li><p>A fixed upper bound, <code>y_max</code>, with <span class="math inline"><em>y</em>(<em>x</em>) ≤ </span> <code>y_max</code> for all <span class="math inline"><em>x</em></span></p></li>
 <li><p>Residual diagnostics in <code>star_EM</code></p></li>
@@ -274,7 +276,7 @@ $$</span> where <span class="math inline"><em>μ</em><sub><em>θ</em></sub>(<em>
 <li><p>Monte Carlo samplers for posterior and predictive inference with linear regression and spline regression</p></li>
 </ul>
 </div>
-
+</div>
   </main><aside class="col-md-3"><div class="license">
 <h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">
