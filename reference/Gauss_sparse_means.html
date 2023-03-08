@@ -140,7 +140,7 @@ conditional on the sampled regression coefficients.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Fit the model:</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">=</span> <span class="fu">Gauss_sparse_means</span><span class="op">(</span><span class="va">y</span>, nsave <span class="op">=</span> <span class="fl">100</span>, nburn <span class="op">=</span> <span class="fl">100</span><span class="op">)</span> <span class="co"># for a quick example</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "0.57 seconds remaining"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "0.55 seconds remaining"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "-0.01 seconds remaining"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Total time:  1 seconds"</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
@@ -154,7 +154,7 @@ conditional on the sampled regression coefficients.</p>
 <span class="r-in"><span><span class="co"># Check the MCMC efficiency:</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="getEffSize.html">getEffSize</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">post_theta</span><span class="op">)</span> <span class="co"># coefficients</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   41.43  100.00  100.00  113.39  100.00  385.24 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   44.14  100.00  100.00  112.30  100.00  691.56 </span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
@@ -163,7 +163,7 @@ conditional on the sampled regression coefficients.</p>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p></p><p>Developed by Brian King, Daniel Kowal.</p>
+  <p></p><p>Developed by <a href="https://bking124.github.io/" class="external-link">Brian King</a>, <a href="http://www.danielrkowal.com/" class="external-link">Daniel R. Kowal</a>.</p>
 </div>
 
 <div class="pkgdown-footer-right">
