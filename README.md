@@ -1,10 +1,7 @@
-STAR: Simultaneous Transformation and Rounding for Modeling
-Integer-Valued Data
-================
-Daniel R. Kowal
-05/20/2020
 
-# Background: integer-valued data
+# STAR: Simultaneous Transformation and Rounding for Modeling Integer-Valued Data
+
+## Background: integer-valued data
 
 Integer-valued or count data are common in many fields. Frequently,
 integer-valued data are observed jointly with predictors, over time
@@ -84,7 +81,7 @@ introduce bias, and more importantly (ii) the implied data-generating
 process is *not* integer-valued, which induces a fundamental discrepancy
 between the data and the model.
 
-# Simultaneous Transformation and Rounding (STAR) Models
+## Simultaneous Transformation and Rounding (STAR) Models
 
 STAR models build upon the continuous data model to provide a *valid
 integer-valued data-generating process*. An example STAR model for
@@ -113,7 +110,7 @@ Estimation, inference, and prediction for STAR are available for both
 *Bayesian* and *frequentist* models. Implementation in both cases is
 provided in the `rSTAR` package.
 
-# Frequentist inference for STAR models
+## Frequentist inference for STAR models
 
 Frequentist (or classical) estimation and inference for STAR models is
 provided by an EM algorithm. Sufficient for estimation is an `estimator`
@@ -175,11 +172,11 @@ print(t(round(ci_all, 3)))
 ```
 
     ##                 Lower  Upper
-    ## (Intercept)     0.785  1.711
+    ## (Intercept)     0.782  1.715
     ## roach1          0.012  0.019
-    ## treatment      -1.259 -0.171
-    ## senior         -1.524 -0.319
-    ## log(exposure2) -0.558  1.697
+    ## treatment      -1.261 -0.180
+    ## senior         -1.517 -0.323
+    ## log(exposure2) -0.559  1.697
 
 Similarly, *p-values* are available using likelihood ratio tests, which
 can be applied for individual coefficients,
@@ -202,11 +199,11 @@ print(pvals(fit_em))
 ```
 
     ##        (Intercept)             roach1          treatment             senior 
-    ##       1.705446e-06       2.980643e-16       1.027886e-02       3.090892e-03 
+    ##       1.705448e-06       2.980644e-16       1.027887e-02       3.090894e-03 
     ##     log(exposure2) Any linear effects 
-    ##       3.263339e-01       1.078662e-17
+    ##       3.263341e-01       1.078664e-17
 
-# Bayesian inference for STAR models
+## Bayesian inference for STAR models
 
 For a Bayesian model, STAR requires only an algorithm for *initializing
 and sampling* from the posterior distribution under a *continuous data
@@ -249,9 +246,9 @@ round(coef(fit_mcmc),3)
 ```
 
     ##       beta1       beta2       beta3       beta4       beta5 sigma_beta1 
-    ##       1.131       0.015      -0.597      -0.753       0.344    1000.000 
+    ##       1.126       0.015      -0.600      -0.751       0.357    1000.000 
     ## sigma_beta2 sigma_beta3 sigma_beta4 sigma_beta5 
-    ##       0.905       0.905       0.905       0.905
+    ##       0.912       0.912       0.912       0.912
 
 ``` r
 # Credible intervals for regression coefficients
@@ -264,11 +261,11 @@ print(t(round(ci_all_bayes, 3)))
 ```
 
     ##                 Lower  Upper
-    ## (Intercept)     0.577  1.648
+    ## (Intercept)     0.581  1.631
     ## roach1          0.012  0.019
-    ## treatment      -1.161 -0.035
-    ## senior         -1.398 -0.088
-    ## log(exposure2) -0.527  1.311
+    ## treatment      -1.158 -0.052
+    ## senior         -1.382 -0.128
+    ## log(exposure2) -0.512  1.333
 
 We may further evaluate the model based on posterior diagnostics and
 posterior predictive checks on the simulated versus observed proportion
@@ -291,7 +288,7 @@ getEffSize(post.coef)
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##    3127    3157    3888    3976    4706    5000
+    ##    3611    3830    4314    4310    4793    5000
 
 ``` r
 # Posterior predictive check:
@@ -302,7 +299,7 @@ abline(v = mean(y==0), lwd=4, col ='blue')
 
 ![](README_files/figure-gfm/diag-2.png)<!-- -->
 
-# Additional features in `rSTAR`
+## Additional features in `rSTAR`
 
 - A fixed upper bound, `y_max`, with $y(x) \le \mbox{}$ `y_max` for all
   $x$
