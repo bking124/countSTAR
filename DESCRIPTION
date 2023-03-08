@@ -3,8 +3,8 @@ Type: Package
 Title: MCMC and EM algorithms for Simultaneous Transformation and Rounding (STAR) Models
 Version: 1.0.0
 Authors@R: c(
-    person("Brian", "King", email = "brianking387@gmail.com", role = c("aut", "cre")),
-    person("Daniel", "Kowal", email = "daniel.kowal@rice.edu", role = "aut"))
+    person(given="Brian", family="King", email = "brianking387@gmail.com", role = c("aut", "cre")),
+    person(given=c("Daniel", "R."), family = "Kowal", email = "daniel.kowal@rice.edu", role = "aut"))
 Description: For Bayesian and classical inference and prediction with integer-valued data,
     Simultaneous Transformation and Rounding (STAR) Models provide a flexible, interpretable,
     and easy-to-use approach. STAR models the observed count data using a rounded 
