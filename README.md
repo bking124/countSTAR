@@ -33,7 +33,7 @@ stickplot(y, main = 'PMF: Roaches Data',
           xlab = 'Roaches', ylab = 'Probability mass')
 ```
 
-![](README_files/figure-gfm/roaches-1.png)<!-- -->
+![](man/figures/roaches-1.png)<!-- -->
 
 There are several notable features in the data:
 
@@ -172,11 +172,11 @@ print(t(round(ci_all, 3)))
 ```
 
     ##                 Lower  Upper
-    ## (Intercept)     0.782  1.715
+    ## (Intercept)     0.792  1.728
     ## roach1          0.012  0.019
-    ## treatment      -1.261 -0.180
-    ## senior         -1.517 -0.323
-    ## log(exposure2) -0.559  1.697
+    ## treatment      -1.262 -0.176
+    ## senior         -1.526 -0.312
+    ## log(exposure2) -0.557  1.700
 
 Similarly, *p-values* are available using likelihood ratio tests, which
 can be applied for individual coefficients,
@@ -199,9 +199,9 @@ print(pvals(fit_em))
 ```
 
     ##        (Intercept)             roach1          treatment             senior 
-    ##       1.705448e-06       2.980644e-16       1.027887e-02       3.090894e-03 
+    ##       1.705446e-06       2.980645e-16       1.027886e-02       3.090894e-03 
     ##     log(exposure2) Any linear effects 
-    ##       3.263341e-01       1.078664e-17
+    ##       3.263339e-01       1.078662e-17
 
 ## Bayesian inference for STAR models
 
@@ -246,9 +246,9 @@ round(coef(fit_mcmc),3)
 ```
 
     ##       beta1       beta2       beta3       beta4       beta5 sigma_beta1 
-    ##       1.126       0.015      -0.600      -0.751       0.357    1000.000 
+    ##       1.126       0.015      -0.597      -0.744       0.337    1000.000 
     ## sigma_beta2 sigma_beta3 sigma_beta4 sigma_beta5 
-    ##       0.912       0.912       0.912       0.912
+    ##       0.915       0.915       0.915       0.915
 
 ``` r
 # Credible intervals for regression coefficients
@@ -261,11 +261,11 @@ print(t(round(ci_all_bayes, 3)))
 ```
 
     ##                 Lower  Upper
-    ## (Intercept)     0.581  1.631
+    ## (Intercept)     0.580  1.632
     ## roach1          0.012  0.019
-    ## treatment      -1.158 -0.052
-    ## senior         -1.382 -0.128
-    ## log(exposure2) -0.512  1.333
+    ## treatment      -1.154 -0.043
+    ## senior         -1.396 -0.085
+    ## log(exposure2) -0.497  1.327
 
 We may further evaluate the model based on posterior diagnostics and
 posterior predictive checks on the simulated versus observed proportion
@@ -280,7 +280,7 @@ colnames(post.coef) = colnames(X)[2:p]
 plot(as.ts(post.coef), main = 'Trace plots', cex.lab = .75)
 ```
 
-![](README_files/figure-gfm/diag-1.png)<!-- -->
+![](man/figures/diag-1.png)<!-- -->
 
 ``` r
 # (Summary of) effective sample sizes across coefficients:
@@ -288,7 +288,7 @@ getEffSize(post.coef)
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##    3611    3830    4314    4310    4793    5000
+    ##    2981    3404    4100    3987    4682    4767
 
 ``` r
 # Posterior predictive check:
@@ -297,7 +297,7 @@ hist(apply(fit_mcmc$post.pred, 1,
 abline(v = mean(y==0), lwd=4, col ='blue')
 ```
 
-![](README_files/figure-gfm/diag-2.png)<!-- -->
+![](man/figures/diag-2.png)<!-- -->
 
 ## Additional features in `rSTAR`
 

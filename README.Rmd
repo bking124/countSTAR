@@ -5,7 +5,8 @@ output: rmarkdown::github_document
 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE,
+                      fig.path = "man/figures/")
 library(rstanarm)
 library(rSTAR)
 ```
