@@ -11,7 +11,8 @@ reference:
   desc:  Estimation of frequentist STAR models using EM algorithm
 - contents:
   - lm_star
-  - ends_with(".lmstar")
+  - confint
+  - predict
   - pvals
   - randomForest_star
   - gbm_star
