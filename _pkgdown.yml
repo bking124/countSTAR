@@ -6,17 +6,3 @@ authors:
     href: http://www.danielrkowal.com/
   Brian King:
     href: https://bking124.github.io/
-reference:
-- title: Frequentist STAR Models
-  desc:  Estimation of frequentist STAR models using EM algorithm
-  contents:
-  - lm_star
-  - starts_with("confint")
-  - starts_with("predict")
-  - pvals
-  - randomForest_star
-  - gbm_star
-  - genEM_star
-- title: Bayesian STAR Models
-  contents:
-  - ends_with("MCMC")
