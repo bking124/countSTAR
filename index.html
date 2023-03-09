@@ -106,7 +106,7 @@
 <span><span class="op">}</span></span>
 <span><span class="fu">stickplot</span><span class="op">(</span><span class="va">y</span>, main <span class="op">=</span> <span class="st">'PMF: Roaches Data'</span>,</span>
 <span>          xlab <span class="op">=</span> <span class="st">'Roaches'</span>, ylab <span class="op">=</span> <span class="st">'Probability mass'</span><span class="op">)</span></span></code></pre></div>
-<p><img src="README_files/figure-gfm/roaches-1.png"><!-- --></p>
+<p><img src="reference/figures/roaches-1.png"><!-- --></p>
 <p>There are several notable features in the data:</p>
 <ol style="list-style-type: decimal">
 <li>Zero-inflation: 36% of the observations are zeros.</li>
@@ -178,11 +178,11 @@ $$</span> where <span class="math inline"><em>μ</em><sub><em>θ</em></sub>(<em>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">ci_all</span><span class="op">)</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'Lower'</span>, <span class="st">'Upper'</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">ci_all</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb7"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="do">##                 Lower  Upper</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="do">## (Intercept)     0.782  1.715</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="do">## (Intercept)     0.792  1.728</span></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="do">## roach1          0.012  0.019</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="do">## treatment      -1.261 -0.180</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="do">## senior         -1.517 -0.323</span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="do">## log(exposure2) -0.559  1.697</span></span></code></pre></div>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="do">## treatment      -1.262 -0.176</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="do">## senior         -1.526 -0.312</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="do">## log(exposure2) -0.557  1.700</span></span></code></pre></div>
 <p>Similarly, <em>p-values</em> are available using likelihood ratio tests, which can be applied for individual coefficients,</p>
 <p><span class="math display"><em>H</em><sub>0</sub> : <em>β</em><sub><em>j</em></sub> = 0  vs  <em>H</em><sub>1</sub> : <em>β</em><sub><em>j</em></sub> ≠ 0</span></p>
 <p>or for joint sets of variables, analogous to a (partial) F-test:</p>
@@ -193,9 +193,9 @@ $$</span> where <span class="math inline"><em>μ</em><sub><em>θ</em></sub>(<em>
 <span><span class="co"># P-values:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="reference/pvals.html">pvals</a></span><span class="op">(</span><span class="va">fit_em</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb9"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="do">##        (Intercept)             roach1          treatment             senior </span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="do">##       1.705448e-06       2.980644e-16       1.027887e-02       3.090894e-03 </span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="do">##       1.705446e-06       2.980645e-16       1.027886e-02       3.090894e-03 </span></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="do">##     log(exposure2) Any linear effects </span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="do">##       3.263341e-01       1.078664e-17</span></span></code></pre></div>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="do">##       3.263339e-01       1.078662e-17</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="bayesian-inference-for-star-models">Bayesian inference for STAR models<a class="anchor" aria-label="anchor" href="#bayesian-inference-for-star-models"></a>
@@ -220,9 +220,9 @@ $$</span> where <span class="math inline"><em>μ</em><sub><em>θ</em></sub>(<em>
 <code class="sourceCode R"><span><span class="co"># Posterior mean of each coefficient:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit_mcmc</span><span class="op">)</span>,<span class="fl">3</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb12"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="do">##       beta1       beta2       beta3       beta4       beta5 sigma_beta1 </span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="do">##       1.126       0.015      -0.600      -0.751       0.357    1000.000 </span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="do">##       1.126       0.015      -0.597      -0.744       0.337    1000.000 </span></span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="do">## sigma_beta2 sigma_beta3 sigma_beta4 sigma_beta5 </span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="do">##       0.912       0.912       0.912       0.912</span></span></code></pre></div>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="do">##       0.915       0.915       0.915       0.915</span></span></code></pre></div>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Credible intervals for regression coefficients</span></span>
 <span><span class="va">ci_all_bayes</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">fit_mcmc</span><span class="op">$</span><span class="va">post.coefficients</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="va">p</span><span class="op">]</span>,</span>
@@ -232,11 +232,11 @@ $$</span> where <span class="math inline"><em>μ</em><sub><em>θ</em></sub>(<em>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">ci_all_bayes</span><span class="op">)</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span>; <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">ci_all_bayes</span><span class="op">)</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'Lower'</span>, <span class="st">'Upper'</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">ci_all_bayes</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb14"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="do">##                 Lower  Upper</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="do">## (Intercept)     0.581  1.631</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="do">## (Intercept)     0.580  1.632</span></span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="do">## roach1          0.012  0.019</span></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="do">## treatment      -1.158 -0.052</span></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="do">## senior         -1.382 -0.128</span></span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="do">## log(exposure2) -0.512  1.333</span></span></code></pre></div>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="do">## treatment      -1.154 -0.043</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="do">## senior         -1.396 -0.085</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="do">## log(exposure2) -0.497  1.327</span></span></code></pre></div>
 <p>We may further evaluate the model based on posterior diagnostics and posterior predictive checks on the simulated versus observed proportion of zeros:</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Posterior draws of the regression coefficients:</span></span>
@@ -245,18 +245,18 @@ $$</span> where <span class="math inline"><em>μ</em><sub><em>θ</em></sub>(<em>
 <span></span>
 <span><span class="co"># MCMC diagnostics:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/ts.html" class="external-link">as.ts</a></span><span class="op">(</span><span class="va">post.coef</span><span class="op">)</span>, main <span class="op">=</span> <span class="st">'Trace plots'</span>, cex.lab <span class="op">=</span> <span class="fl">.75</span><span class="op">)</span></span></code></pre></div>
-<p><img src="README_files/figure-gfm/diag-1.png"><!-- --></p>
+<p><img src="reference/figures/diag-1.png"><!-- --></p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># (Summary of) effective sample sizes across coefficients:</span></span>
 <span><span class="fu"><a href="reference/getEffSize.html">getEffSize</a></span><span class="op">(</span><span class="va">post.coef</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb17"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="do">##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="do">##    3611    3830    4314    4310    4793    5000</span></span></code></pre></div>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="do">##    2981    3404    4100    3987    4682    4767</span></span></code></pre></div>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Posterior predictive check:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html" class="external-link">hist</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">fit_mcmc</span><span class="op">$</span><span class="va">post.pred</span>, <span class="fl">1</span>,</span>
 <span>           <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">x</span><span class="op">==</span><span class="fl">0</span><span class="op">)</span><span class="op">)</span>, main <span class="op">=</span> <span class="st">'Proportion of Zeros'</span>, xlab<span class="op">=</span><span class="st">''</span><span class="op">)</span>;</span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>v <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">y</span><span class="op">==</span><span class="fl">0</span><span class="op">)</span>, lwd<span class="op">=</span><span class="fl">4</span>, col <span class="op">=</span><span class="st">'blue'</span><span class="op">)</span></span></code></pre></div>
-<p><img src="README_files/figure-gfm/diag-2.png"><!-- --></p>
+<p><img src="reference/figures/diag-2.png"><!-- --></p>
 </div>
 <div class="section level2">
 <h2 id="additional-features-in-rstar">Additional features in <code>rSTAR</code>

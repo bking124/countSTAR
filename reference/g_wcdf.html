@@ -105,6 +105,7 @@ This function incorporates positive weights to determine the CDFs.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Negative binomial version:</span></span></span>
 <span class="r-in"><span><span class="va">g_negbin</span> <span class="op">=</span> <span class="fu">g_wcdf</span><span class="op">(</span><span class="va">y</span>, distribution <span class="op">=</span> <span class="st">'neg-bin'</span>, weights <span class="op">=</span> <span class="va">w</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'neg-bin' not recommended for underdispersed data</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Plot together:</span></span></span>
 <span class="r-in"><span><span class="va">t</span> <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span> <span class="co"># grid</span></span></span>
