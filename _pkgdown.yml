@@ -9,7 +9,7 @@ authors:
 reference:
 - title: Frequentist STAR Models
   desc:  Estimation of frequentist STAR models using EM algorithm
-- contents:
+  contents:
   - lm_star
   - confint
   - predict
@@ -18,5 +18,5 @@ reference:
   - gbm_star
   - genEM_star
 - title: Bayesian STAR Models
-- contents:
+  contents:
   - ends_with("MCMC")
