@@ -1,3 +1,408 @@
+#' MCMC sampler for STAR with a monotone spline model
+#' for the transformation
+#'
+#' Run the MCMC algorithm for STAR given
+#' \enumerate{
+#' \item a function to initialize model parameters; and
+#' \item a function to sample (i.e., update) model parameters.
+#' }
+#' The transformation is modeled as an unknown, monotone function
+#' using I-splines. The Robust Adaptive Metropolis (RAM) sampler
+#' is used for drawing the parameter of the transformation function.
+#'
+#' @param y \code{n x 1} vector of observed counts
+#' @param sample_params a function that inputs data \code{y} and a named list \code{params} containing
+#' \enumerate{
+#' \item \code{mu}: vector of conditional means (fitted values)
+#' \item \code{sigma}: the conditional standard deviation
+#' \item \code{coefficients}: a named list of parameters that determine \code{mu}
+#' }
+#' and outputs an updated list \code{params} of samples from the full conditional posterior
+#' distribution of \code{coefficients} and \code{sigma} (and updates \code{mu})
+#' @param init_params an initializing function that inputs data \code{y}
+#' and initializes the named list \code{params} of \code{mu}, \code{sigma}, and \code{coefficients}
+#' @param lambda_prior the prior mean for the transformation g() is the Box-Cox function with
+#' parameter \code{lambda_prior}
+#' @param y_max a fixed and known upper bound for all observations; default is \code{Inf}
+#' @param nsave number of MCMC iterations to save
+#' @param nburn number of MCMC iterations to discard
+#' @param nskip number of MCMC iterations to skip between saving iterations,
+#' i.e., save every (nskip + 1)th draw
+#' @param save_y_hat logical; if TRUE, compute and save the posterior draws of
+#' the expected counts, E(y), which may be slow to compute
+#' @param target_acc_rate target acceptance rate (between zero and one)
+#' @param adapt_rate rate of adaptation in RAM sampler (between zero and one)
+#' @param stop_adapt_perc stop adapting at the proposal covariance at \code{stop_adapt_perc*nburn}
+#' @param verbose logical; if TRUE, print time remaining
+#'
+#' @return a list with the following elements:
+#' \itemize{
+#' \item \code{coefficients}: the posterior mean of the coefficients
+#' \item \code{fitted.values}: the posterior mean of the conditional expectation of the counts \code{y}
+#' \item \code{post.coefficients}: posterior draws of the coefficients
+#' \item \code{post.fitted.values}: posterior draws of the conditional mean of the counts \code{y}
+#' \item \code{post.pred}: draws from the posterior predictive distribution of \code{y}
+#' \item \code{post.sigma}: draws from the posterior distribution of \code{sigma}
+#' \item \code{post.log.like.point}: draws of the log-likelihood for each of the \code{n} observations
+#' \item \code{WAIC}: Widely-Applicable/Watanabe-Akaike Information Criterion
+#' \item \code{p_waic}: Effective number of parameters based on WAIC
+#' \item \code{post.g}: draws from the posterior distribution of the transformation \code{g}
+#' \item \code{post.sigma.gamma}: draws from the posterior distribution of \code{sigma.gamma},
+#' the prior standard deviation of the transformation g() coefficients
+#' }
+#'
+#' @examples
+#'
+#' \dontrun{
+#' # Simulate data with count-valued response y:
+#' sim_dat = simulate_nb_lm(n = 100, p = 5)
+#' y = sim_dat$y; X = sim_dat$X
+#'
+#' # STAR: unknown I-spline transformation
+#' fit = star_MCMC_ispline(y = y,
+#'                          sample_params = function(y, params) sample_params_lm(y, X, params),
+#'                          init_params = function(y) init_params_lm(y, X))
+#' # Posterior mean of each coefficient:
+#' coef(fit)
+#'
+#' # WAIC for STAR-np:
+#' fit$WAIC
+#'
+#' # MCMC diagnostics:
+#' plot(as.ts(fit$post.coefficients[,1:3]))
+#'
+#' # Posterior predictive check:
+#' hist(apply(fit$post.pred, 1,
+#'            function(x) mean(x==0)), main = 'Proportion of Zeros', xlab='');
+#' abline(v = mean(y==0), lwd=4, col ='blue')
+#'
+#'}
+#' @importFrom splines2 iSpline
+#' @import Matrix
+#' @keywords internal
+genMCMC_star_ispline = function(y,
+                             sample_params,
+                             init_params,
+                             lambda_prior = 1/2,
+                             y_max = Inf,
+                             nsave = 5000,
+                             nburn = 5000,
+                             nskip = 2,
+                             save_y_hat = FALSE,
+                             target_acc_rate = 0.3,
+                             adapt_rate = 0.75,
+                             stop_adapt_perc = 0.5,
+                             verbose = TRUE){
+
+  # Check: currently implemented for nonnegative integers
+  if(any(y < 0) || any(y != floor(y)))
+    stop('y must be nonnegative counts')
+
+  # Check: y_max must be a true upper bound
+  if(any(y > y_max))
+    stop('y must not exceed y_max')
+
+  # Check: the prior for lambda must be positive:
+  if(lambda_prior <= 0)
+    stop('lambda_prior must be positive')
+
+  # Transformation g:
+  g_bc = function(t, lambda) {
+    if(lambda == 0) {
+      return(log(t))
+    } else {
+      return((sign(t)*abs(t)^lambda - 1)/lambda)
+    }
+  }
+
+  # Also define the rounding function and the corresponding intervals:
+  round_floor = function(z) pmin(floor(z)*I(z > 0), y_max)
+  a_j = function(j) {val = j; val[j==0] = -Inf; val[j==y_max+1] = Inf; val}
+
+  # One-time cost:
+  a_y = a_j(y); a_yp1 = a_j(y + 1)
+
+  # Unique observation points for the (rounded) counts:
+  t_g = 0:min(y_max, max(a_yp1)) # useful for g()
+
+  # g evaluated at t_g: begin with Box-Cox function
+  g_eval = g_bc(t_g, lambda = lambda_prior)
+  g_eval = g_eval/max(g_eval) # Normalize
+  g_eval_ay = g_eval[match(a_y, t_g)]; g_eval_ay[a_y==-Inf] = -Inf
+  g_eval_ayp1 = g_eval[match(a_yp1, t_g)]; g_eval_ayp1[a_yp1==Inf] = Inf
+
+  # Length of the response vector:
+  n = length(y)
+
+  # Random initialization for z_star:
+  z_star = g_eval_ayp1 + abs(rnorm(n=n))
+  z_star[is.infinite(z_star)] = g_eval_ay[is.infinite(z_star)] + abs(rnorm(n=sum(is.infinite(z_star))))
+
+  # Initialize:
+  params = init_params(z_star)
+
+  # Check: does the initialization make sense?
+  if(is.null(params$mu) || is.null(params$sigma) || is.null(params$coefficients))
+    stop("The init_params() function must return 'mu', 'sigma', and 'coefficients'")
+
+  # Check: does the sampler make sense?
+  params = sample_params(z_star, params);
+  if(is.null(params$mu) || is.null(params$sigma) || is.null(params$coefficients))
+    stop("The sample_params() function must return 'mu', 'sigma', and 'coefficients'")
+
+  # Length of parameters:
+  p = length(unlist(params$coefficients))
+  #----------------------------------------------------------------------------
+  # Define the I-Spline components:
+
+  # Grid for later (including t_g):
+  t_grid = sort(unique(c(
+    0:min(2*max(y), y_max),
+    seq(0, min(2*max(y), y_max), length.out = 100),
+    quantile(unique(y[y!=0]), seq(0, 1, length.out = 100)))))
+
+  # Number and location of interior knots:
+  #num_int_knots_g = 4
+  num_int_knots_g = min(ceiling(length(unique(y))/4), 10)
+  knots_g = c(1,
+              quantile(unique(y[y!=0 & y!=1]), # Quantiles of data (excluding zero and one)
+                       seq(0, 1, length.out = num_int_knots_g + 1)[-c(1, num_int_knots_g + 1)]))
+
+  # Remove redundant and boundary knots, if necessary:
+  knots_g = knots_g[knots_g > 0]; knots_g = knots_g[knots_g < max(t_g)]; knots_g = sort(unique(knots_g))
+
+  # I-spline basis:
+  B_I_grid = iSpline(t_grid, knots = knots_g, degree = 2)
+  B_I = iSpline(t_g, knots = knots_g, degree = 2)   #B_I = B_I_grid[match(t_g, t_grid),]
+
+  # Derivative:
+  #D_I = deriv(B_I_grid, derivs = 1L)[match(t_g, t_grid),]
+  #PenMat = 1/sqrt(length(t_g))*crossprod(D_I); # Penalty matrix
+  #rkPenMat = sum(abs(eigen(PenMat, only.values = TRUE)$values) > 10^-8) # rank of penalty matrix
+
+  # Number of columns:
+  L = ncol(B_I)
+
+  # Recurring term:
+  BtBinv = chol2inv(chol(crossprod(B_I)))
+
+  # Prior mean for gamma_ell: center at g_bc(t, lambda = ...)
+  # This also serves as the initialization (and proposal covariance)
+  opt = constrOptim(theta = rep(1/2, L),
+                    f = function(gamma) sum((g_eval - B_I%*%gamma)^2),
+                    grad = function(gamma) 2*crossprod(B_I)%*%gamma - 2*crossprod(B_I, g_eval),
+                    ui = diag(L),
+                    ci = rep(0, L),
+                    hessian = TRUE)
+  if(opt$convergence == 0){
+    # Convergence:
+    mu_gamma = opt$par
+
+    # Cholesky decomposition of proposal covariance:
+    Smat = try(t(chol(2.4/sqrt(L)*chol2inv(chol(opt$hessian)))), silent = TRUE)
+    if(class(Smat)[1] == 'try-error') Smat = diag(L)
+  } else{
+    # No convergence: use OLS w/ buffer for negative values
+    mu_gamma = BtBinv%*%crossprod(B_I, g_eval)
+    mu_gamma[mu_gamma <= 0] = 10^-2
+    # Cholesky decomposition of proposal covariance:
+    Smat = diag(L)
+  }
+  # Constrain and update initial g_eval:
+  mu_gamma = mu_gamma/sum(mu_gamma)
+  g_eval = B_I%*%mu_gamma;
+  g_eval_ay = g_eval[match(a_y, t_g)]; g_eval_ay[a_y==-Inf] = -Inf;
+  g_eval_ayp1 = g_eval[match(a_yp1, t_g)]; g_eval_ayp1[a_yp1==Inf] = Inf
+
+  # (Log) Prior for xi_gamma = log(gamma)
+  log_prior_xi_gamma = function(xi_gamma, sigma_gamma){
+    #-1/(2*sigma_gamma^2)*crossprod(exp(xi_gamma) - mu_gamma, PenMat)%*%(exp(xi_gamma) - mu_gamma) + sum(xi_gamma)
+    -1/(2*sigma_gamma^2)*sum((exp(xi_gamma) - mu_gamma)^2) + sum(xi_gamma)
+  }
+
+  # Initial value:
+  gamma = mu_gamma;  # Coefficient for g()
+  sigma_gamma = 1    # Prior SD for g()
+  #----------------------------------------------------------------------------
+
+  # Keep track of acceptances:
+  count_accept = 0;
+  total_count_accept = numeric(nsave + nburn)
+
+  # Store MCMC output:
+  post.fitted.values = array(NA, c(nsave, n))
+  post.coefficients = array(NA, c(nsave, p),
+                            dimnames = list(NULL, names(unlist((params$coefficients)))))
+  post.pred = array(NA, c(nsave, n))
+  post.mu = array(NA, c(nsave, n))
+  post.sigma = post.sigma.gamma = numeric(nsave)
+  post.g = array(NA, c(nsave, length(t_g)))
+  post.log.like.point = array(NA, c(nsave, n)) # Pointwise log-likelihood
+
+  # Total number of MCMC simulations:
+  nstot = nburn+(nskip+1)*(nsave)
+  skipcount = 0; isave = 0 # For counting
+
+  # Run the MCMC:
+  if(verbose) timer0 = proc.time()[3] # For timing the sampler
+  for(nsi in 1:nstot){
+
+    #----------------------------------------------------------------------------
+    # Block 1: sample the z_star
+    z_star = rtruncnormRcpp(y_lower = g_eval_ay,
+                            y_upper = g_eval_ayp1,
+                            mu = params$mu,
+                            sigma = rep(params$sigma, n),
+                            u_rand = runif(n = n))
+    #----------------------------------------------------------------------------
+    # Block 2: sample the conditional mean mu (+ any corresponding parameters)
+    #   and the conditional SD sigma
+    params = sample_params(z_star, params)
+    #----------------------------------------------------------------------------
+    # Block 3: sample the function g()
+
+    # First, check the gamma values to prevent errors:
+    if(all(gamma == 0)){
+      warning('Note: constant gamma values; modifying values for stability and re-starting MCMC')
+      gamma = mu_gamma; Smat = diag(L); nsi = 1
+    }
+
+    # Store the current values:
+    prevVec =  log(gamma)
+
+    # Propose (uncentered)
+    U = rnorm(n = L);
+    proposed = c(prevVec + Smat%*%U)
+
+    # Proposed function, centered and evaluated at points
+    g_prop = B_I%*%exp(proposed - log(sum(exp(proposed))))
+    g_prop_ay = g_prop[match(a_y, t_g)]; g_prop_ay[a_y==-Inf] = -Inf
+    g_prop_ayp1 = g_prop[match(a_yp1, t_g)]; g_prop_ayp1[a_yp1==Inf] = Inf
+
+    # Symmetric proposal:
+    logPropRatio = 0
+
+    # Prior ratio:
+    logpriorRatio = log_prior_xi_gamma(proposed, sigma_gamma) -
+      log_prior_xi_gamma(prevVec, sigma_gamma)
+
+    # Likelihood ratio:
+    loglikeRatio = logLikeRcpp(g_a_j = g_prop_ay,
+                               g_a_jp1 = g_prop_ayp1,
+                               mu = params$mu,
+                               sigma = rep(params$sigma, n)) -
+      logLikeRcpp(g_a_j = g_eval_ay,
+                  g_a_jp1 = g_eval_ayp1,
+                  mu = params$mu,
+                  sigma = rep(params$sigma, n))
+
+    # Compute the ratio:
+    alphai = min(1, exp(logPropRatio + logpriorRatio + loglikeRatio))
+    if(is.nan(alphai) || is.na(alphai)) alphai = 1 # Error catch
+    if(runif(1) < alphai) {
+      # Accept:
+      gamma = exp(proposed);
+      g_eval = g_prop; g_eval_ay = g_prop_ay; g_eval_ayp1 = g_prop_ayp1
+      count_accept = count_accept + 1; total_count_accept[nsi] = 1
+    }
+
+    # Now sample sigma_gamma:
+    sigma_gamma = 1/sqrt(rgamma(n = 1,
+                                #shape = 0.001 + rkPenMat/2,
+                                #rate = 0.001 + crossprod(gamma - mu_gamma, PenMat)%*%(gamma - mu_gamma)/2))
+                                shape = 0.001 + L/2,
+                                rate = 0.001 + sum((gamma - mu_gamma)^2)/2))
+
+    # RAM adaptive part:
+    if(nsi <= stop_adapt_perc*nburn){
+      a_rate = min(5, L*nsi^(-adapt_rate))
+
+      M <- Smat %*% (diag(L) + a_rate * (alphai - target_acc_rate) *
+                       U %*% t(U)/sum(U^2)) %*% t(Smat)
+      # Stability checks:
+      eig <- eigen(M, only.values = TRUE)$values
+      tol <- ncol(M) * max(abs(eig)) * .Machine$double.eps;
+      if (!isSymmetric(M) | is.complex(eig) | !all(Re(eig) > tol)) M <- as.matrix(Matrix::nearPD(M)$mat)
+
+      Smat <- t(chol(M))
+    }
+    #----------------------------------------------------------------------------
+    # Store the MCMC:
+    if(nsi > nburn){
+
+      # Increment the skip counter:
+      skipcount = skipcount + 1
+
+      # Save the iteration:
+      if(skipcount > nskip){
+        # Increment the save index
+        isave = isave + 1
+
+        # Posterior samples of the model parameters:
+        post.coefficients[isave,] = unlist(params$coefficients)
+
+        # Posterior predictive distribution:
+        u = rnorm(n = n, mean = params$mu, sd = params$sigma); g_grid = B_I_grid%*%gamma
+        post.pred[isave,] = round_floor(sapply(u, function(ui) t_grid[which.min(abs(ui - g_grid))]))
+
+        # Conditional expectation:
+        if(save_y_hat){
+          u = qnorm(0.9999, mean = params$mu, sd = params$sigma)
+          Jmax = ceiling(sapply(u, function(ui) t_grid[which.min(abs(ui - g_grid))]))
+          Jmax[Jmax > 2*max(y)] = 2*max(y) # To avoid excessive computation times, cap at 2*max(y)
+          Jmaxmax = max(Jmax)
+          g_a_j_0J = g_grid[match(a_j(0:Jmaxmax), t_grid)]; g_a_j_0J[1] = -Inf
+          g_a_j_1Jp1 = g_grid[match(a_j(1:(Jmaxmax + 1)), t_grid)]; g_a_j_1Jp1[length(g_a_j_1Jp1)] = Inf
+          post.fitted.values[isave,] = expectation_gRcpp(g_a_j = g_a_j_0J,
+                                                         g_a_jp1 = g_a_j_1Jp1,
+                                                         mu = params$mu, sigma = rep(params$sigma, n),
+                                                         Jmax = Jmax)
+        }
+
+        # Monotone transformation:
+        post.g[isave,] = g_eval;
+
+        # SD parameter:
+        post.sigma[isave] = params$sigma
+
+        # SD of g() coefficients:
+        post.sigma.gamma[isave] = sigma_gamma
+
+        # Conditional mean parameter:
+        post.mu[isave,] = params$mu
+
+        # Pointwise Log-likelihood:
+        post.log.like.point[isave, ] = logLikePointRcpp(g_a_j = g_eval_ay,
+                                                        g_a_jp1 = g_eval_ayp1,
+                                                        mu = params$mu,
+                                                        sigma = rep(params$sigma, n))
+
+        # And reset the skip counter:
+        skipcount = 0
+      }
+    }
+    if(verbose) computeTimeRemaining(nsi, timer0, nstot, nrep = 5000)
+  }
+  if(verbose) print(paste('Total time: ', round((proc.time()[3] - timer0)), 'seconds'))
+
+  # Compute WAIC:
+  lppd = sum(log(colMeans(exp(post.log.like.point))))
+  p_waic = sum(apply(post.log.like.point, 2, function(x) sd(x)^2))
+  WAIC = -2*(lppd - p_waic)
+
+  # Return a named list:
+  list(coefficients = colMeans(post.coefficients),
+       fitted.values = colMeans(post.fitted.values),
+       post.coefficients = post.coefficients,
+       post.pred = post.pred,
+       post.fitted.values = post.fitted.values,
+       post.sigma = post.sigma,
+       post.log.like.point = post.log.like.point,
+       WAIC = WAIC, p_waic = p_waic,post.g = post.g,
+       post.sigma.gamma = post.sigma.gamma)
+}
+
+
 #' Initialize the parameters for an additive model
 #'
 #' Initialize the parameters for an additive model, which may contain

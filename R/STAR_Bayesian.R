@@ -1,4 +1,4 @@
-#' MCMC Algorithm for STAR
+#' Generalized MCMC Algorithm for STAR
 #'
 #' Run the MCMC algorithm for STAR given
 #' \enumerate{
@@ -342,16 +342,11 @@ genMCMC_star = function(y,
 #' (Box-Cox or estimated nonparametrically) for greater flexibility.
 #'
 #' @param y \code{n x 1} vector of observed counts
-#' @param sample_params a function that inputs data \code{y} and a named list \code{params} containing
-#' \enumerate{
-#' \item \code{mu}: the \code{n x 1} vector of conditional means (fitted values)
-#' \item \code{sigma}: the conditional standard deviation
-#' \item \code{coefficients}: a named list of parameters that determine \code{mu}
-#' }
-#' and outputs an updated list \code{params} of samples from the full conditional posterior
-#' distribution of \code{coefficients} and \code{sigma} (and updates \code{mu})
-#' @param init_params an initializing function that inputs data \code{y}
-#' and initializes the named list \code{params} of \code{mu}, \code{sigma}, and \code{coefficients}
+#' @param X_lin \code{n x pL} matrix of predictors to be modelled as linear
+#' @param X_nonlin \code{n x pNL} matrix of predictors to be modelled as nonlinear
+#' @param splinetype Type of spline to use for modelling the nonlinear predictors;
+#' must be either "orthogonal" (orthogonalized splines--the default) or "thinplate"
+#' (low-rank thin plate splines)
 #' @param transformation transformation to use for the latent data; must be one of
 #' \itemize{
 #' \item "identity" (identity transformation)
@@ -361,6 +356,8 @@ genMCMC_star = function(y,
 #' \item "pois" (transformation for moment-matched marginal Poisson CDF)
 #' \item "neg-bin" (transformation for moment-matched marginal Negative Binomial CDF)
 #' \item "box-cox" (box-cox transformation with learned parameter)
+#' \item "ispline" (transformation is modeled as unknown, monotone function
+#' using I-splines)
 #' }
 #' @param y_max a fixed and known upper bound for all observations; default is \code{Inf}
 #' @param nsave number of MCMC iterations to save
@@ -385,6 +382,12 @@ genMCMC_star = function(y,
 #' \item \code{WAIC}: Widely-Applicable/Watanabe-Akaike Information Criterion
 #' \item \code{p_waic}: Effective number of parameters based on WAIC
 #' }
+#' In the case of transformation="ispline", the list also contains
+#' \itemize{
+#' \item \code{post.g}: draws from the posterior distribution of the transformation \code{g}
+#' \item \code{post.sigma.gamma}: draws from the posterior distribution of \code{sigma.gamma},
+#' the prior standard deviation of the transformation g() coefficients
+#' }
 #'
 #' @details STAR defines a count-valued probability model by
 #' (1) specifying a Gaussian model for continuous *latent* data and
@@ -404,38 +407,23 @@ genMCMC_star = function(y,
 #' distribution function (CDF), which is fully nonparametric ('np'), or the parametric
 #' alternatives based on Poisson ('pois') or Negative-Binomial ('neg-bin')
 #' distributions. For the parametric distributions, the parameters of the distribution
-#' are estimated using moments (means and variances) of \code{y}.
+#' are estimated using moments (means and variances) of \code{y}. Third, the transformation can be
+#' modeled as an unknown, monotone function using I-splines ('ispline'). The
+#' Robust Adaptive Metropolis (RAM) sampler is used for drawing the parameter
+#' of the transformation function.
 #'
 #' @examples
 #' \dontrun{
 #' # Simulate data with count-valued response y:
-#' sim_dat = simulate_nb_lm(n = 100, p = 5)
+#' sim_dat = simulate_nb_friedman(n = 100, p = 5, seed=32)
 #' y = sim_dat$y; X = sim_dat$X
 #'
-#' # STAR: log-transformation:
-#' fit_log = star_MCMC(y = y,
-#'                          sample_params = function(y, params) sample_params_lm(y, X, params),
-#'                          init_params = function(y) init_params_lm(y, X),
-#'                          transformation = 'log')
-#' # Posterior mean of each coefficient:
-#' coef(fit_log)
-#'
-#' # WAIC for STAR-log:
-#' fit_log$WAIC
-#'
-#' # MCMC diagnostics:
-#' plot(as.ts(fit_log$post.coefficients[,1:3]))
-#'
-#' # Posterior predictive check:
-#' hist(apply(fit_log$post.pred, 1,
-#'            function(x) mean(x==0)), main = 'Proportion of Zeros', xlab='');
-#' abline(v = mean(y==0), lwd=4, col ='blue')
+#' # Linear and nonlinear components:
+#' X_lin = as.matrix(X[,-(1:3)])
+#' X_nonlin = as.matrix(X[,(1:3)])
 #'
 #' # STAR: nonparametric transformation
-#' fit = star_MCMC(y = y,
-#'                 sample_params = function(y, params) sample_params_lm(y, X, params),
-#'                 init_params = function(y) init_params_lm(y, X),
-#'                 transformation = 'np')
+#' fit <- bam_star(y,X_lin, X_nonlin)
 #'
 #' # Posterior mean of each coefficient:
 #' coef(fit)
@@ -471,7 +459,12 @@ bam_star = function(y, X_lin, X_nonlin, splinetype="orthogonal",
     init_params = function(y){init_bam_thin(y=y, X_lin=X_lin,X_nonlin=X_nonlin)}
     sample_params = function(y, params){sample_bam_thin(y=y, X_lin=X_lin,X_nonlin=X_nonlin, params=params)}
   }
-  genMCMC_star(y,sample_params,init_params, transformation = transformation,
+  if(transformation=="ispline"){
+    result = genMCMC_star_ispline(y,sample_params,init_params, y_max=y_max, nsave=nsave,
+                                  nburn=nburn, nskip=nskip, save_y_hat=save_y_hat,verbose=TRUE)
+  } else {
+    result= genMCMC_star(y,sample_params,init_params, transformation = transformation,
                  y_max=y_max, nsave=nsave, nburn=nburn, nskip=nskip, save_y_hat=save_y_hat,verbose=TRUE)
-
+  }
+  return(result)
 }

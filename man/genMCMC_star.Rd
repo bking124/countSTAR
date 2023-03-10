@@ -2,7 +2,7 @@
 % Please edit documentation in R/STAR_Bayesian.R
 \name{genMCMC_star}
 \alias{genMCMC_star}
-\title{MCMC Algorithm for STAR}
+\title{Generalized MCMC Algorithm for STAR}
 \usage{
 genMCMC_star(
   y,
