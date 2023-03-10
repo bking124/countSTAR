@@ -24,4 +24,5 @@ mean(1:10)
 x = rnorm(n = 10^4, mean = 5, sd = 1)
 plot(ergMean(x))
 abline(h=5)
+
 }

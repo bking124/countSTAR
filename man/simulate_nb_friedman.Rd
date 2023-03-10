@@ -10,7 +10,8 @@ simulate_nb_friedman(
   r_nb = 1,
   b_int = log(1.5),
   b_sig = log(5),
-  sigma_true = sqrt(2 * log(1))
+  sigma_true = sqrt(2 * log(1)),
+  seed = NULL
 )
 }
 \arguments{
