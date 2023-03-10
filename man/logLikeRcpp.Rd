@@ -26,3 +26,4 @@ components with means \code{mu} and standard deviations \code{sigma}.
 \note{
 This function uses \code{Rcpp} for computational efficiency.
 }
+\keyword{internal}

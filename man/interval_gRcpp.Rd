@@ -29,3 +29,4 @@ based on intervals/bands for the Gaussian process \code{mu}.
 \note{
 This function uses \code{Rcpp} for computational efficiency.
 }
+\keyword{internal}

@@ -29,3 +29,4 @@ are assumed to be independent.
 \note{
 This function uses \code{Rcpp} for computational efficiency.
 }
+\keyword{internal}

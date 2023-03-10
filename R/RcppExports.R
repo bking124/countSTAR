@@ -18,7 +18,7 @@
 #'
 #' @useDynLib rSTAR
 #' @import Rcpp
-#' @export
+#' @keywords internal
 expectation_gRcpp <- function(g_a_j, g_a_jp1, mu, sigma, Jmax) {
     .Call('_rSTAR_expectation_gRcpp', PACKAGE = 'rSTAR', g_a_j, g_a_jp1, mu, sigma, Jmax)
 }
@@ -41,7 +41,7 @@ expectation_gRcpp <- function(g_a_j, g_a_jp1, mu, sigma, Jmax) {
 #'
 #' @useDynLib rSTAR
 #' @import Rcpp
-#' @export
+#' @keywords internal
 interval_gRcpp <- function(g_a_j, g_a_jp1, L_mu, U_mu, sigma, Jmax) {
     .Call('_rSTAR_interval_gRcpp', PACKAGE = 'rSTAR', g_a_j, g_a_jp1, L_mu, U_mu, sigma, Jmax)
 }
@@ -65,7 +65,7 @@ interval_gRcpp <- function(g_a_j, g_a_jp1, L_mu, U_mu, sigma, Jmax) {
 #'
 #' @useDynLib rSTAR
 #' @import Rcpp
-#' @export
+#' @keywords internal
 rtruncnormRcpp <- function(y_lower, y_upper, mu, sigma, u_rand) {
     .Call('_rSTAR_rtruncnormRcpp', PACKAGE = 'rSTAR', y_lower, y_upper, mu, sigma, u_rand)
 }
@@ -86,7 +86,7 @@ rtruncnormRcpp <- function(y_lower, y_upper, mu, sigma, u_rand) {
 #'
 #' @useDynLib rSTAR
 #' @import Rcpp
-#' @export
+#' @keywords internal
 logLikeRcpp <- function(g_a_j, g_a_jp1, mu, sigma) {
     .Call('_rSTAR_logLikeRcpp', PACKAGE = 'rSTAR', g_a_j, g_a_jp1, mu, sigma)
 }
@@ -107,7 +107,7 @@ logLikeRcpp <- function(g_a_j, g_a_jp1, mu, sigma) {
 #'
 #' @useDynLib rSTAR
 #' @import Rcpp
-#' @export
+#' @keywords internal
 logLikePointRcpp <- function(g_a_j, g_a_jp1, mu, sigma) {
     .Call('_rSTAR_logLikePointRcpp', PACKAGE = 'rSTAR', g_a_j, g_a_jp1, mu, sigma)
 }
@@ -129,7 +129,7 @@ logLikePointRcpp <- function(g_a_j, g_a_jp1, mu, sigma) {
 #'
 #' @useDynLib rSTAR
 #' @import Rcpp
-#' @export
+#' @keywords internal
 expectation2_gRcpp <- function(g_a_j, g_a_jp1, mu, sigma, Jmax) {
     .Call('_rSTAR_expectation2_gRcpp', PACKAGE = 'rSTAR', g_a_j, g_a_jp1, mu, sigma, Jmax)
 }
@@ -146,7 +146,7 @@ expectation2_gRcpp <- function(g_a_j, g_a_jp1, mu, sigma, Jmax) {
 #'
 #' @useDynLib rSTAR
 #' @import Rcpp
-#' @export
+#' @keywords internal
 pmaxRcpp <- function(v1, v2) {
     .Call('_rSTAR_pmaxRcpp', PACKAGE = 'rSTAR', v1, v2)
 }
@@ -163,7 +163,7 @@ pmaxRcpp <- function(v1, v2) {
 #'
 #' @useDynLib rSTAR
 #' @import Rcpp
-#' @export
+#' @keywords internal
 pminRcpp <- function(v1, v2) {
     .Call('_rSTAR_pminRcpp', PACKAGE = 'rSTAR', v1, v2)
 }
@@ -184,7 +184,7 @@ pminRcpp <- function(v1, v2) {
 #'
 #' @useDynLib rSTAR
 #' @import Rcpp
-#' @export
+#' @keywords internal
 expectation_identity <- function(a, Jmax, Mu, sigma_t, Offset) {
     .Call('_rSTAR_expectation_identity', PACKAGE = 'rSTAR', a, Jmax, Mu, sigma_t, Offset)
 }
@@ -205,7 +205,7 @@ expectation_identity <- function(a, Jmax, Mu, sigma_t, Offset) {
 #'
 #' @useDynLib rSTAR
 #' @import Rcpp
-#' @export
+#' @keywords internal
 expectation_log <- function(a, Jmax, Mu, sigma_t, Offset) {
     .Call('_rSTAR_expectation_log', PACKAGE = 'rSTAR', a, Jmax, Mu, sigma_t, Offset)
 }
@@ -226,7 +226,7 @@ expectation_log <- function(a, Jmax, Mu, sigma_t, Offset) {
 #'
 #' @useDynLib rSTAR
 #' @import Rcpp
-#' @export
+#' @keywords internal
 expectation_sqrt <- function(a, Jmax, Mu, sigma_t, Offset) {
     .Call('_rSTAR_expectation_sqrt', PACKAGE = 'rSTAR', a, Jmax, Mu, sigma_t, Offset)
 }

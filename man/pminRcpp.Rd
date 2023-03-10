@@ -20,3 +20,4 @@ Compute the pointwise min for two vectors of equal length
 \note{
 This function uses \code{Rcpp} for computational efficiency.
 }
+\keyword{internal}

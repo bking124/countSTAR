@@ -19,7 +19,7 @@ using namespace Rcpp;
 //'
 //' @useDynLib rSTAR
 //' @import Rcpp
-//' @export
+//' @keywords internal
 // [[Rcpp::export]]
 arma::vec expectation_gRcpp(arma::vec g_a_j, arma::vec g_a_jp1,
                         arma::vec mu, arma::vec sigma,
@@ -60,7 +60,7 @@ arma::vec expectation_gRcpp(arma::vec g_a_j, arma::vec g_a_jp1,
 //'
 //' @useDynLib rSTAR
 //' @import Rcpp
-//' @export
+//' @keywords internal
 // [[Rcpp::export]]
 arma::mat interval_gRcpp(arma::vec g_a_j, arma::vec g_a_jp1,
                          arma::vec L_mu, arma::vec U_mu, arma::vec sigma,
@@ -105,7 +105,7 @@ arma::mat interval_gRcpp(arma::vec g_a_j, arma::vec g_a_jp1,
 //'
 //' @useDynLib rSTAR
 //' @import Rcpp
-//' @export
+//' @keywords internal
 // [[Rcpp::export]]
 arma::vec rtruncnormRcpp(arma::vec y_lower, arma::vec y_upper,
                          arma::vec mu, arma::vec sigma,
@@ -153,7 +153,7 @@ arma::vec rtruncnormRcpp(arma::vec y_lower, arma::vec y_upper,
 //'
 //' @useDynLib rSTAR
 //' @import Rcpp
-//' @export
+//' @keywords internal
 // [[Rcpp::export]]
 double logLikeRcpp(arma::vec g_a_j, arma::vec g_a_jp1,
                    arma::vec mu, arma::vec sigma){
@@ -186,7 +186,7 @@ double logLikeRcpp(arma::vec g_a_j, arma::vec g_a_jp1,
 //'
 //' @useDynLib rSTAR
 //' @import Rcpp
-//' @export
+//' @keywords internal
 // [[Rcpp::export]]
 arma::vec logLikePointRcpp(arma::vec g_a_j, arma::vec g_a_jp1,
                    arma::vec mu, arma::vec sigma){
@@ -220,7 +220,7 @@ arma::vec logLikePointRcpp(arma::vec g_a_j, arma::vec g_a_jp1,
 //'
 //' @useDynLib rSTAR
 //' @import Rcpp
-//' @export
+//' @keywords internal
 // [[Rcpp::export]]
 arma::vec expectation2_gRcpp(arma::vec g_a_j, arma::vec g_a_jp1,
                             arma::vec mu, arma::vec sigma,
@@ -255,7 +255,7 @@ arma::vec expectation2_gRcpp(arma::vec g_a_j, arma::vec g_a_jp1,
 //'
 //' @useDynLib rSTAR
 //' @import Rcpp
-//' @export
+//' @keywords internal
 // [[Rcpp::export]]
 arma::mat pmaxRcpp(arma::vec v1, arma::vec v2){
 
@@ -288,7 +288,7 @@ arma::mat pmaxRcpp(arma::vec v1, arma::vec v2){
 //'
 //' @useDynLib rSTAR
 //' @import Rcpp
-//' @export
+//' @keywords internal
 // [[Rcpp::export]]
 arma::mat pminRcpp(arma::vec v1, arma::vec v2){
 
@@ -329,7 +329,7 @@ arma::mat pminRcpp(arma::vec v1, arma::vec v2){
 //'
 //' @useDynLib rSTAR
 //' @import Rcpp
-//' @export
+//' @keywords internal
 // [[Rcpp::export]]
 arma::mat expectation_identity(arma::vec a, arma::mat Jmax,
                                arma::mat Mu, arma::vec sigma_t,
@@ -373,7 +373,7 @@ arma::mat expectation_identity(arma::vec a, arma::mat Jmax,
 //'
 //' @useDynLib rSTAR
 //' @import Rcpp
-//' @export
+//' @keywords internal
 // [[Rcpp::export]]
 arma::mat expectation_log(arma::vec a, arma::mat Jmax,
                                arma::mat Mu, arma::vec sigma_t,
@@ -417,7 +417,7 @@ arma::mat expectation_log(arma::vec a, arma::mat Jmax,
 //'
 //' @useDynLib rSTAR
 //' @import Rcpp
-//' @export
+//' @keywords internal
 // [[Rcpp::export]]
 arma::mat expectation_sqrt(arma::vec a, arma::mat Jmax,
                                arma::mat Mu, arma::vec sigma_t,

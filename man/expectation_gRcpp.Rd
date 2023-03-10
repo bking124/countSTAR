@@ -27,3 +27,4 @@ under a generic link function g.
 \note{
 This function uses \code{Rcpp} for computational efficiency.
 }
+\keyword{internal}
