@@ -27,6 +27,9 @@ smaller values imply greater overdispersion, while larger values approximate the
 \item{b_sig}{regression coefficients for true signals; default is log(5.0).}
 
 \item{sigma_true}{standard deviation of the Gaussian innovation; default is zero.}
+
+\item{seed}{optional integer to set the seed for reproducible simulation; default is NULL
+which results in a different dataset after each run}
 }
 \value{
 A named list with the simulated count response \code{y}, the simulated design matrix \code{X},

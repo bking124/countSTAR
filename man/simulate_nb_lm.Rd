@@ -12,7 +12,8 @@ simulate_nb_lm(
   b_sig = log(2),
   sigma_true = sqrt(2 * log(1)),
   ar1 = 0,
-  intercept = FALSE
+  intercept = FALSE,
+  seed = NULL
 )
 }
 \arguments{
@@ -35,6 +36,9 @@ twofold increase in the expected counts for a one unit increase in x}
 
 \item{intercept}{a Boolean indicating whether an intercept column should be included
 in the returned design matrix; default is FALSE}
+
+\item{seed}{optional integer to set the seed for reproducible simulation; default is NULL
+which results in a different dataset after each run}
 }
 \value{
 A named list with the simulated count response \code{y}, the simulated design matrix \code{X}

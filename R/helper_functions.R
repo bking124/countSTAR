@@ -420,6 +420,8 @@ a_j_round = function(j, y_min = -Inf, y_max = Inf) {
 #' @param ar1 the autoregressive coefficient among the columns of the X matrix; default is zero.
 #' @param intercept a Boolean indicating whether an intercept column should be included
 #' in the returned design matrix; default is FALSE
+#' @param seed optional integer to set the seed for reproducible simulation; default is NULL
+#' which results in a different dataset after each run
 #'
 #' @return A named list with the simulated count response \code{y}, the simulated design matrix \code{X}
 #' (possibly including the intercept), the true expected counts \code{Ey},
@@ -443,8 +445,14 @@ simulate_nb_lm = function(n = 100,
                           b_sig = log(2.0),
                           sigma_true = sqrt(2*log(1.0)),
                           ar1 = 0,
-                          intercept = FALSE
+                          intercept = FALSE,
+                          seed = NULL
                           ){
+
+  #Set seed for reproducible results
+  if(!is.null(seed)){
+    set.seed(seed)
+  }
 
   # True regression effects:
   beta_true = c(b_int,
@@ -504,6 +512,8 @@ simulate_nb_lm = function(n = 100,
 #' @param b_int intercept; default is log(1.5).
 #' @param b_sig regression coefficients for true signals; default is log(5.0).
 #' @param sigma_true standard deviation of the Gaussian innovation; default is zero.
+#' @param seed optional integer to set the seed for reproducible simulation; default is NULL
+#' which results in a different dataset after each run
 #'
 #' @return A named list with the simulated count response \code{y}, the simulated design matrix \code{X},
 #' and the true expected counts \code{Ey}.
