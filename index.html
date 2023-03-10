@@ -209,7 +209,7 @@ $$</span> where <span class="math inline"><em>μ</em><sub><em>θ</em></sub>(<em>
 <span><span class="co"># Dimensions:</span></span>
 <span><span class="va">n</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span>; <span class="va">p</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">fit_mcmc</span> <span class="op">=</span> <span class="fu"><a href="reference/star_MCMC.html">star_MCMC</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">y</span>,</span>
+<span><span class="va">fit_mcmc</span> <span class="op">=</span> <span class="fu">star_MCMC</span><span class="op">(</span>y <span class="op">=</span> <span class="va">y</span>,</span>
 <span>                          sample_params <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">y</span>, <span class="va">params</span><span class="op">)</span></span>
 <span>                            <span class="fu"><a href="reference/sample_params_lm.html">sample_params_lm</a></span><span class="op">(</span><span class="va">y</span>, <span class="va">X</span>, <span class="va">params</span><span class="op">)</span>,</span>
 <span>                         init_params <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">y</span><span class="op">)</span> </span>

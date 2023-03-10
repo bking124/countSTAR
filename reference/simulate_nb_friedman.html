@@ -54,7 +54,8 @@
 <span>  r_nb <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  b_int <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">1.5</span><span class="op">)</span>,</span>
 <span>  b_sig <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">5</span><span class="op">)</span>,</span>
-<span>  sigma_true <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fl">2</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span>  sigma_true <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fl">2</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  seed <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -83,6 +84,11 @@ smaller values imply greater overdispersion, while larger values approximate the
 
 <dt>sigma_true</dt>
 <dd><p>standard deviation of the Gaussian innovation; default is zero.</p></dd>
+
+
+<dt>seed</dt>
+<dd><p>optional integer to set the seed for reproducible simulation; default is NULL
+which results in a different dataset after each run</p></dd>
 
 </dl></div>
     <div class="section level2">
