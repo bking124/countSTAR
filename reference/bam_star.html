@@ -75,6 +75,20 @@ The transformation can be known (e.g., log or sqrt) or unknown
 <dd><p><code>n x 1</code> vector of observed counts</p></dd>
 
 
+<dt>X_lin</dt>
+<dd><p><code>n x pL</code> matrix of predictors to be modelled as linear</p></dd>
+
+
+<dt>X_nonlin</dt>
+<dd><p><code>n x pNL</code> matrix of predictors to be modelled as nonlinear</p></dd>
+
+
+<dt>splinetype</dt>
+<dd><p>Type of spline to use for modelling the nonlinear predictors;
+must be either "orthogonal" (orthogonalized splines--the default) or "thinplate"
+(low-rank thin plate splines)</p></dd>
+
+
 <dt>transformation</dt>
 <dd><p>transformation to use for the latent data; must be one of</p><ul><li><p>"identity" (identity transformation)</p></li>
 <li><p>"log" (log transformation)</p></li>
@@ -83,6 +97,8 @@ The transformation can be known (e.g., log or sqrt) or unknown
 <li><p>"pois" (transformation for moment-matched marginal Poisson CDF)</p></li>
 <li><p>"neg-bin" (transformation for moment-matched marginal Negative Binomial CDF)</p></li>
 <li><p>"box-cox" (box-cox transformation with learned parameter)</p></li>
+<li><p>"ispline" (transformation is modeled as unknown, monotone function
+using I-splines)</p></li>
 </ul></dd>
 
 
@@ -111,19 +127,6 @@ the expected counts, E(y), which may be slow to compute</p></dd>
 <dt>verbose</dt>
 <dd><p>logical; if TRUE, print time remaining</p></dd>
 
-
-<dt>sample_params</dt>
-<dd><p>a function that inputs data <code>y</code> and a named list <code>params</code> containing</p><ol><li><p><code>mu</code>: the <code>n x 1</code> vector of conditional means (fitted values)</p></li>
-<li><p><code>sigma</code>: the conditional standard deviation</p></li>
-<li><p><code>coefficients</code>: a named list of parameters that determine <code>mu</code></p></li>
-</ol><p>and outputs an updated list <code>params</code> of samples from the full conditional posterior
-distribution of <code>coefficients</code> and <code>sigma</code> (and updates <code>mu</code>)</p></dd>
-
-
-<dt>init_params</dt>
-<dd><p>an initializing function that inputs data <code>y</code>
-and initializes the named list <code>params</code> of <code>mu</code>, <code>sigma</code>, and <code>coefficients</code></p></dd>
-
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -140,6 +143,9 @@ and initializes the named list <code>params</code> of <code>mu</code>, <code>sig
 <li><p><code>logLik</code>: the log-likelihood evaluated at the posterior means</p></li>
 <li><p><code>WAIC</code>: Widely-Applicable/Watanabe-Akaike Information Criterion</p></li>
 <li><p><code>p_waic</code>: Effective number of parameters based on WAIC</p></li>
+</ul><p>In the case of transformation="ispline", the list also contains</p><ul><li><p><code>post.g</code>: draws from the posterior distribution of the transformation <code>g</code></p></li>
+<li><p><code>post.sigma.gamma</code>: draws from the posterior distribution of <code>sigma.gamma</code>,
+the prior standard deviation of the transformation g() coefficients</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -159,40 +165,25 @@ data <code>y</code>. Options in this case include the empirical cumulative
 distribution function (CDF), which is fully nonparametric ('np'), or the parametric
 alternatives based on Poisson ('pois') or Negative-Binomial ('neg-bin')
 distributions. For the parametric distributions, the parameters of the distribution
-are estimated using moments (means and variances) of <code>y</code>.</p>
+are estimated using moments (means and variances) of <code>y</code>. Third, the transformation can be
+modeled as an unknown, monotone function using I-splines ('ispline'). The
+Robust Adaptive Metropolis (RAM) sampler is used for drawing the parameter
+of the transformation function.</p>
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co"># Simulate data with count-valued response y:</span></span></span>
-<span class="r-in"><span><span class="va">sim_dat</span> <span class="op">=</span> <span class="fu"><a href="simulate_nb_lm.html">simulate_nb_lm</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">100</span>, p <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">sim_dat</span> <span class="op">=</span> <span class="fu"><a href="simulate_nb_friedman.html">simulate_nb_friedman</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">100</span>, p <span class="op">=</span> <span class="fl">5</span>, seed<span class="op">=</span><span class="fl">32</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">y</span> <span class="op">=</span> <span class="va">sim_dat</span><span class="op">$</span><span class="va">y</span>; <span class="va">X</span> <span class="op">=</span> <span class="va">sim_dat</span><span class="op">$</span><span class="va">X</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># STAR: log-transformation:</span></span></span>
-<span class="r-in"><span><span class="va">fit_log</span> <span class="op">=</span> <span class="fu">star_MCMC</span><span class="op">(</span>y <span class="op">=</span> <span class="va">y</span>,</span></span>
-<span class="r-in"><span>                         sample_params <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">y</span>, <span class="va">params</span><span class="op">)</span> <span class="fu"><a href="sample_params_lm.html">sample_params_lm</a></span><span class="op">(</span><span class="va">y</span>, <span class="va">X</span>, <span class="va">params</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                         init_params <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">y</span><span class="op">)</span> <span class="fu"><a href="init_params_lm.html">init_params_lm</a></span><span class="op">(</span><span class="va">y</span>, <span class="va">X</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                         transformation <span class="op">=</span> <span class="st">'log'</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="co"># Posterior mean of each coefficient:</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit_log</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># WAIC for STAR-log:</span></span></span>
-<span class="r-in"><span><span class="va">fit_log</span><span class="op">$</span><span class="va">WAIC</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># MCMC diagnostics:</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/ts.html" class="external-link">as.ts</a></span><span class="op">(</span><span class="va">fit_log</span><span class="op">$</span><span class="va">post.coefficients</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Posterior predictive check:</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html" class="external-link">hist</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">fit_log</span><span class="op">$</span><span class="va">post.pred</span>, <span class="fl">1</span>,</span></span>
-<span class="r-in"><span>           <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">x</span><span class="op">==</span><span class="fl">0</span><span class="op">)</span><span class="op">)</span>, main <span class="op">=</span> <span class="st">'Proportion of Zeros'</span>, xlab<span class="op">=</span><span class="st">''</span><span class="op">)</span>;</span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>v <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">y</span><span class="op">==</span><span class="fl">0</span><span class="op">)</span>, lwd<span class="op">=</span><span class="fl">4</span>, col <span class="op">=</span><span class="st">'blue'</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Linear and nonlinear components:</span></span></span>
+<span class="r-in"><span><span class="va">X_lin</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">X</span><span class="op">[</span>,<span class="op">-</span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">X_nonlin</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">X</span><span class="op">[</span>,<span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># STAR: nonparametric transformation</span></span></span>
-<span class="r-in"><span><span class="va">fit</span> <span class="op">=</span> <span class="fu">star_MCMC</span><span class="op">(</span>y <span class="op">=</span> <span class="va">y</span>,</span></span>
-<span class="r-in"><span>                sample_params <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">y</span>, <span class="va">params</span><span class="op">)</span> <span class="fu"><a href="sample_params_lm.html">sample_params_lm</a></span><span class="op">(</span><span class="va">y</span>, <span class="va">X</span>, <span class="va">params</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                init_params <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">y</span><span class="op">)</span> <span class="fu"><a href="init_params_lm.html">init_params_lm</a></span><span class="op">(</span><span class="va">y</span>, <span class="va">X</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                transformation <span class="op">=</span> <span class="st">'np'</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu">bam_star</span><span class="op">(</span><span class="va">y</span>,<span class="va">X_lin</span>, <span class="va">X_nonlin</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Posterior mean of each coefficient:</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>

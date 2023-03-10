@@ -100,6 +100,9 @@
     <loc>https://bking124.github.io/rSTAR/reference/genMCMC_star.html</loc>
   </url>
   <url>
+    <loc>https://bking124.github.io/rSTAR/reference/genMCMC_star_ispline.html</loc>
+  </url>
+  <url>
     <loc>https://bking124.github.io/rSTAR/reference/getEffSize.html</loc>
   </url>
   <url>
@@ -203,9 +206,6 @@
   </url>
   <url>
     <loc>https://bking124.github.io/rSTAR/reference/splineBasis.html</loc>
-  </url>
-  <url>
-    <loc>https://bking124.github.io/rSTAR/reference/star_MCMC_ispline.html</loc>
   </url>
   <url>
     <loc>https://bking124.github.io/rSTAR/reference/truncnorm_mom.html</loc>
