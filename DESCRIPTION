@@ -1,6 +1,6 @@
 Package: rSTAR
 Type: Package
-Title: MCMC and EM algorithms for Simultaneous Transformation and Rounding (STAR) Models
+Title: Modeling Integer-Valued Data  via Simultaneous Transformation and Rounding (STAR)
 Version: 1.0.0
 Authors@R: c(
     person(given="Brian", family="King", email = "brianking387@gmail.com", role = c("aut", "cre")),
@@ -18,7 +18,8 @@ Description: For Bayesian and classical inference and prediction with integer-va
     Importantly, STAR is easy to combine with existing MCMC or point estimation
     methods for continuous data, which allows seamless adaptation of continuous data
     models (such as linear regressions, additive models, BART, random forests,
-    and gradient boosting machines) for integer-valued data. 
+    and gradient boosting machines) for integer-valued data. The package also includes several
+    methods for modeling count-valued time series data, namely via warped Dynamic Linear Models.
 License: GPL-2
 Encoding: UTF-8
 LazyData: true

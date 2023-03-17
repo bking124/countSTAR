@@ -1,7 +1,7 @@
 ---
 output: rmarkdown::github_document
 ---
-# STAR: Simultaneous Transformation and Rounding for Modeling Integer-Valued Data
+# Modeling Integer-Valued Data  via Simultaneous Transformation and Rounding (STAR)
 
 
 ```{r setup, include=FALSE}
@@ -10,6 +10,8 @@ knitr::opts_chunk$set(echo = TRUE,
 library(rstanarm)
 library(rSTAR)
 ```
+
+
 
 
 ## Background: integer-valued data
