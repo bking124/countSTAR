@@ -581,7 +581,7 @@ simulate_nb_friedman = function(n = 100,
 #' @param y \code{n x 1} vector of data
 #' @param post_y \code{Nsims x n} matrix of simulated fitted values, where \code{Nsims} is the
 #' number of simulations
-#' @param y_hat \code{n x 1} vector of fitted values; if NULL, use the pointwise samlpe mean \code{colMeans(post_y)}
+#' @param y_hat \code{n x 1} vector of fitted values; if NULL, use the pointwise sample mean \code{colMeans(post_y)}
 #' @param alpha confidence level for the credible intervals
 #' @param ... other arguments for plotting
 #' @import coda

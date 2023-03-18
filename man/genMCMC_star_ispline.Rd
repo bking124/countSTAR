@@ -94,7 +94,7 @@ sim_dat = simulate_nb_lm(n = 100, p = 5)
 y = sim_dat$y; X = sim_dat$X
 
 # STAR: unknown I-spline transformation
-fit = star_MCMC_ispline(y = y,
+fit = genMCMC_star_ispline(y = y,
                          sample_params = function(y, params) sample_params_lm(y, X, params),
                          init_params = function(y) init_params_lm(y, X))
 # Posterior mean of each coefficient:

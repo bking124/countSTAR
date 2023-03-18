@@ -12,7 +12,7 @@ plot_fitted(y, post_y, y_hat = NULL, alpha = 0.05, ...)
 \item{post_y}{\code{Nsims x n} matrix of simulated fitted values, where \code{Nsims} is the
 number of simulations}
 
-\item{y_hat}{\code{n x 1} vector of fitted values; if NULL, use the pointwise samlpe mean \code{colMeans(post_y)}}
+\item{y_hat}{\code{n x 1} vector of fitted values; if NULL, use the pointwise sample mean \code{colMeans(post_y)}}
 
 \item{alpha}{confidence level for the credible intervals}
 

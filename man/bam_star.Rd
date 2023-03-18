@@ -71,7 +71,7 @@ a list with the following elements:
 \item \code{WAIC}: Widely-Applicable/Watanabe-Akaike Information Criterion
 \item \code{p_waic}: Effective number of parameters based on WAIC
 }
-In the case of transformation="ispline", the list also contains
+In the case of \code{transformation="ispline"}, the list also contains
 \itemize{
 \item \code{post.g}: draws from the posterior distribution of the transformation \code{g}
 \item \code{post.sigma.gamma}: draws from the posterior distribution of \code{sigma.gamma},
