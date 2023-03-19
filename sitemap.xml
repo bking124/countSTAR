@@ -28,9 +28,6 @@
     <loc>https://bking124.github.io/rSTAR/reference/STAR_gprior_gibbs_da.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/STAR_spline.html</loc>
-  </url>
-  <url>
     <loc>https://bking124.github.io/rSTAR/reference/STAR_spline_gibbs.html</loc>
   </url>
   <url>
@@ -206,6 +203,12 @@
   </url>
   <url>
     <loc>https://bking124.github.io/rSTAR/reference/splineBasis.html</loc>
+  </url>
+  <url>
+    <loc>https://bking124.github.io/rSTAR/reference/spline_star.html</loc>
+  </url>
+  <url>
+    <loc>https://bking124.github.io/rSTAR/reference/spline_star_exact.html</loc>
   </url>
   <url>
     <loc>https://bking124.github.io/rSTAR/reference/truncnorm_mom.html</loc>

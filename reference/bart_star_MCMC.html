@@ -103,6 +103,8 @@ computing log-predictive scores)</p></dd>
 <li><p>"pois" (transformation for moment-matched marginal Poisson CDF)</p></li>
 <li><p>"neg-bin" (transformation for moment-matched marginal Negative Binomial CDF)</p></li>
 <li><p>"box-cox" (box-cox transformation with learned parameter)</p></li>
+<li><p>"ispline" (transformation is modeled as unknown, monotone function
+using I-splines)</p></li>
 </ul></dd>
 
 
@@ -167,19 +169,28 @@ the expected counts, E(y), which may be slow to compute</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     
 
-<p>a list with the following elements:</p><ul><li><p><code>fitted.values</code>: the posterior mean of the conditional expectation of the counts <code>y</code></p></li>
-<li><p><code>post.fitted.values</code>: posterior draws of the conditional mean of the counts <code>y</code></p></li>
-<li><p><code>post.pred.test</code>: draws from the posterior predictive distribution at the test points <code>X_test</code></p></li>
-<li><p><code>post.fitted.values.test</code>: posterior draws of the conditional mean at the test points <code>X_test</code></p></li>
-<li><p><code>post.pred</code>: draws from the posterior predictive distribution of <code>y</code></p></li>
-<li><p><code>post.lambda</code>: draws from the posterior distribution of <code>lambda</code></p></li>
+<p>a list with the following elements:</p><ul><li><p><code>post.pred</code>: draws from the posterior predictive distribution of <code>y</code></p></li>
 <li><p><code>post.sigma</code>: draws from the posterior distribution of <code>sigma</code></p></li>
-<li><p><code>post.mu.test</code>: draws of the conditional mean of z_star at the test points</p></li>
 <li><p><code>post.log.like.point</code>: draws of the log-likelihood for each of the <code>n</code> observations</p></li>
-<li><p><code>post.log.pred.test</code>: draws of the log-predictive distribution for each of the <code>n0</code> test cases</p></li>
 <li><p><code>logLik</code>: the log-likelihood evaluated at the posterior means</p></li>
 <li><p><code>WAIC</code>: Widely-Applicable/Watanabe-Akaike Information Criterion</p></li>
 <li><p><code>p_waic</code>: Effective number of parameters based on WAIC</p></li>
+<li><p><code>post.pred.test</code>: draws from the posterior predictive distribution at the test points <code>X_test</code>
+(<code>NULL</code> if <code>X_test</code> is not given)</p></li>
+<li><p><code>post.fitted.values.test</code>: posterior draws of the conditional mean at the test points <code>X_test</code>
+(<code>NULL</code> if <code>X_test</code> is not given)</p></li>
+<li><p><code>post.mu.test</code>: draws of the conditional mean of z_star at the test points <code>X_test</code>
+(<code>NULL</code> if <code>X_test</code> is not given)</p></li>
+<li><p><code>post.log.pred.test</code>: draws of the log-predictive distribution for each of the <code>n0</code> test cases
+(<code>NULL</code> if <code>X_test</code> is not given)</p></li>
+<li><p><code>fitted.values</code>: the posterior mean of the conditional expectation of the counts <code>y</code>
+(<code>NULL</code> if <code>save_y_hat=FALSE</code>)</p></li>
+<li><p><code>post.fitted.values</code>: posterior draws of the conditional mean of the counts <code>y</code>
+(<code>NULL</code> if <code>save_y_hat=FALSE</code>)</p></li>
+</ul><p>In the case of <code>transformation="ispline"</code>, the list also contains</p><ul><li><p><code>post.g</code>: draws from the posterior distribution of the transformation <code>g</code></p></li>
+<li><p><code>post.sigma.gamma</code>: draws from the posterior distribution of <code>sigma.gamma</code>,
+the prior standard deviation of the transformation g() coefficients</p></li>
+</ul><p>If <code>transformation="box-cox"</code>, then the list also contains</p><ul><li><p><code>post.lambda</code>: draws from the posterior distribution of <code>lambda</code></p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -200,7 +211,10 @@ data <code>y</code>. Options in this case include the empirical cumulative
 distribution function (CDF), which is fully nonparametric ('np'), or the parametric
 alternatives based on Poisson ('pois') or Negative-Binomial ('neg-bin')
 distributions. For the parametric distributions, the parameters of the distribution
-are estimated using moments (means and variances) of <code>y</code>.</p>
+are estimated using moments (means and variances) of <code>y</code>. Third, the transformation can be
+modeled as an unknown, monotone function using I-splines ('ispline'). The
+Robust Adaptive Metropolis (RAM) sampler is used for drawing the parameter
+of the transformation function.</p>
     </div>
 
     <div class="section level2">
