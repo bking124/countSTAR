@@ -28,6 +28,7 @@ Imports: coda, dbarts, FastGP, gbm, graphics, grDevices, gtools, Matrix, spikeSl
 RoxygenNote: 7.2.3
 Suggests: 
     knitr,
-    rmarkdown
+    rmarkdown,
+    rstanarm
 VignetteBuilder: knitr
 URL: https://bking124.github.io/rSTAR/
