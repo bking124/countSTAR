@@ -1,3 +1,297 @@
+#' Monte Carlo predictive sampler for spline regression
+#'
+#' Compute direct Monte Carlo samples from the posterior predictive
+#' distribution of a STAR spline regression model.
+#'
+#' @param y \code{n x 1} vector of observed counts
+#' @param tau \code{n x 1} vector of observation points; if NULL, assume equally-spaced on [0,1]
+#' @param transformation transformation to use for the latent data; must be one of
+#' \itemize{
+#' \item "identity" (identity transformation)
+#' \item "log" (log transformation)
+#' \item "sqrt" (square root transformation)
+#' \item "bnp" (Bayesian nonparametric transformation using the Bayesian bootstrap)
+#' \item "np" (nonparametric transformation estimated from empirical CDF)
+#' \item "pois" (transformation for moment-matched marginal Poisson CDF)
+#' \item "neg-bin" (transformation for moment-matched marginal Negative Binomial CDF)
+#' }
+#' @param y_max a fixed and known upper bound for all observations; default is \code{Inf}
+#' @param psi prior variance (1/smoothing parameter)
+#' @param method_sigma method to estimate the latent data standard deviation; must be one of
+#' \itemize{
+#' \item "mle" use the MLE from the STAR EM algorithm
+#' \item "mmle" use the marginal MLE (Note: slower!)
+#' }
+#' @param approx_Fz logical; in BNP transformation, apply a (fast and stable)
+#' normal approximation for the marginal CDF of the latent data
+#' @param approx_Fy logical; in BNP transformation, approximate
+#' the marginal CDF of \code{y} using the empirical CDF
+#' @param nsave number of Monte Carlo simulations
+#' @param compute_marg logical; if TRUE, compute and return the
+#' marginal likelihood
+#' @return a list with the following elements:
+#' \itemize{
+#' \item \code{post_ytilde}: \code{nsave x n} samples
+#' from the posterior predictive distribution at the observation points \code{tau}
+#' \item \code{marg_like}: the marginal likelihood (if requested; otherwise NULL)
+#' }
+#'
+#' @details STAR defines a count-valued probability model by
+#' (1) specifying a Gaussian model for continuous *latent* data and
+#' (2) connecting the latent data to the observed data via a
+#' *transformation and rounding* operation. Here, the continuous
+#' latent data model is a spline regression.
+#'
+#' There are several options for the transformation. First, the transformation
+#' can belong to the *Box-Cox* family, which includes the known transformations
+#' 'identity', 'log', and 'sqrt'. Second, the transformation
+#' can be estimated (before model fitting) using the empirical distribution of the
+#' data \code{y}. Options in this case include the empirical cumulative
+#' distribution function (CDF), which is fully nonparametric ('np'), or the parametric
+#' alternatives based on Poisson ('pois') or Negative-Binomial ('neg-bin')
+#' distributions. For the parametric distributions, the parameters of the distribution
+#' are estimated using moments (means and variances) of \code{y}. The distribution-based
+#' transformations approximately preserve the mean and variance of the count data \code{y}
+#' on the latent data scale, which lends interpretability to the model parameters.
+#' Lastly, the transformation can be modeled using the Bayesian bootstrap ('bnp'),
+#' which is a Bayesian nonparametric model and incorporates the uncertainty
+#' about the transformation into posterior and predictive inference.
+#'
+#' The Monte Carlo sampler produces direct, discrete, and joint draws
+#' from the posterior predictive distribution of the spline regression model
+#' at the observed tau points.
+#'
+#' @examples
+#' # Simulate some data:
+#' n = 100
+#' tau = seq(0,1, length.out = n)
+#' y = round_floor(exp(1 + rnorm(n)/4 + poly(tau, 4)%*%rnorm(n=4, sd = 4:1)))
+#'
+#' # Sample from the predictive distribution of a STAR spline model:
+#' fit_star = STAR_spline(y = y, tau = tau)
+#' post_ytilde = fit_star$post_ytilde
+#'
+#' # Compute 90% prediction intervals:
+#' pi_y = t(apply(post_ytilde, 2, quantile, c(0.05, .95)))
+#'
+#'# Plot the results: intervals, median, and smoothed mean
+#' plot(tau, y, ylim = range(pi_y, y))
+#' polygon(c(tau, rev(tau)),c(pi_y[,2], rev(pi_y[,1])),col='gray', border=NA)
+#' lines(tau, apply(post_ytilde, 2, median), lwd=5, col ='black')
+#' lines(tau, smooth.spline(tau, apply(post_ytilde, 2, mean))$y, lwd=5, col='blue')
+#' lines(tau, y, type='p')
+#'
+#' @importFrom TruncatedNormal mvrandn pmvnorm
+#' @importFrom FastGP rcpp_rmvnorm
+#' @importFrom spikeSlabGAM sm
+#' @importFrom stats poly
+#' @keywords internal
+spline_star_exact = function(y,
+                       tau = NULL,
+                       transformation = 'np',
+                       y_max = Inf,
+                       psi = 1000,
+                       method_sigma = 'mle',
+                       approx_Fz = FALSE,
+                       approx_Fy = FALSE,
+                       nsave = 1000,
+                       compute_marg = TRUE){
+  #----------------------------------------------------------------------------
+  # Check: does the method for sigma make sense?
+  method_sigma = tolower(method_sigma);
+  if(!is.element(method_sigma, c("mle", "mmle")))
+    stop("The sigma estimation method must be 'mle' or 'mmle'")
+
+  # Assign a family for the transformation: Box-Cox or CDF?
+  transform_family = ifelse(
+    test = is.element(transformation, c("identity", "log", "sqrt", "box-cox")),
+    yes = 'bc', no = 'cdf'
+  )
+
+  # If approximating F_y in BNP, use 'np':
+  if(transformation == 'bnp' && approx_Fy)
+    transformation = 'np'
+  #----------------------------------------------------------------------------
+  # Define the transformation:
+  if(transform_family == 'bc'){
+    # Lambda value for each Box-Cox argument:
+    if(transformation == 'identity') lambda = 1
+    if(transformation == 'log') lambda = 0
+    if(transformation == 'sqrt') lambda = 1/2
+
+    # Transformation function:
+    g = function(t) g_bc(t,lambda = lambda)
+
+    # Inverse transformation function:
+    g_inv = function(s) g_inv_bc(s,lambda = lambda)
+  }
+
+  if(transform_family == 'cdf'){
+
+    # Transformation function:
+    g = g_cdf(y = y, distribution = ifelse(transformation == 'bnp',
+                                           'np', # for initialization
+                                           transformation))
+
+    # Define the grid for approximations using equally-spaced + quantile points:
+    t_grid = sort(unique(round(c(
+      seq(0, min(2*max(y), y_max), length.out = 250),
+      quantile(unique(y[y < y_max] + 1), seq(0, 1, length.out = 250))), 8)))
+
+    # Inverse transformation function:
+    g_inv = g_inv_approx(g = g, t_grid = t_grid)
+  }
+
+  # Lower and upper intervals:
+  g_a_y = g(a_j(y, y_max = y_max));
+  g_a_yp1 = g(a_j(y + 1, y_max = y_max))
+  #----------------------------------------------------------------------------
+  # Number of observations:
+  n = length(y)
+
+  # Observation points:
+  if(is.null(tau)) tau = seq(0, 1,length.out = n)
+  #----------------------------------------------------------------------------
+  # Orthogonalized P-spline and related quantities:
+  B = cbind(1/sqrt(n), poly(tau, 1), sm(tau))
+  B = B/sqrt(sum(diag(crossprod(B))))
+  diagBtB = colSums(B^2)
+  BBt = tcrossprod(B)
+  p = length(diagBtB)
+  #----------------------------------------------------------------------------
+  # Latent data SD:
+  if(method_sigma == 'mle'){
+    sigma_epsilon = genEM_star(y = y,
+                            estimator = function(y) lm(y ~ B - 1),
+                            transformation = ifelse(transformation == 'bnp', 'np',
+                                                    transformation),
+                            y_max = y_max)$sigma.hat
+  }
+
+  if(method_sigma == 'mmle'){
+    sigma_seq = exp(seq(log(sd(y)) - 2,
+                        log(sd(y)) + 2, length.out = 10))
+    m_sigma = rep(NA, length(sigma_seq))
+    print('Marginal MLE evaluations:')
+    for(j in 1:length(sigma_seq)){
+      m_sigma[j] = TruncatedNormal::pmvnorm(
+        mu = rep(0, n),
+        sigma = sigma_seq[j]^2*(diag(n) + psi*BBt),
+        lb = g_a_y,
+        ub = g_a_yp1
+      )
+      print(paste(j, 'of 10'))
+    }
+    sigma_epsilon = sigma_seq[which.max(m_sigma)]
+    #plot(sigma_seq, m_sigma); abline(v = sigma_epsilon)
+  }
+  #----------------------------------------------------------------------------
+  # BNP specifications:
+  if(transformation == 'bnp'){
+
+    # Necessary quantity:
+    xt_XtXinv_x = sapply(1:n, function(i) sum(B[i,]^2/diagBtB))
+
+    # Grid of values to evaluate Fz:
+    zgrid = sort(unique(sapply(range(xt_XtXinv_x), function(xtemp){
+      qnorm(seq(0.001, 0.999, length.out = 250),
+            mean = 0,
+            sd = sqrt(sigma_epsilon^2 + sigma_epsilon^2*psi*xtemp))
+    })))
+
+    # The scale is not identified, but set at the MLE anyway:
+    sigma_epsilon = median(sigma_epsilon/sqrt(1 + psi*xt_XtXinv_x))
+
+    # Remove marginal likelihood computations:
+    if(compute_marg){
+      warning('Marginal likelihood not currently implemented for BNP')
+      compute_marg = FALSE
+    }
+  }
+  #----------------------------------------------------------------------------
+  # Posterior predictive simulations:
+
+  # Covariance matrix of z:
+  Sigma_z = sigma_epsilon^2*(diag(n) + psi*BBt)
+
+  # Important terms for predictive draws:
+  #BdBt = B%*%diag(1/(1 + psi*diagBtB))%*%t(B)
+  #Bd2Bt = B%*%diag(1 - psi*diagBtB/(1 + psi*diagBtB))%*%t(B)
+  BdBt = tcrossprod(t(t(B)*1/(1 + psi*diagBtB)), B)
+  Bd2Bt = tcrossprod(t(t(B)*(1 - psi*diagBtB/(1 + psi*diagBtB))), B)
+
+  # Marginal likelihood, if requested:
+  if(compute_marg){
+    print('Computing the marginal likelihood...')
+    marg_like = TruncatedNormal::pmvnorm(
+      mu = rep(0, n),
+      sigma = sigma_epsilon^2*(diag(n) + psi*BBt),
+      lb = g_a_y,
+      ub = g_a_yp1
+    )
+  } else marg_like = NULL
+
+  print('Posterior predictive sampling...')
+
+  # Common term for predictive draws:
+  V1tilde = rcpp_rmvnorm(n = nsave,
+                         mu = rep(0, n),
+                         S = sigma_epsilon^2*(psi*BdBt + diag(n)))
+
+  # Bayesian bootstrap sampling:
+  if(transformation == 'bnp'){
+    # MC draws:
+    post_ytilde = array(NA, c(nsave, n)) # storage
+    for(s in 1:nsave){
+      # Sample the transformation:
+      g = g_bnp(y = y,
+                xtSigmax = sigma_epsilon^2*psi*xt_XtXinv_x,
+                zgrid = zgrid,
+                sigma_epsilon = sigma_epsilon,
+                approx_Fz = approx_Fz)
+
+      # Update the lower and upper intervals:
+      g_a_y = g(a_j(y, y_max = y_max));
+      g_a_yp1 = g(a_j(y + 1, y_max = y_max))
+
+      # Update the inverse transformation function:
+      g_inv = g_inv_approx(g = g, t_grid = t_grid)
+
+      # Sample z in this interval:
+      z = mvrandn(l = g_a_y,
+                  u = g_a_yp1,
+                  Sig = Sigma_z,
+                  n = 1)
+
+      # Predictive samples of ztilde:
+      ztilde = V1tilde[s,] + t(crossprod(psi*Bd2Bt, z))
+
+      # Predictive samples of ytilde:
+      post_ytilde[s,] = round_floor(g_inv(ztilde), y_max)
+    }
+  } else {
+    # Sample z in this interval:
+    post_z = t(mvrandn(l = g_a_y,
+                       u = g_a_yp1,
+                       Sig = Sigma_z,
+                       n = nsave))
+
+    # Predictive samples of ztilde:
+    post_ztilde = V1tilde + t(tcrossprod(psi*Bd2Bt, post_z))
+
+    # Predictive samples of ytilde:
+    post_ytilde = t(apply(post_ztilde, 1, function(z){
+      round_floor(g_inv(z), y_max)
+    }))
+    #post_ytilde = matrix(round_floor(g_inv(post_ztilde), y_max), nrow = S)
+  }
+
+  print('Done!')
+
+  return(list(post_ytilde = post_ytilde,
+              marg_like = marg_like))
+}
+
 #' MCMC sampler for BART-STAR with a monotone spline model
 #' for the transformation
 #'
