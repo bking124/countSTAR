@@ -5,6 +5,8 @@ vignette: >
   %\VignetteIndexEntry{Getting Started with rSTAR}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+
+bibliography: refs.bib
 ---
 
 ```{r, include = FALSE}
