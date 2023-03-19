@@ -8,3 +8,5 @@ src/*.dll
 dev/
 inst/doc
 docs
+/doc/
+/Meta/

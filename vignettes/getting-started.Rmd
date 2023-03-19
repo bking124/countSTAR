@@ -16,6 +16,7 @@ knitr::opts_chunk$set(
 
 ```{r setup}
 library(rSTAR)
+library(rstanarm)
 ```
 
 
@@ -45,13 +46,6 @@ where $\mu_\theta(x)$ is the conditional expectation of the transformed latent d
 
 
 Estimation, inference, and prediction for STAR are available for both *Bayesian* and *frequentist* models. Implementation in both cases is provided in the `rSTAR` package. 
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE,
-                      fig.path = "man/figures/")
-library(rstanarm)
-library(rSTAR)
-```
 
 ## Background: integer-valued data
 Integer-valued or count data are common in many fields. Frequently, integer-valued data are observed jointly with predictors, over time intervals, or across spatial locations. Integer-valued data also exhibit a variety of distributional features, including zero-inflation, skewness, over- and underdispersion, and in some cases may be bounded or censored. Flexible and interpretable models for *integer-valued processes* are therefore highly useful in practice. 
@@ -179,7 +173,7 @@ X = model.matrix(y ~ roach1 + treatment + senior + log(exposure2),
 # Dimensions:
 n = nrow(X); p = ncol(X)
 
-fit_mcmc = star_MCMC(y = y,
+fit_mcmc = genMCMC_star(y = y,
                           sample_params = function(y, params)
                             sample_params_lm(y, X, params),
                          init_params = function(y) 
