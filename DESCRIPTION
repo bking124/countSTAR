@@ -32,3 +32,4 @@ Suggests:
     rstanarm
 VignetteBuilder: knitr
 URL: https://bking124.github.io/rSTAR/
+     https://github.com/bking124/rSTAR

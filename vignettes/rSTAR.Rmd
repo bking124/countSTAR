@@ -50,9 +50,6 @@ where $\mu_\theta(x)$ is the conditional expectation of the transformed latent d
 Estimation, inference, and prediction for STAR are available for both *Bayesian* and *frequentist* models. Implementation in both cases is provided in the `rSTAR` package. 
 
 ## Background: integer-valued data
-Integer-valued or count data are common in many fields. Frequently, integer-valued data are observed jointly with predictors, over time intervals, or across spatial locations. Integer-valued data also exhibit a variety of distributional features, including zero-inflation, skewness, over- and underdispersion, and in some cases may be bounded or censored. Flexible and interpretable models for *integer-valued processes* are therefore highly useful in practice. 
-
-
 As an illustration, consider the `roaches` data from Gelman and Hill (2006).
 The response variable, $y_i$, is the number of roaches caught in traps in apartment $i$, with $i=1,\ldots, n = 262$. 
 
@@ -81,20 +78,6 @@ There are several notable features in the data:
 3. Overdispersion: the sample mean is `r round(mean(y),0)` and the sample variance is `r round(var(y),0)`. 
 
 A pest management treatment was applied to a subset of 158 apartments, with the remaining 104 apartments receiving a control. Additional data are available on the pre-treatment number of roaches, whether the apartment building is restricted to elderly residents, and the number of days for which the traps were exposed. We are interested in modeling how the roach incidence varies with these predictors.
-
-There are two main modeling frameworks for this kind of data:
-
-1. *Poisson and extensions*: the Poisson distribution is a valid count-valued distribution, and may incorporate predictions within a generalized linear modeling (GLM) framework. However, the Poisson distribution has limited modeling flexibility, which restricts practical utility in many applications. Extensions such as the zero-inflated Poisson, the negative-binomial, and the Conway-Maxwell distribuiton seek to enhance flexibility by adding parameters. While successful in some cases, these approaches require estimation of each additional parameter, which presents challenges especially in the presence of predictors or other (temporal or spatial) dependence.
-
-
-2. *Transformed Gaussian*: in applied settings, it is perhaps more common to simply ignore the discrete nature of the data and apply continuous data models. For example, one might consider the transformed regression model
-
-$$
-z_i = \log(y_i + 1), \quad
-y_i = x_i'\beta + \epsilon_i, \quad \epsilon_i \stackrel{iid}{\sim}N(0, \sigma^2)
-$$
-The transformation helps model the skewness often found in count data, while the regression model incorporates a simple and well-known continuous data model. However, this approach has two major flaws: (i) the transformation $z_i = \log(y_i + 1)$ requires the inclusion of an artificial constant to accommodate $y_i=0$, which is arbitrary and may introduce bias, and more importantly (ii) the implied data-generating process is *not* integer-valued, which induces a fundamental discrepancy between the data and the model. 
-
 
 ## Frequentist inference for STAR models
 Frequentist (or classical) estimation and inference for STAR models is provided by an EM algorithm. Sufficient for estimation is an `estimator` function which solves the least squares (or Gaussian maximum likelihood) problem associated with $\mu_\theta$---or in other words, the estimator that *would* be used for Gaussian or continuous data. Specifically, `estimator` inputs data and outputs a list with two elements: the estimated `coefficients` $\hat \theta$ and the `fitted.values` $\hat \mu_\theta(x_i) = \mu_{\hat \theta}(x_i)$. The EM algorithm updates the parameters until convergence to the maximum likelihood estimators (MLEs), and is implemented in `star_EM`:
