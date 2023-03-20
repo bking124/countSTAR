@@ -126,8 +126,11 @@ linear, additive, and tree-based regression models.</p>
 <div class="section level2">
 <h2 id="integer-valued-data-the-roaches-dataset">Integer-Valued Data: The Roaches Dataset<a class="anchor" aria-label="anchor" href="#integer-valued-data-the-roaches-dataset"></a>
 </h2>
-<p>As an illustration, consider the <code>roaches</code> data from <span class="citation">Gelman and Hill (<a href="#ref-Gelman_Hill_2006" role="doc-biblioref">2006</a>)</span>. The response variable, <span class="math inline">\(y_i\)</span>, is the number of roaches caught in
-traps in apartment <span class="math inline">\(i\)</span>, with <span class="math inline">\(i=1,\ldots, n = 262\)</span>.</p>
+<p>As an example of complex count-valued data, consider the
+<code>roaches</code> data from <span class="citation">Gelman and Hill
+(<a href="#ref-Gelman_Hill_2006" role="doc-biblioref">2006</a>)</span>.
+The response variable, <span class="math inline">\(y_i\)</span>, is the
+number of roaches caught in traps in apartment <span class="math inline">\(i\)</span>, with <span class="math inline">\(i=1,\ldots, n = 262\)</span>.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Source: http://mc-stan.org/rstanarm/articles/count.html</span></span>
 <span><span class="co">#install.packages("rstanarm")</span></span>
@@ -172,15 +175,23 @@ estimator that <em>would</em> be used for Gaussian or continuous data.
 Specifically, <code>estimator</code> inputs data and outputs a list with
 two elements: the estimated <code>coefficients</code> <span class="math inline">\(\hat \theta\)</span> and the
 <code>fitted.values</code> <span class="math inline">\(\hat
-\mu_\theta(x_i) = \mu_{\hat \theta}(x_i)\)</span>. The EM algorithm
-updates the parameters until convergence to the maximum likelihood
-estimators (MLEs), and is implemented in <code>star_EM</code>:</p>
+\mu_\theta(x_i) = \mu_{\hat \theta}(x_i)\)</span>.</p>
+<div class="section level3">
+<h3 id="the-classical-linear-model">The Classical Linear Model<a class="anchor" aria-label="anchor" href="#the-classical-linear-model"></a>
+</h3>
+<p>For many applications, the STAR linear model is often the first
+method to try. In <code>rSTAR</code>, the linear model is implemented
+with the <code>lm_star</code> function, which aims to mimic the
+functionality of <code>lm</code> by allowing users to input a formula.
+Standard functions like <code>coef</code> and <code>fitted</code> can be
+used on the output to extract coefficients and fitted values,
+respectively.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bking124.github.io/rSTAR/">rSTAR</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Select a transformation:</span></span>
 <span><span class="va">transformation</span> <span class="op">=</span> <span class="st">'log'</span> <span class="co"># Log transformation</span></span>
-<span><span class="co"># transformation = 'np' # Estimated transformation using empirical CDF</span></span>
+<span><span class="co">#transformation = 'np' # Estimated transformation using empirical CDF</span></span>
 <span></span>
 <span><span class="co"># EM algorithm for STAR (using the log-link)</span></span>
 <span><span class="va">fit_em</span> <span class="op">=</span> <span class="fu"><a href="../reference/lm_star.html">lm_star</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">roach1</span> <span class="op">+</span> <span class="va">treatment</span> <span class="op">+</span> <span class="va">senior</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">exposure2</span><span class="op">)</span>,</span>
@@ -196,8 +207,8 @@ estimators (MLEs), and is implemented in <code>star_EM</code>:</p>
 <span><span class="co">#&gt;          1.260          0.015         -0.715         -0.912          0.560</span></span></code></pre></div>
 <p>Here the <code>log</code> transformation was used, but other options
 are available; see <code><a href="../reference/lm_star.html">?lm_star</a></code> for details.</p>
-<p>Based on the fitted STAR model, we may further obtain <em>confidence
-intervals</em> for the estimated coefficients using
+<p>Based on the fitted STAR linear model, we may further obtain
+<em>confidence intervals</em> for the estimated coefficients using
 <code>confint</code>:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Confidence interval for the j=2 column:</span></span>
@@ -217,11 +228,11 @@ intervals</em> for the estimated coefficients using
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">ci_all</span><span class="op">)</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'Lower'</span>, <span class="st">'Upper'</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">ci_all</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                 Lower  Upper</span></span>
-<span><span class="co">#&gt; (Intercept)     0.778  1.719</span></span>
+<span><span class="co">#&gt; (Intercept)     0.797  1.723</span></span>
 <span><span class="co">#&gt; roach1          0.012  0.019</span></span>
-<span><span class="co">#&gt; treatment      -1.267 -0.172</span></span>
-<span><span class="co">#&gt; senior         -1.521 -0.319</span></span>
-<span><span class="co">#&gt; log(exposure2) -0.558  1.697</span></span></code></pre></div>
+<span><span class="co">#&gt; treatment      -1.264 -0.176</span></span>
+<span><span class="co">#&gt; senior         -1.528 -0.319</span></span>
+<span><span class="co">#&gt; log(exposure2) -0.556  1.699</span></span></code></pre></div>
 <p>Similarly, <em>p-values</em> are available using likelihood ratio
 tests, which can be applied for individual coefficients,</p>
 <p><span class="math display">\[
@@ -231,16 +242,43 @@ H_0: \beta_j= 0 \quad \mbox{vs} \quad H_1: \beta_j \ne 0
 <p><span class="math display">\[
 H_0: \beta_1=\ldots=\beta_p = 0, \quad \mbox{vs.} \quad H_1: \beta_j \ne
 0 \mbox{ for some } j=1,\ldots,p
-\]</span></p>
+\]</span> P-values for all individual coefficients as well as the
+p-value for <em>any</em> effects are computed with the
+<code>pvals</code> function.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># p-value for *any* effects</span></span>
-<span><span class="co"># Note that the null model estimator *does not* include any X:</span></span>
-<span><span class="co"># P-values:</span></span>
+<code class="sourceCode R"><span><span class="co"># P-values:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="../reference/pvals.html">pvals</a></span><span class="op">(</span><span class="va">fit_em</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;        (Intercept)             roach1          treatment             senior </span></span>
-<span><span class="co">#&gt;       1.705447e-06       2.980645e-16       1.027887e-02       3.090895e-03 </span></span>
+<span><span class="co">#&gt;       1.705447e-06       2.980646e-16       1.027887e-02       3.090893e-03 </span></span>
 <span><span class="co">#&gt;     log(exposure2) Any linear effects </span></span>
-<span><span class="co">#&gt;       3.263340e-01       1.078663e-17</span></span></code></pre></div>
+<span><span class="co">#&gt;       3.263339e-01       1.078663e-17</span></span></code></pre></div>
+<p>Finally, we can get predictions at new data points (or the training
+data) using <code>predict</code>, which actually outputs samples from
+the (plug-in) predictive distribution at the MLEs. This output can then
+be used to create prediction intervals if desired, or alternatively the
+samples can be compared with the empirical PMF of <span class="math inline">\(y\)</span> using <code>plot_pmf</code>.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">#Compute the predictive draws (just using observed points here)</span></span>
+<span><span class="va">y_pred</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">fit_em</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Using these draws, compute prediction intervals for STAR</span></span>
+<span><span class="va">PI_y</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">y_pred</span>, <span class="fl">2</span>, <span class="va">quantile</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="fl">1</span> <span class="op">-</span> <span class="fl">0.05</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Plot empirical PMf of y vs PMF from predictive draws</span></span>
+<span><span class="fu"><a href="../reference/plot_pmf.html">plot_pmf</a></span><span class="op">(</span><span class="va">y</span>, <span class="va">y_pred</span><span class="op">)</span></span></code></pre></div>
+<p><img src="rSTAR_files/figure-html/predict-lm-1.png" width="700"></p>
+</div>
+<div class="section level3">
+<h3 id="machine-learning-models">Machine Learning Models<a class="anchor" aria-label="anchor" href="#machine-learning-models"></a>
+</h3>
+</div>
+<div class="section level3">
+<h3 id="a-generic-em-algorithm">A Generic EM Algorithm<a class="anchor" aria-label="anchor" href="#a-generic-em-algorithm"></a>
+</h3>
+<p>The EM algorithm updates the parameters until convergence to the
+maximum likelihood estimators (MLEs), and is implemented in
+<code>star_EM</code>:</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="bayesian-inference-for-star-models">Bayesian inference for STAR models<a class="anchor" aria-label="anchor" href="#bayesian-inference-for-star-models"></a>
@@ -262,7 +300,7 @@ z_i^* &amp;= x_i'\beta + \epsilon_i, \quad \epsilon_i
 samples for <span class="math inline">\((\beta, \sigma_\beta,
 \sigma)\)</span> are obtained using <code>star_MCMC</code> as
 follows:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">X</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">model.matrix</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">roach1</span> <span class="op">+</span> <span class="va">treatment</span> <span class="op">+</span> <span class="va">senior</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">exposure2</span><span class="op">)</span>,</span>
 <span>                 data <span class="op">=</span> <span class="va">roaches</span><span class="op">)</span></span>
 <span></span>
@@ -283,13 +321,13 @@ the posterior of <span class="math inline">\((\beta, \sigma_\beta,
 <code>init_params</code> simply initializes the parameters
 <code>params</code>. Posterior expectations and posterior credible
 intervals are available as follows:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Posterior mean of each coefficient:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit_mcmc</span><span class="op">)</span>,<span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt;       beta1       beta2       beta3       beta4       beta5 sigma_beta1 </span></span>
-<span><span class="co">#&gt;       1.128       0.015      -0.602      -0.748       0.352    1000.000 </span></span>
+<span><span class="co">#&gt;       1.123       0.016      -0.598      -0.749       0.350    1000.000 </span></span>
 <span><span class="co">#&gt; sigma_beta2 sigma_beta3 sigma_beta4 sigma_beta5 </span></span>
-<span><span class="co">#&gt;       0.910       0.910       0.910       0.910</span></span>
+<span><span class="co">#&gt;       0.913       0.913       0.913       0.913</span></span>
 <span></span>
 <span><span class="co"># Credible intervals for regression coefficients</span></span>
 <span><span class="va">ci_all_bayes</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">fit_mcmc</span><span class="op">$</span><span class="va">post.coefficients</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="va">p</span><span class="op">]</span>,</span>
@@ -299,15 +337,15 @@ intervals are available as follows:</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">ci_all_bayes</span><span class="op">)</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span>; <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">ci_all_bayes</span><span class="op">)</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'Lower'</span>, <span class="st">'Upper'</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">ci_all_bayes</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                 Lower  Upper</span></span>
-<span><span class="co">#&gt; (Intercept)     0.565  1.636</span></span>
+<span><span class="co">#&gt; (Intercept)     0.567  1.620</span></span>
 <span><span class="co">#&gt; roach1          0.012  0.019</span></span>
-<span><span class="co">#&gt; treatment      -1.184 -0.042</span></span>
-<span><span class="co">#&gt; senior         -1.373 -0.078</span></span>
-<span><span class="co">#&gt; log(exposure2) -0.500  1.321</span></span></code></pre></div>
+<span><span class="co">#&gt; treatment      -1.163 -0.037</span></span>
+<span><span class="co">#&gt; senior         -1.387 -0.076</span></span>
+<span><span class="co">#&gt; log(exposure2) -0.500  1.319</span></span></code></pre></div>
 <p>We may further evaluate the model based on posterior diagnostics and
 posterior predictive checks on the simulated versus observed proportion
 of zeros:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Posterior draws of the regression coefficients:</span></span>
 <span><span class="va">post.coef</span> <span class="op">=</span> <span class="va">fit_mcmc</span><span class="op">$</span><span class="va">post.coefficients</span><span class="op">[</span>,<span class="fl">2</span><span class="op">:</span><span class="va">p</span><span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">post.coef</span><span class="op">)</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span><span class="op">[</span><span class="fl">2</span><span class="op">:</span><span class="va">p</span><span class="op">]</span></span>
@@ -315,12 +353,12 @@ of zeros:</p>
 <span><span class="co"># MCMC diagnostics:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/ts.html" class="external-link">as.ts</a></span><span class="op">(</span><span class="va">post.coef</span><span class="op">)</span>, main <span class="op">=</span> <span class="st">'Trace plots'</span>, cex.lab <span class="op">=</span> <span class="fl">.75</span><span class="op">)</span></span></code></pre></div>
 <p><img src="rSTAR_files/figure-html/diag-1.png" width="700"></p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="co"># (Summary of) effective sample sizes across coefficients:</span></span>
 <span><span class="fu"><a href="../reference/getEffSize.html">getEffSize</a></span><span class="op">(</span><span class="va">post.coef</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span></span>
-<span><span class="co">#&gt;    2653    3092    3995    3850    4753    4757</span></span>
+<span><span class="co">#&gt;    3247    3489    4149    4085    4745    4794</span></span>
 <span></span>
 <span><span class="co"># Posterior predictive check:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html" class="external-link">hist</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">fit_mcmc</span><span class="op">$</span><span class="va">post.pred</span>, <span class="fl">1</span>,</span>
