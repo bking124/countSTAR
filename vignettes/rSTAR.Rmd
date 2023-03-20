@@ -1,14 +1,14 @@
 ---
 title: "Getting Started with rSTAR"
-output: 
-  rmarkdown::html_vignette:
-    number_sections: true
+output: rmarkdown::html_vignette
+number_sections: true
 vignette: >
   %\VignetteIndexEntry{Getting Started with rSTAR}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 
 bibliography: refs.bib
+link-citations: true
 ---
 
 ```{r, include = FALSE}
