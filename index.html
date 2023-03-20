@@ -64,20 +64,24 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
 <li class="nav-item">
-  <a class="nav-link" href="reference/index.html">Reference</a>
+  <a class="nav-link" href="articles/rSTAR.html">Get started</a>
 </li>
-<li class="nav-item dropdown">
-  <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
-  <div class="dropdown-menu" aria-labelledby="dropdown-articles">
-    <a class="dropdown-item" href="articles/getting-started.html">Getting Started with rSTAR</a>
-  </div>
+<li class="nav-item">
+  <a class="nav-link" href="reference/index.html">Reference</a>
 </li>
       </ul>
 <form class="form-inline my-2 my-lg-0" role="search">
         <input type="search" class="form-control me-sm-2" aria-label="Toggle navigation" name="search-input" data-search-index="search.json" id="search-input" placeholder="Search for" autocomplete="off">
 </form>
 
-      <ul class="navbar-nav"></ul>
+      <ul class="navbar-nav">
+<li class="nav-item">
+  <a class="external-link nav-link" href="https://github.com/bking124/rSTAR/" aria-label="github">
+    <span class="fab fa fab fa-github fa-lg"></span>
+     
+  </a>
+</li>
+      </ul>
 </div>
 
     
@@ -90,14 +94,22 @@
 <div class="section level3">
 <h3 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h3>
-<p><code>rSTAR</code> implements a variety of methods for modeling integer-valued data, based on the idea of Simultaneous Transformation and Rounding (STAR). The bulk of methods serve for static regression problems, but the package also supports time series analysis via the warped Dynamic Linear Model (DLM) framework. Additionally, both classical/frequentist and Bayesian methods for estimation of STAR models are available.</p>
+<p>Integer-valued or count data are common in many fields. Frequently, integer-valued data are observed jointly with predictors, over time intervals, or across spatial locations. Integer-valued data also exhibit a variety of complex distributional features, including zero-inflation, skewness, over- and underdispersion, and in some cases may be bounded or censored. Flexible and interpretable models for <em>integer-valued processes</em> are therefore highly useful in practice.</p>
+<p><code>rSTAR</code> implements a variety of methods for modeling such processes, based on the idea of Simultaneous Transformation and Rounding (STAR). The bulk of methods serve for static regression problems, but the package also supports time series analysis via the warped Dynamic Linear Model (DLM) framework. Additionally, both classical/frequentist and Bayesian methods for estimation of STAR models are available.</p>
 <p>Broadly, STAR defines an integer-valued probability model by (1) specifying a (conditionally) Gaussian model for continuous <em>latent</em> data and (2) connecting the latent data to the observed data via a <em>transformation and rounding</em> operation.</p>
-<p>Importantly, STAR models are highly flexible integer-valued processes, and provide the capability to model (i) discrete data, (ii) zero-inflation, (iii) over- or under-dispersion, and (iv) bounded or censored data.</p>
-<p>More information on the different options for STAR models and how they are implemented in <code>rSTAR</code> can be found in the vignette, accessible on the <a href="https://bking124.github.io/rSTAR/articles/getting-started.html">website</a> or by running the command <code>vignette("rSTAR")</code>.</p>
+<p>Importantly, STAR models are highly flexible integer-valued processes, and provide the capability to model (i) discrete data, (ii) zero-inflation, (iii) over- or under-dispersion, (iv) heaping, and (v) bounded or censored data.</p>
+<p>Detailed information on the different options for STAR models and how they are implemented in <code>rSTAR</code> can be found in the vignette, accessible on the <a href="https://bking124.github.io/rSTAR/articles/rSTAR.html">website</a> or by running the command <code><a href="articles/rSTAR.html">vignette("rSTAR")</a></code>.</p>
 <p>Please submit any issues or feature requests to <a href="https://github.com/bking124/rSTAR" class="external-link uri">https://github.com/bking124/rSTAR</a>.</p>
 </div>
 </div>
-  </main><aside class="col-md-3"><div class="license">
+  </main><aside class="col-md-3"><div class="links">
+<h2 data-toc-skip>Links</h2>
+<ul class="list-unstyled">
+<li><a href="https://github.com/bking124/rSTAR/" class="external-link">Browse source code</a></li>
+</ul>
+</div>
+
+<div class="license">
 <h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">
 <li><a href="https://www.r-project.org/Licenses/GPL-2" class="external-link">GPL-2</a></li>
