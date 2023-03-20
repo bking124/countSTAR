@@ -47,7 +47,7 @@ $$
 where $\mu_\theta(x)$ is the conditional expectation of the transformed latent data with unknown parameters $\theta$. Examples include linear, additive, and tree-based regression models. 
 
 ## Integer-Valued Data: The Roaches Dataset
-As an illustration, consider the `roaches` data from @Gelman_Hill_2006.
+As an example of complex count-valued data, consider the `roaches` data from @Gelman_Hill_2006.
 The response variable, $y_i$, is the number of roaches caught in traps in apartment $i$, with $i=1,\ldots, n = 262$. 
 
 ```{r roaches}
@@ -78,14 +78,17 @@ There are several notable features in the data:
 A pest management treatment was applied to a subset of 158 apartments, with the remaining 104 apartments receiving a control. Additional data are available on the pre-treatment number of roaches, whether the apartment building is restricted to elderly residents, and the number of days for which the traps were exposed. We are interested in modeling how the roach incidence varies with these predictors.
 
 ## Frequentist inference for STAR models
-Frequentist (or classical) estimation and inference for STAR models is provided by an EM algorithm. Sufficient for estimation is an `estimator` function which solves the least squares (or Gaussian maximum likelihood) problem associated with $\mu_\theta$---or in other words, the estimator that *would* be used for Gaussian or continuous data. Specifically, `estimator` inputs data and outputs a list with two elements: the estimated `coefficients` $\hat \theta$ and the `fitted.values` $\hat \mu_\theta(x_i) = \mu_{\hat \theta}(x_i)$. The EM algorithm updates the parameters until convergence to the maximum likelihood estimators (MLEs), and is implemented in `star_EM`:
+Frequentist (or classical) estimation and inference for STAR models is provided by an EM algorithm. Sufficient for estimation is an `estimator` function which solves the least squares (or Gaussian maximum likelihood) problem associated with $\mu_\theta$---or in other words, the estimator that *would* be used for Gaussian or continuous data. Specifically, `estimator` inputs data and outputs a list with two elements: the estimated `coefficients` $\hat \theta$ and the `fitted.values` $\hat \mu_\theta(x_i) = \mu_{\hat \theta}(x_i)$.
+
+### The Classical Linear Model
+For many applications, the STAR linear model is often the first method to try. In `rSTAR`, the linear model is implemented with the `lm_star` function, which aims to mimic the functionality of `lm` by allowing users to input a formula. Standard functions like `coef` and `fitted` can be used on the output to extract coefficients and fitted values, respectively.
 
 ```{r freq-lm}
 library(rSTAR)
 
 # Select a transformation:
 transformation = 'log' # Log transformation
-# transformation = 'np' # Estimated transformation using empirical CDF
+#transformation = 'np' # Estimated transformation using empirical CDF
 
 # EM algorithm for STAR (using the log-link)
 fit_em = lm_star(y ~ roach1 + treatment + senior + log(exposure2),
@@ -101,7 +104,7 @@ round(coef(fit_em), 3)
 
 Here the `log` transformation was used, but other options are available; see `?lm_star` for details. 
 
-Based on the fitted STAR model, we may further obtain *confidence intervals* for the estimated coefficients using `confint`:
+Based on the fitted STAR linear model, we may further obtain *confidence intervals* for the estimated coefficients using `confint`:
 
 ```{r conf}
 # Confidence interval for the j=2 column:
@@ -133,12 +136,31 @@ or for joint sets of variables, analogous to a (partial) F-test:
 $$
 H_0: \beta_1=\ldots=\beta_p = 0, \quad \mbox{vs.} \quad H_1: \beta_j \ne 0 \mbox{ for some } j=1,\ldots,p
 $$
-```{r pval-all}
-# p-value for *any* effects
-# Note that the null model estimator *does not* include any X:
+P-values for all individual coefficients as well as the p-value for *any* effects are computed with the `pvals` function.
+```{r pval}
 # P-values:
 print(pvals(fit_em))
 ```
+
+Finally, we can get predictions at new data points (or the training data) using `predict`, which actually outputs samples from the (plug-in) predictive distribution at the MLEs. This output can then be used to create prediction intervals if desired, or alternatively the samples can be compared with the empirical PMF of $y$ using `plot_pmf`.
+```{r predict-lm}
+#Compute the predictive draws (just using observed points here)
+y_pred = predict(fit_em)
+
+# Using these draws, compute prediction intervals for STAR
+PI_y = t(apply(y_pred, 2, quantile, c(0.05, 1 - 0.05)))
+
+# Plot empirical PMf of y vs PMF from predictive draws
+plot_pmf(y, y_pred)
+```
+
+
+
+
+### Machine Learning Models
+
+### A Generic EM Algorithm
+The EM algorithm updates the parameters until convergence to the maximum likelihood estimators (MLEs), and is implemented in `star_EM`:
 
 ## Bayesian inference for STAR models
 
