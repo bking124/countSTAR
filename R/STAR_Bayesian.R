@@ -48,7 +48,6 @@
 #' \item \code{post.lambda}: draws from the posterior distribution of \code{lambda}
 #' \item \code{post.sigma}: draws from the posterior distribution of \code{sigma}
 #' \item \code{post.log.like.point}: draws of the log-likelihood for each of the \code{n} observations
-#' \item \code{logLik}: the log-likelihood evaluated at the posterior means
 #' \item \code{WAIC}: Widely-Applicable/Watanabe-Akaike Information Criterion
 #' \item \code{p_waic}: Effective number of parameters based on WAIC
 #' }
@@ -316,12 +315,6 @@ genMCMC_star = function(y,
   p_waic = sum(apply(post.log.like.point, 2, function(x) sd(x)^2))
   WAIC = -2*(lppd - p_waic)
 
-  # Now compute the log likelihood evaluated at the posterior means:
-  logLik = logLikeRcpp(g_a_j = z_lower,
-                       g_a_jp1 = z_upper,
-                       mu = colMeans(post.mu),
-                       sigma = rep(mean(post.sigma), n))
-
   # Return a named list:
   list(coefficients = colMeans(post.coefficients),
        fitted.values = colMeans(post.fitted.values),
@@ -329,7 +322,7 @@ genMCMC_star = function(y,
        post.pred = post.pred,
        post.fitted.values = post.fitted.values,
        post.lambda = post.lambda, post.sigma = post.sigma,
-       post.log.like.point = post.log.like.point, logLik = logLik,
+       post.log.like.point = post.log.like.point,
        WAIC = WAIC, p_waic = p_waic)
 }
 
@@ -378,7 +371,6 @@ genMCMC_star = function(y,
 #' \item \code{post.lambda}: draws from the posterior distribution of \code{lambda}
 #' \item \code{post.sigma}: draws from the posterior distribution of \code{sigma}
 #' \item \code{post.log.like.point}: draws of the log-likelihood for each of the \code{n} observations
-#' \item \code{logLik}: the log-likelihood evaluated at the posterior means
 #' \item \code{WAIC}: Widely-Applicable/Watanabe-Akaike Information Criterion
 #' \item \code{p_waic}: Effective number of parameters based on WAIC
 #' }
@@ -516,7 +508,6 @@ bam_star = function(y, X_lin, X_nonlin, splinetype="orthogonal",
 #' \item \code{post.pred}: draws from the posterior predictive distribution of \code{y}
 #' \item \code{post.sigma}: draws from the posterior distribution of \code{sigma}
 #' \item \code{post.log.like.point}: draws of the log-likelihood for each of the \code{n} observations
-#' \item \code{logLik}: the log-likelihood evaluated at the posterior means
 #' \item \code{WAIC}: Widely-Applicable/Watanabe-Akaike Information Criterion
 #' \item \code{p_waic}: Effective number of parameters based on WAIC
 #' \item \code{post.pred.test}: draws from the posterior predictive distribution at the test points \code{X_test}
@@ -876,18 +867,12 @@ bart_star_MCMC = function(y,
   p_waic = sum(apply(post.log.like.point, 2, function(x) sd(x)^2))
   WAIC = -2*(lppd - p_waic)
 
-  # Now compute the log likelihood evaluated at the posterior means:
-  logLik = logLikeRcpp(g_a_j = z_lower,
-                       g_a_jp1 = z_upper,
-                       mu = colMeans(post.mu),
-                       sigma = rep(mean(post.sigma), n))
-
   #Compute fitted values if necessary
   if(save_y_hat) fitted.values = colMeans(post.fitted.values) else fitted.values=NULL
 
   # Return a named list:
   result = list(post.pred = post.pred,  post.sigma = post.sigma, post.log.like.point = post.log.like.point,
-                logLik = logLik, WAIC = WAIC, p_waic = p_waic,
+                WAIC = WAIC, p_waic = p_waic,
                 post.pred.test = post.pred.test, post.fitted.values.test = post.fitted.values.test,
                 post.mu.test = post.mu.test, post.log.pred.test = post.log.pred.test,
                 fitted.values = fitted.values, post.fitted.values = post.fitted.values)
