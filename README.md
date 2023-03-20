@@ -15,10 +15,10 @@ processes* are therefore highly useful in practice.
 
 `rSTAR` implements a variety of methods for modeling such processes,
 based on the idea of Simultaneous Transformation and Rounding (STAR).
-The bulk of methods serve for static regression problems, but the
-package also supports time series analysis via the warped Dynamic Linear
-Model (DLM) framework. Additionally, both classical/frequentist and
-Bayesian methods for estimation of STAR models are available.
+Estimation, inference, and prediction for STAR are available for both
+*Bayesian* and *frequentist* models. The bulk of methods serve for
+static regression problems, but the package also supports time series
+analysis via the warped Dynamic Linear Model (DLM) framework.
 
 Broadly, STAR defines an integer-valued probability model by (1)
 specifying a (conditionally) Gaussian model for continuous *latent* data
