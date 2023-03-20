@@ -361,41 +361,7 @@ a_j = function(j, y_max = Inf) {
 
   return(val)
 }
-#----------------------------------------------------------------------------
-#' Inverse rounding function: usual rounding + bounds
-#'
-#' Define the intervals associated with \code{y = j} based on the midpoint rounding.
-#' The function returns \code{-Inf} for \code{j < y_min} and \code{Inf} for
-#'  \code{j > y_max}, where \code{y_min} and \code{y_max} are a known bounds on the data \code{y}
-#' (if specified). Negative values are allowed.
-#'
-#' @param j the integer-valued input(s)
-#' @param y_min a fixed and known lower bound for all observations; default is \code{-Inf}
-#' @param y_max a fixed and known upper bound for all observations; default is \code{Inf}
-#' @return The (lower) interval endpoint(s) associated with \code{j}.
-#'
-#' @examples
-#' # Standard cases:
-#' a_j_round(0)
-#' a_j_round(20)
-#'
-#' # Boundary cases:
-#' a_j_round(0, y_min = 1)
-#' a_j_round(20.5, y_max = 15)
-#'
-#' @export
-a_j_round = function(j, y_min = -Inf, y_max = Inf) {
-  # a_j = j + 0.5
-  val = j + 0.5;
 
-  # a_{y_min} = -Inf
-  val[j <= y_min] = -Inf;
-
-  # a_{y_max + 1} = Inf
-  val[j >= y_max + 1] = Inf;
-
-  return(val)
-}
 #----------------------------------------------------------------------------
 #' Simulate count data from a linear regression
 #'
