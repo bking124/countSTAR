@@ -154,10 +154,8 @@ PI_y = t(apply(y_pred, 2, quantile, c(0.05, 1 - 0.05)))
 plot_pmf(y, y_pred)
 ```
 
-
-
-
 ### Machine Learning Models
+In addition to the linear model, `rSTAR` also has implementations for STAR models paired with more flexible regression methods, in particular random forests and generalized boosted machines.  
 
 ### A Generic EM Algorithm
 The EM algorithm updates the parameters until convergence to the maximum likelihood estimators (MLEs), and is implemented in `star_EM`:
