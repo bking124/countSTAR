@@ -85,7 +85,6 @@ a list with the following elements:
 \item \code{post.pred}: draws from the posterior predictive distribution of \code{y}
 \item \code{post.sigma}: draws from the posterior distribution of \code{sigma}
 \item \code{post.log.like.point}: draws of the log-likelihood for each of the \code{n} observations
-\item \code{logLik}: the log-likelihood evaluated at the posterior means
 \item \code{WAIC}: Widely-Applicable/Watanabe-Akaike Information Criterion
 \item \code{p_waic}: Effective number of parameters based on WAIC
 \item \code{post.pred.test}: draws from the posterior predictive distribution at the test points \code{X_test}

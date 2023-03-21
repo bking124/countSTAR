@@ -1188,7 +1188,7 @@ spline_star = function(y,
   }
   if(verbose) print(paste('Total time: ', round((proc.time()[3] - timer0)), 'seconds'))
 
-  return(post_ytilde)
+  return(list(post_ytilde))
 }
 
 

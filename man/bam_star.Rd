@@ -67,7 +67,6 @@ a list with the following elements:
 \item \code{post.lambda}: draws from the posterior distribution of \code{lambda}
 \item \code{post.sigma}: draws from the posterior distribution of \code{sigma}
 \item \code{post.log.like.point}: draws of the log-likelihood for each of the \code{n} observations
-\item \code{logLik}: the log-likelihood evaluated at the posterior means
 \item \code{WAIC}: Widely-Applicable/Watanabe-Akaike Information Criterion
 \item \code{p_waic}: Effective number of parameters based on WAIC
 }

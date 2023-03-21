@@ -36,19 +36,16 @@ on the [website](https://bking124.github.io/rSTAR/articles/rSTAR.html)
 or by running the command `vignette("rSTAR")`. A basic breakdown of the
 available modeling functions is shown below:
 
-| Analysis Type                   | Method (`function`)                              | Dependent Package/Function |
-|---------------------------------|--------------------------------------------------|----------------------------|
-| **Static Classical Regression** |                                                  |                            |
-| \-                              | Linear regression (`lm_star`)                    | `lm`                       |
-| \-                              | Generalized boosted modeling (`gbm_star`)        | `gbm`                      |
-| \-                              | Random Forests (`randomForest_star`)             | `randomForest`             |
-| **Static Bayesian Regression**  |                                                  |                            |
-| \-                              | Linear regression (`blm_star`)                   | \-                         |
-| \-                              | Additive modeling (`bam_star`)                   | `spikeSlabGAM`             |
-| \-                              | Spline regression (`spline_star`)                | `spikeSlabGAM`             |
-| \-                              | Bayesian additive regression trees (`bart_star`) | `dbarts`                   |
-| **Time Series Modeling**        |                                                  |                            |
-| \-                              | Warped Dynamic Linear Models (`warpDLM`)         | `KFAS`                     |
+| Analysis Type                   | Method (`function`)                              | Dependent Package |
+|---------------------------------|--------------------------------------------------|-------------------|
+| **Static Classical Regression** | Linear regression (`lm_star`)                    | \-                |
+| \-                              | Generalized boosted modeling (`gbm_star`)        | `gbm`             |
+| \-                              | Random Forests (`randomForest_star`)             | `randomForest`    |
+| **Static Bayesian Regression**  | Linear regression (`blm_star`)                   | \-                |
+| \-                              | Additive modeling (`bam_star`)                   | `spikeSlabGAM`    |
+| \-                              | Spline regression (`spline_star`)                | `spikeSlabGAM`    |
+| \-                              | Bayesian additive regression trees (`bart_star`) | `dbarts`          |
+| **Time Series Modeling**        | Warped Dynamic Linear Models (`warpDLM`)         | `KFAS`            |
 
 In addition to these ready to use functions, users can also implement
 STAR methods with custom latent regression models using the `genEM_star`
