@@ -98,7 +98,77 @@
 <p><code>rSTAR</code> implements a variety of methods for modeling such processes, based on the idea of Simultaneous Transformation and Rounding (STAR). Estimation, inference, and prediction for STAR are available for both <em>Bayesian</em> and <em>frequentist</em> models. The bulk of methods serve for static regression problems, but the package also supports time series analysis via the warped Dynamic Linear Model (DLM) framework.</p>
 <p>Broadly, STAR defines an integer-valued probability model by (1) specifying a (conditionally) Gaussian model for continuous <em>latent</em> data and (2) connecting the latent data to the observed data via a <em>transformation and rounding</em> operation.</p>
 <p>Importantly, STAR models are highly flexible integer-valued processes, and provide the capability to model (i) discrete data, (ii) zero-inflation, (iii) over- or under-dispersion, (iv) heaping, and (v) bounded or censored data.</p>
-<p>Detailed information on the different options for STAR models and how they are implemented in <code>rSTAR</code> can be found in the vignette, accessible on the <a href="https://bking124.github.io/rSTAR/articles/rSTAR.html">website</a> or by running the command <code><a href="articles/rSTAR.html">vignette("rSTAR")</a></code>.</p>
+<p>Detailed information on the different options for STAR models and how they are implemented in <code>rSTAR</code> can be found in the vignette, accessible on the <a href="https://bking124.github.io/rSTAR/articles/rSTAR.html">website</a> or by running the command <code><a href="articles/rSTAR.html">vignette("rSTAR")</a></code>. A basic breakdown of the available modeling functions is shown below:</p>
+<table class="table">
+<colgroup>
+<col width="29%">
+<col width="45%">
+<col width="25%">
+</colgroup>
+<thead><tr class="header">
+<th>Analysis Type</th>
+<th>Method (<code>function</code>)</th>
+<th>Dependent Package/Function</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><strong>Static Classical Regression</strong></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>-</td>
+<td>Linear regression (<code>lm_star</code>)</td>
+<td><code>lm</code></td>
+</tr>
+<tr class="odd">
+<td>-</td>
+<td>Generalized boosted modeling (<code>gbm_star</code>)</td>
+<td><code>gbm</code></td>
+</tr>
+<tr class="even">
+<td>-</td>
+<td>Random Forests (<code>randomForest_star</code>)</td>
+<td><code>randomForest</code></td>
+</tr>
+<tr class="odd">
+<td><strong>Static Bayesian Regression</strong></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>-</td>
+<td>Linear regression (<code>blm_star</code>)</td>
+<td>-</td>
+</tr>
+<tr class="odd">
+<td>-</td>
+<td>Additive modeling (<code>bam_star</code>)</td>
+<td><code>spikeSlabGAM</code></td>
+</tr>
+<tr class="even">
+<td>-</td>
+<td>Spline regression (<code>spline_star</code>)</td>
+<td><code>spikeSlabGAM</code></td>
+</tr>
+<tr class="odd">
+<td>-</td>
+<td>Bayesian additive regression trees (<code>bart_star</code>)</td>
+<td><code>dbarts</code></td>
+</tr>
+<tr class="even">
+<td><strong>Time Series Modeling</strong></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>-</td>
+<td>Warped Dynamic Linear Models (<code>warpDLM</code>)</td>
+<td><code>KFAS</code></td>
+</tr>
+</tbody>
+</table>
+<p>In addition to these ready to use functions, users can also implement STAR methods with custom latent regression models using the <code>genEM_star</code> and <code>genMCMC_star</code> functions.</p>
 <p>Please submit any issues or feature requests to <a href="https://github.com/bking124/rSTAR" class="external-link uri">https://github.com/bking124/rSTAR</a>.</p>
 </div>
 </div>
