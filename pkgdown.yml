@@ -3,7 +3,7 @@ pkgdown: 2.0.7
 pkgdown_sha: ~
 articles:
   rSTAR: rSTAR.html
-last_built: 2023-03-21T14:49Z
+last_built: 2023-03-21T15:17Z
 urls:
   reference: https://bking124.github.io/rSTAR/reference
   article: https://bking124.github.io/rSTAR/articles

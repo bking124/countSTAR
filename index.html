@@ -101,43 +101,33 @@
 <p>Detailed information on the different options for STAR models and how they are implemented in <code>rSTAR</code> can be found in the vignette, accessible on the <a href="https://bking124.github.io/rSTAR/articles/rSTAR.html">website</a> or by running the command <code><a href="articles/rSTAR.html">vignette("rSTAR")</a></code>. A basic breakdown of the available modeling functions is shown below:</p>
 <table class="table">
 <colgroup>
-<col width="29%">
-<col width="45%">
-<col width="25%">
+<col width="32%">
+<col width="49%">
+<col width="18%">
 </colgroup>
 <thead><tr class="header">
 <th>Analysis Type</th>
 <th>Method (<code>function</code>)</th>
-<th>Dependent Package/Function</th>
+<th>Dependent Package</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
 <td><strong>Static Classical Regression</strong></td>
-<td></td>
-<td></td>
+<td>Linear regression (<code>lm_star</code>)</td>
+<td>-</td>
 </tr>
 <tr class="even">
-<td>-</td>
-<td>Linear regression (<code>lm_star</code>)</td>
-<td><code>lm</code></td>
-</tr>
-<tr class="odd">
 <td>-</td>
 <td>Generalized boosted modeling (<code>gbm_star</code>)</td>
 <td><code>gbm</code></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>-</td>
 <td>Random Forests (<code>randomForest_star</code>)</td>
 <td><code>randomForest</code></td>
 </tr>
-<tr class="odd">
-<td><strong>Static Bayesian Regression</strong></td>
-<td></td>
-<td></td>
-</tr>
 <tr class="even">
-<td>-</td>
+<td><strong>Static Bayesian Regression</strong></td>
 <td>Linear regression (<code>blm_star</code>)</td>
 <td>-</td>
 </tr>
@@ -158,11 +148,6 @@
 </tr>
 <tr class="even">
 <td><strong>Time Series Modeling</strong></td>
-<td></td>
-<td></td>
-</tr>
-<tr class="odd">
-<td>-</td>
 <td>Warped Dynamic Linear Models (<code>warpDLM</code>)</td>
 <td><code>KFAS</code></td>
 </tr>
