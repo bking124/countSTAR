@@ -56,3 +56,4 @@ names(params)
 names(params$coefficients)
 
 }
+\keyword{internal}

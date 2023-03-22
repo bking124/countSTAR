@@ -3220,7 +3220,7 @@ init_lm_hs = function(y, X){
 #' names(params)
 #' names(params$coefficients)
 #'
-#' @export
+#' @keywords internal
 sample_lm_hs = function(y, X, params, XtX = NULL){
 
   # Dimensions:
