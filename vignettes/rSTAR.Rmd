@@ -180,9 +180,9 @@ n = nrow(X); p = ncol(X)
 
 fit_mcmc = genMCMC_star(y = y,
                           sample_params = function(y, params)
-                            sample_params_lm(y, X, params),
+                            rSTAR:::sample_lm_ridge(y, X, params),
                          init_params = function(y) 
-                           init_params_lm(y,X),
+                           rSTAR:::init_lm_ridge(y,X),
                          transformation = 'log', verbose = FALSE)
 ```
 
@@ -193,7 +193,7 @@ The function `sample_params` computes a single draw of the parameters `params` c
 round(coef(fit_mcmc),3)
 
 # Credible intervals for regression coefficients
-ci_all_bayes = apply(fit_mcmc$post.coefficients[,1:p],
+ci_all_bayes = apply(fit_mcmc$post.beta,
       2, function(x) quantile(x, c(.025, .975)))
 
 # Rename and print:
@@ -205,7 +205,7 @@ We may further evaluate the model based on posterior diagnostics and posterior p
 
 ```{r diag}
 # Posterior draws of the regression coefficients:
-post.coef = fit_mcmc$post.coefficients[,2:p]
+post.coef = fit_mcmc$post.beta[,2:p]
 colnames(post.coef) = colnames(X)[2:p]
 
 # MCMC diagnostics:
