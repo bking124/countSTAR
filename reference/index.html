@@ -44,8 +44,96 @@
     </div>
 
     <div class="section level2">
-      <h2 id="all-functions">All functions<a class="anchor" aria-label="anchor" href="#all-functions"></a></h2>
+      <h2 id="classical-star-regression">Classical STAR Regression<a class="anchor" aria-label="anchor" href="#classical-star-regression"></a></h2>
       
+      <p class="section-desc"></p><p>Methods for STAR models estimated using EM algorithm</p>
+
+      
+    </div><div id="" class="section level2">
+      
+      
+      
+
+      <dl><dt>
+          
+          <code><a href="lm_star.html">lm_star()</a></code> 
+        </dt>
+        <dd>Fitting frequentist STAR linear model via EM algorithm</dd>
+      </dl><dl><dt>
+          
+          <code><a href="confint.lmstar.html">confint(<i>&lt;lmstar&gt;</i>)</a></code> 
+        </dt>
+        <dd>Compute asymptotic confidence intervals for STAR linear regression</dd>
+      </dl><dl><dt>
+          
+          <code><a href="predict.lmstar.html">predict(<i>&lt;lmstar&gt;</i>)</a></code> 
+        </dt>
+        <dd>Compute a predictive distribution for the integer-valued response in STAR linear model</dd>
+      </dl><dl><dt>
+          
+          <code><a href="pvals.html">pvals()</a></code> 
+        </dt>
+        <dd>Compute coefficient p-values for STAR linear regression using likelihood ratio test</dd>
+      </dl><dl><dt>
+          
+          <code><a href="randomForest_star.html">randomForest_star()</a></code> 
+        </dt>
+        <dd>Fit Random Forest STAR with EM algorithm</dd>
+      </dl><dl><dt>
+          
+          <code><a href="gbm_star.html">gbm_star()</a></code> 
+        </dt>
+        <dd>Fitting STAR Gradient Boosting Machines via EM algorithm</dd>
+      </dl><dl><dt>
+          
+          <code><a href="genEM_star.html">genEM_star()</a></code> 
+        </dt>
+        <dd>Generalized EM estimation for STAR</dd>
+      </dl></div><div class="section level2">
+      <h2 id="bayesian-star-regression">Bayesian STAR Regression<a class="anchor" aria-label="anchor" href="#bayesian-star-regression"></a></h2>
+      
+      <p class="section-desc"></p><p>Methods for STAR models estimated using Bayesian methods (either Gibbs sampling or exact Monte Carlo estimation in certain scenarios)</p>
+
+      
+    </div><div id="" class="section level2">
+      
+      
+      
+
+      <dl><dt>
+          
+          <code><a href="blm_star.html">blm_star()</a></code> 
+        </dt>
+        <dd>STAR Bayesian Linear Regression</dd>
+      </dl><dl><dt>
+          
+          <code><a href="bam_star.html">bam_star()</a></code> 
+        </dt>
+        <dd>Fit Bayesian Additive STAR Model with MCMC</dd>
+      </dl><dl><dt>
+          
+          <code><a href="bart_star.html">bart_star()</a></code> 
+        </dt>
+        <dd>MCMC Algorithm for BART-STAR</dd>
+      </dl><dl><dt>
+          
+          <code><a href="spline_star.html">spline_star()</a></code> 
+        </dt>
+        <dd>Estimation for Bayesian STAR spline regression</dd>
+      </dl><dl><dt>
+          
+          <code><a href="genMCMC_star.html">genMCMC_star()</a></code> 
+        </dt>
+        <dd>Generalized MCMC Algorithm for STAR</dd>
+      </dl></div><div class="section level2">
+      <h2 id="helper-functions">Helper Functions<a class="anchor" aria-label="anchor" href="#helper-functions"></a></h2>
+      
+      
+
+      
+    </div><div class="section level2">
+      
+      <h3 id="transformation-and-rounding-functions">Transformation and Rounding Functions<a class="anchor" aria-label="anchor" href="#transformation-and-rounding-functions"></a></h3>
       
 
       
@@ -61,34 +149,9 @@
         <dd>Inverse rounding function</dd>
       </dl><dl><dt>
           
-          <code><a href="bam_star.html">bam_star()</a></code> 
+          <code><a href="round_floor.html">round_floor()</a></code> 
         </dt>
-        <dd>Fit Bayesian Additive STAR Model with MCMC</dd>
-      </dl><dl><dt>
-          
-          <code><a href="bart_star.html">bart_star()</a></code> 
-        </dt>
-        <dd>MCMC Algorithm for BART-STAR</dd>
-      </dl><dl><dt>
-          
-          <code><a href="blm_star.html">blm_star()</a></code> 
-        </dt>
-        <dd>STAR Bayesian Linear Regression</dd>
-      </dl><dl><dt>
-          
-          <code><a href="confint.lmstar.html">confint(<i>&lt;lmstar&gt;</i>)</a></code> 
-        </dt>
-        <dd>Compute asymptotic confidence intervals for STAR linear regression</dd>
-      </dl><dl><dt>
-          
-          <code><a href="credBands.html">credBands()</a></code> 
-        </dt>
-        <dd>Compute Simultaneous Credible Bands</dd>
-      </dl><dl><dt>
-          
-          <code><a href="ergMean.html">ergMean()</a></code> 
-        </dt>
-        <dd>Compute the ergodic (running) mean.</dd>
+        <dd>Rounding function</dd>
       </dl><dl><dt>
           
           <code><a href="g_bc.html">g_bc()</a></code> 
@@ -114,31 +177,27 @@
           <code><a href="g_inv_bc.html">g_inv_bc()</a></code> 
         </dt>
         <dd>Inverse Box-Cox transformation</dd>
+      </dl></div><div class="section level2">
+      
+      <h3 id="simulation-and-visualization">Simulation and Visualization<a class="anchor" aria-label="anchor" href="#simulation-and-visualization"></a></h3>
+      
+
+      
+    </div><div id="" class="section level2">
+      
+      
+      
+
+      <dl><dt>
+          
+          <code><a href="simulate_nb_friedman.html">simulate_nb_friedman()</a></code> 
+        </dt>
+        <dd>Simulate count data from Friedman's nonlinear regression</dd>
       </dl><dl><dt>
           
-          <code><a href="gbm_star.html">gbm_star()</a></code> 
+          <code><a href="simulate_nb_lm.html">simulate_nb_lm()</a></code> 
         </dt>
-        <dd>Fitting STAR Gradient Boosting Machines via EM algorithm</dd>
-      </dl><dl><dt>
-          
-          <code><a href="genEM_star.html">genEM_star()</a></code> 
-        </dt>
-        <dd>Generalized EM estimation for STAR</dd>
-      </dl><dl><dt>
-          
-          <code><a href="genMCMC_star.html">genMCMC_star()</a></code> 
-        </dt>
-        <dd>Generalized MCMC Algorithm for STAR</dd>
-      </dl><dl><dt>
-          
-          <code><a href="getEffSize.html">getEffSize()</a></code> 
-        </dt>
-        <dd>Summarize of effective sample size</dd>
-      </dl><dl><dt>
-          
-          <code><a href="lm_star.html">lm_star()</a></code> 
-        </dt>
-        <dd>Fitting frequentist STAR linear model via EM algorithm</dd>
+        <dd>Simulate count data from a linear regression</dd>
       </dl><dl><dt>
           
           <code><a href="plot_coef.html">plot_coef()</a></code> 
@@ -156,51 +215,27 @@
         <dd>Plot the empirical and model-based probability mass functions</dd>
       </dl><dl><dt>
           
-          <code><a href="predict.lmstar.html">predict(<i>&lt;lmstar&gt;</i>)</a></code> 
-        </dt>
-        <dd>Compute a predictive distribution for the integer-valued response in STAR linear model</dd>
-      </dl><dl><dt>
-          
-          <code><a href="pvals.html">pvals()</a></code> 
-        </dt>
-        <dd>Compute coefficient p-values for STAR linear regression using likelihood ratio test</dd>
-      </dl><dl><dt>
-          
-          <code><a href="randomForest_star.html">randomForest_star()</a></code> 
-        </dt>
-        <dd>Fit Random Forest STAR with EM algorithm</dd>
-      </dl><dl><dt>
-          
-          <code><a href="round_floor.html">round_floor()</a></code> 
-        </dt>
-        <dd>Rounding function</dd>
-      </dl><dl><dt>
-          
-          <code><a href="sample_lm_hs.html">sample_lm_hs()</a></code> 
-        </dt>
-        <dd>Sample linear regression parameters assuming horseshoe prior</dd>
-      </dl><dl><dt>
-          
           <code><a href="simBaS.html">simBaS()</a></code> 
         </dt>
         <dd>Compute Simultaneous Band Scores (SimBaS)</dd>
       </dl><dl><dt>
           
-          <code><a href="simulate_nb_friedman.html">simulate_nb_friedman()</a></code> 
+          <code><a href="credBands.html">credBands()</a></code> 
         </dt>
-        <dd>Simulate count data from Friedman's nonlinear regression</dd>
+        <dd>Compute Simultaneous Credible Bands</dd>
       </dl><dl><dt>
           
-          <code><a href="simulate_nb_lm.html">simulate_nb_lm()</a></code> 
+          <code><a href="getEffSize.html">getEffSize()</a></code> 
         </dt>
-        <dd>Simulate count data from a linear regression</dd>
+        <dd>Summarize of effective sample size</dd>
       </dl><dl><dt>
           
-          <code><a href="spline_star.html">spline_star()</a></code> 
+          <code><a href="ergMean.html">ergMean()</a></code> 
         </dt>
-        <dd>Estimation for Bayesian STAR spline regression</dd>
+        <dd>Compute the ergodic (running) mean.</dd>
       </dl></div>
-  </main></div>
+  </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">
