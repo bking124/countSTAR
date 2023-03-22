@@ -19,15 +19,6 @@
     <loc>https://bking124.github.io/rSTAR/reference/BrentMethod.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/STAR_gprior.html</loc>
-  </url>
-  <url>
-    <loc>https://bking124.github.io/rSTAR/reference/STAR_gprior_gibbs.html</loc>
-  </url>
-  <url>
-    <loc>https://bking124.github.io/rSTAR/reference/STAR_gprior_gibbs_da.html</loc>
-  </url>
-  <url>
     <loc>https://bking124.github.io/rSTAR/reference/a_j.html</loc>
   </url>
   <url>
@@ -38,6 +29,15 @@
   </url>
   <url>
     <loc>https://bking124.github.io/rSTAR/reference/bart_star_MCMC_ispline.html</loc>
+  </url>
+  <url>
+    <loc>https://bking124.github.io/rSTAR/reference/blm_star.html</loc>
+  </url>
+  <url>
+    <loc>https://bking124.github.io/rSTAR/reference/blm_star_bnpgibbs.html</loc>
+  </url>
+  <url>
+    <loc>https://bking124.github.io/rSTAR/reference/blm_star_exact.html</loc>
   </url>
   <url>
     <loc>https://bking124.github.io/rSTAR/reference/computeTimeRemaining.html</loc>
@@ -106,13 +106,13 @@
     <loc>https://bking124.github.io/rSTAR/reference/init_bam_thin.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/init_params_lm.html</loc>
+    <loc>https://bking124.github.io/rSTAR/reference/init_lm_gprior.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/init_params_lm_gprior.html</loc>
+    <loc>https://bking124.github.io/rSTAR/reference/init_lm_hs.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/init_params_lm_hs.html</loc>
+    <loc>https://bking124.github.io/rSTAR/reference/init_lm_ridge.html</loc>
   </url>
   <url>
     <loc>https://bking124.github.io/rSTAR/reference/init_params_mean.html</loc>
@@ -175,13 +175,13 @@
     <loc>https://bking124.github.io/rSTAR/reference/sample_bam_thin.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/sample_params_lm.html</loc>
+    <loc>https://bking124.github.io/rSTAR/reference/sample_lm_gprior.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/sample_params_lm_gprior.html</loc>
+    <loc>https://bking124.github.io/rSTAR/reference/sample_lm_hs.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/sample_params_lm_hs.html</loc>
+    <loc>https://bking124.github.io/rSTAR/reference/sample_lm_ridge.html</loc>
   </url>
   <url>
     <loc>https://bking124.github.io/rSTAR/reference/sample_params_mean.html</loc>

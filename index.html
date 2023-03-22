@@ -101,8 +101,8 @@
 <p>Detailed information on the different options for STAR models and how they are implemented in <code>rSTAR</code> can be found in the vignette, accessible on the <a href="https://bking124.github.io/rSTAR/articles/rSTAR.html">website</a> or by running the command <code><a href="articles/rSTAR.html">vignette("rSTAR")</a></code>. A basic breakdown of the available modeling functions is shown below:</p>
 <table class="table">
 <colgroup>
-<col width="32%">
-<col width="49%">
+<col width="31%">
+<col width="50%">
 <col width="18%">
 </colgroup>
 <thead><tr class="header">
@@ -113,47 +113,47 @@
 <tbody>
 <tr class="odd">
 <td><strong>Static Classical Regression</strong></td>
-<td>Linear regression (<code>lm_star</code>)</td>
+<td>Linear regression (<code><a href="reference/lm_star.html">lm_star()</a></code>)</td>
 <td>-</td>
 </tr>
 <tr class="even">
 <td>-</td>
-<td>Generalized boosted modeling (<code>gbm_star</code>)</td>
+<td>Generalized boosted modeling (<code><a href="reference/gbm_star.html">gbm_star()</a></code>)</td>
 <td><code>gbm</code></td>
 </tr>
 <tr class="odd">
 <td>-</td>
-<td>Random Forests (<code>randomForest_star</code>)</td>
+<td>Random Forests (<code><a href="reference/randomForest_star.html">randomForest_star()</a></code>)</td>
 <td><code>randomForest</code></td>
 </tr>
 <tr class="even">
 <td><strong>Static Bayesian Regression</strong></td>
-<td>Linear regression (<code>blm_star</code>)</td>
+<td>Linear regression (<code><a href="reference/blm_star.html">blm_star()</a></code>)</td>
 <td>-</td>
 </tr>
 <tr class="odd">
 <td>-</td>
-<td>Additive modeling (<code>bam_star</code>)</td>
+<td>Additive modeling (<code><a href="reference/bam_star.html">bam_star()</a></code>)</td>
 <td><code>spikeSlabGAM</code></td>
 </tr>
 <tr class="even">
 <td>-</td>
-<td>Spline regression (<code>spline_star</code>)</td>
+<td>Spline regression (<code><a href="reference/spline_star.html">spline_star()</a></code>)</td>
 <td><code>spikeSlabGAM</code></td>
 </tr>
 <tr class="odd">
 <td>-</td>
-<td>Bayesian additive regression trees (<code>bart_star</code>)</td>
+<td>Bayesian additive regression trees (<code>bart_star()</code>)</td>
 <td><code>dbarts</code></td>
 </tr>
 <tr class="even">
 <td><strong>Time Series Modeling</strong></td>
-<td>Warped Dynamic Linear Models (<code>warpDLM</code>)</td>
+<td>Warped Dynamic Linear Models (<code>warpDLM()</code>)</td>
 <td><code>KFAS</code></td>
 </tr>
 </tbody>
 </table>
-<p>In addition to these ready to use functions, users can also implement STAR methods with custom latent regression models using the <code>genEM_star</code> and <code>genMCMC_star</code> functions.</p>
+<p>In addition to these ready to use functions, users can also implement STAR methods with custom latent regression models using the <code><a href="reference/genEM_star.html">genEM_star()</a></code> and <code><a href="reference/genMCMC_star.html">genMCMC_star()</a></code> functions.</p>
 <p>Please submit any issues or feature requests to <a href="https://github.com/bking124/rSTAR" class="external-link uri">https://github.com/bking124/rSTAR</a>.</p>
 </div>
 </div>
