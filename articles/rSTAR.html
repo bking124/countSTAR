@@ -227,11 +227,11 @@ are available; see <code><a href="../reference/lm_star.html">?lm_star</a></code>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">ci_all</span><span class="op">)</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'Lower'</span>, <span class="st">'Upper'</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">ci_all</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                 Lower  Upper</span></span>
-<span><span class="co">#&gt; (Intercept)     0.775  1.721</span></span>
+<span><span class="co">#&gt; (Intercept)     0.798  1.723</span></span>
 <span><span class="co">#&gt; roach1          0.012  0.019</span></span>
-<span><span class="co">#&gt; treatment      -1.262 -0.176</span></span>
-<span><span class="co">#&gt; senior         -1.526 -0.320</span></span>
-<span><span class="co">#&gt; log(exposure2) -0.557  1.699</span></span></code></pre></div>
+<span><span class="co">#&gt; treatment      -1.266 -0.172</span></span>
+<span><span class="co">#&gt; senior         -1.524 -0.311</span></span>
+<span><span class="co">#&gt; log(exposure2) -0.552  1.698</span></span></code></pre></div>
 <p>Similarly, <em>p-values</em> are available using likelihood ratio
 tests, which can be applied for individual coefficients,</p>
 <p><span class="math display">\[
@@ -248,9 +248,9 @@ p-value for <em>any</em> effects are computed with the
 <code class="sourceCode R"><span><span class="co"># P-values:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="../reference/pvals.html">pvals</a></span><span class="op">(</span><span class="va">fit_em</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;        (Intercept)             roach1          treatment             senior </span></span>
-<span><span class="co">#&gt;       1.705446e-06       2.980644e-16       1.027887e-02       3.090894e-03 </span></span>
+<span><span class="co">#&gt;       1.705447e-06       2.980644e-16       1.027887e-02       3.090895e-03 </span></span>
 <span><span class="co">#&gt;     log(exposure2) Any linear effects </span></span>
-<span><span class="co">#&gt;       3.263341e-01       1.078663e-17</span></span></code></pre></div>
+<span><span class="co">#&gt;       3.263343e-01       1.078663e-17</span></span></code></pre></div>
 <p>Finally, we can get predictions at new data points (or the training
 data) using <code>predict</code>, which actually outputs samples from
 the (plug-in) predictive distribution at the MLEs. This output can then
@@ -328,7 +328,7 @@ intervals are available as follows:</p>
 <code class="sourceCode R"><span><span class="co"># Posterior mean of each coefficient:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit_mcmc</span><span class="op">)</span>,<span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  beta1  beta2  beta3  beta4  beta5 </span></span>
-<span><span class="co">#&gt;  1.129  0.016 -0.603 -0.753  0.356</span></span>
+<span><span class="co">#&gt;  1.118  0.015 -0.587 -0.750  0.343</span></span>
 <span></span>
 <span><span class="co"># Credible intervals for regression coefficients</span></span>
 <span><span class="va">ci_all_bayes</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">fit_mcmc</span><span class="op">$</span><span class="va">post.beta</span>,</span>
@@ -338,11 +338,11 @@ intervals are available as follows:</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">ci_all_bayes</span><span class="op">)</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span>; <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">ci_all_bayes</span><span class="op">)</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'Lower'</span>, <span class="st">'Upper'</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">ci_all_bayes</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                 Lower  Upper</span></span>
-<span><span class="co">#&gt; (Intercept)     0.591  1.628</span></span>
+<span><span class="co">#&gt; (Intercept)     0.562  1.622</span></span>
 <span><span class="co">#&gt; roach1          0.012  0.019</span></span>
-<span><span class="co">#&gt; treatment      -1.158 -0.046</span></span>
-<span><span class="co">#&gt; senior         -1.386 -0.121</span></span>
-<span><span class="co">#&gt; log(exposure2) -0.488  1.351</span></span></code></pre></div>
+<span><span class="co">#&gt; treatment      -1.155 -0.040</span></span>
+<span><span class="co">#&gt; senior         -1.390 -0.092</span></span>
+<span><span class="co">#&gt; log(exposure2) -0.505  1.333</span></span></code></pre></div>
 <p>We may further evaluate the model based on posterior diagnostics and
 posterior predictive checks on the simulated versus observed proportion
 of zeros:</p>
@@ -359,7 +359,7 @@ of zeros:</p>
 <span><span class="co"># (Summary of) effective sample sizes across coefficients:</span></span>
 <span><span class="fu"><a href="../reference/getEffSize.html">getEffSize</a></span><span class="op">(</span><span class="va">post.coef</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span></span>
-<span><span class="co">#&gt;    3667    3707    4146    4151    4590    4644</span></span>
+<span><span class="co">#&gt;    3692    3829    4438    4392    5000    5000</span></span>
 <span></span>
 <span><span class="co"># Posterior predictive check:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html" class="external-link">hist</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">fit_mcmc</span><span class="op">$</span><span class="va">post.pred</span>, <span class="fl">1</span>,</span>
