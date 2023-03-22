@@ -718,7 +718,7 @@ bam_star = function(y, X_lin, X_nonlin, splinetype="orthogonal",
 #' abline(v = mean(y==0), lwd=4, col ='blue')
 #'
 #' # BART-STAR with nonparametric transformation:
-#' fit = bart_star_MCMC(y = y, X = X,
+#' fit = bart_star(y = y, X = X,
 #'                      transformation = 'np', save_y_hat = TRUE)
 #'
 #' # Fitted values
@@ -740,18 +740,18 @@ bam_star = function(y, X_lin, X_nonlin, splinetype="orthogonal",
 #'
 #' @import dbarts
 #' @export
-bart_star_MCMC = function(y,
-                          X,
-                          X_test = NULL, y_test = NULL,
-                          transformation = 'np',
-                          y_max = Inf,
-                          n.trees = 200,
-                          sigest = NULL, sigdf = 3, sigquant = 0.90, k = 2.0, power = 2.0, base = 0.95,
-                          nsave = 5000,
-                          nburn = 5000,
-                          nskip = 2,
-                          save_y_hat = FALSE,
-                          verbose = TRUE){
+bart_star = function(y,
+                    X,
+                    X_test = NULL, y_test = NULL,
+                    transformation = 'np',
+                    y_max = Inf,
+                    n.trees = 200,
+                    sigest = NULL, sigdf = 3, sigquant = 0.90, k = 2.0, power = 2.0, base = 0.95,
+                    nsave = 5000,
+                    nburn = 5000,
+                    nskip = 2,
+                    save_y_hat = FALSE,
+                    verbose = TRUE){
 
   # Check: currently implemented for nonnegative integers
   if(any(y < 0) || any(y != floor(y)))
@@ -765,7 +765,7 @@ bart_star_MCMC = function(y,
   if(transformation=="ispline"){
     .args = as.list(match.call())[-1]
     .args[['transformation']] <- NULL
-    return(do.call(bart_star_MCMC_ispline, .args))
+    return(do.call(bart_star_ispline, .args))
   }
 
   # Check: does the transformation make sense?

@@ -947,7 +947,7 @@ spline_star_exact = function(y,
 #' @importFrom splines2 iSpline
 #' @import Matrix
 #' @keywords internal
-bart_star_MCMC_ispline = function(y,
+bart_star_ispline = function(y,
                                   X,
                                   X_test = NULL, y_test = NULL,
                                   lambda_prior = 1/2,
