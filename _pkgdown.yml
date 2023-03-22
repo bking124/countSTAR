@@ -6,3 +6,37 @@ authors:
     href: http://www.danielrkowal.com/
   Brian King:
     href: https://bking124.github.io/
+
+reference:
+- title: Classical STAR Regression
+  desc: Methods for STAR models estimated using EM algorithm
+- contents:
+  - lm_star
+  - confint.lmstar
+  - predict.lmstar
+  - pvals
+  - randomForest_star
+  - gbm_star
+  - genEM_star
+- title: Bayesian STAR Regression
+  desc: Methods for STAR models estimated using Bayesian methods (either Gibbs sampling or exact Monte Carlo estimation in certain scenarios)
+- contents:
+  - blm_star
+  - bam_star
+  - bart_star
+  - spline_star
+  - genMCMC_star
+- title: Helper Functions
+- subtitle: Transformation and Rounding Functions
+- contents:
+  - a_j
+  - round_floor
+  - starts_with("g_")
+- subtitle: Simulation and Visualization
+- contents:
+  - starts_with("simulate")
+  - starts_with("plot")
+  - simBaS
+  - credBands
+  - getEffSize
+  - ergMean
