@@ -1,3 +1,96 @@
+#' STAR Bayesian Linear Regression
+#'
+#'
+#' @return a list with the following elements:
+#'
+#' @export
+blm_star <- function(y, X, X_test = X,
+                     transformation = 'np',
+                     y_max = Inf,
+                     prior = "gprior",
+                     use_MCMC = TRUE,
+                     nsave = 5000,
+                     nburn = 5000,
+                     nskip=0,
+                     method_sigma = 'mle',
+                     approx_Fz = FALSE,
+                     approx_Fy = FALSE,
+                     psi = NULL,
+                     compute_marg = FALSE){
+  #Check prior
+  prior = tolower(prior);
+  if(!is.element(prior, c("gprior", "horseshoe", "ridge")))
+    stop("The prior must be one of 'gprior', 'horseshoe', or 'ridge'")
+
+  #Check: do prior and transformation match?
+  if(transformation=="bnp" && prior!="gprior")
+    stop('BNP transformation is only implemented for g-prior')
+
+  #Check if sample size is too big to run exact sampler
+  if(use_MCMC==FALSE && length(y) > 500){
+    warning("Exact sampler should not be used when n>500. Defaulting back to Gibbs sampler")
+    use_MCMC = TRUE
+  }
+
+  #Check: do we have exact sampler for given prior?
+  if(use_MCMC == FALSE && prior!="gprior")
+    stop('Direct Monte Carlo sampling only implemented for g-prior')
+
+  #Check: do we have an exact sampler available for given transformation?
+  if(use_MCMC == FALSE && (transformation=="box-cox" || transformation =="ispline"))
+    stop('Direct Monte Carlo sampling not implemented for chosen transformation')
+
+  # If approximating F_y in BNP, use 'np':
+  if(transformation == 'bnp' && approx_Fy)
+    transformation = 'np'
+
+  #----------------------------------------------------------------------------
+  #Now begin calling appropriate functions
+  #Call exact sampler
+  if(use_MCMC==FALSE){
+    .args = as.list(match.call())[-1]
+    .args[c('prior','use_MCMC', 'nburn', 'nskip')] <- NULL
+    return(do.call(blm_star_exact, .args))
+  }
+
+  #Getting here must mean use_MCMC==TRUE
+  if(transformation=="bnp"){
+    .args = as.list(match.call())[-1]
+    .args[c('transformation','prior','use_MCMC','method_sigma', 'compute_marg')] <- NULL
+    return(do.call(blm_star_bnpgibbs, .args))
+  }
+
+  #Now we set the appropriate init and sample functions
+  if(prior=="gprior"){
+    init_params = function(y){init_lm_gprior(y, X)}
+    sample_params = function(y, params){sample_lm_gprior(y=y, X=X, params=params)}
+  }
+  else if (prior == "ridge"){
+    init_params = function(y){init_lm_ridge(y, X)}
+    sample_params = function(y, params){sample_lm_ridge(y=y, X=X, params=params)}
+  }
+  else{
+    init_params = function(y){init_lm_hs(y, X)}
+    sample_params = function(y, params){sample_lm_hs(y=y, X=X, params=params)}
+  }
+
+  #Invoke the appropriate generic MCMC sampler
+  .args = as.list(match.call())[-1]
+  .args[c('transformation','prior','use_MCMC','method_sigma', 'compute_marg',
+          'approx_Fz','approx_Fy', 'psi')] <- NULL
+  .args$sample_params = sample_params
+  .args$init_params = init_params
+
+  if(transformation=="ispline"){
+    .args[['transformation']] <- NULL
+    result = do.call(genMCMC_star_ispline, .args)
+  } else {
+    result = do.call(genMCMC_star, .args)
+  }
+  result = result[!sapply(result,is.null)]
+  return(result)
+}
+
 #' Generalized MCMC Algorithm for STAR
 #'
 #' Run the MCMC algorithm for STAR given
@@ -199,17 +292,38 @@ genMCMC_star = function(y,
   if(is.null(params$mu) || is.null(params$sigma) || is.null(params$coefficients))
     stop("The sample_params() function must return 'mu', 'sigma', and 'coefficients'")
 
+  # Does the sampler return beta? If so, we want to store separately
+  beta_sampled = !is.null(params$coefficients$beta)
+
   # Length of parameters:
-  p = length(unlist(params$coefficients))
+  if(beta_sampled){
+    p = length(params$coefficients$beta)
+    p_other = length(unlist(params$coefficients))-p
+  } else{
+    p = length(unlist(params$coefficients))
+  }
 
   # Lower and upper intervals:
   a_y = a_j(y, y_max = y_max); a_yp1 = a_j(y + 1, y_max = y_max)
   z_lower = g(a_y); z_upper = g(a_yp1)
 
   # Store MCMC output:
-  post.fitted.values = array(NA, c(nsave, n))
-  post.coefficients = array(NA, c(nsave, p),
+  if(save_y_hat)  post.fitted.values = array(NA, c(nsave, n)) else post.fitted.values = NULL
+  if(beta_sampled){
+    post.beta = array(NA, c(nsave, p),
+                      dimnames = list(NULL, names(unlist(params$coefficients['beta']))))
+    if(p_other > 0){
+      post.params = array(NA, c(nsave, p_other),
+                        dimnames = list(NULL, names(unlist(within(params$coefficients,rm(beta))))))
+    } else {
+      post.params = NULL
+    }
+
+  } else {
+    post.coefficients = array(NA, c(nsave, p),
                             dimnames = list(NULL, names(unlist((params$coefficients)))))
+  }
+
   post.pred = array(NA, c(nsave, n))
   post.mu = array(NA, c(nsave, n))
   post.sigma = numeric(nsave)
@@ -270,7 +384,12 @@ genMCMC_star = function(y,
         isave = isave + 1
 
         # Posterior samples of the model parameters:
-        post.coefficients[isave,] = unlist(params$coefficients)
+        if(beta_sampled){
+          post.beta[isave,] = params$coefficients$beta
+          if(!is.null(post.params)) post.params[isave, ] = unlist(within(params$coefficients, rm(beta)))
+        } else{
+          post.coefficients[isave,] = unlist(params$coefficients)
+        }
 
         # Posterior predictive distribution:
         post.pred[isave,] = round_floor(g_inv(rnorm(n = n, mean = params$mu, sd = params$sigma)), y_max=y_max)
@@ -310,20 +429,34 @@ genMCMC_star = function(y,
   }
   if(verbose) print(paste('Total time: ', round((proc.time()[3] - timer0)), 'seconds'))
 
+  #Compute fitted values if necessary
+  if(save_y_hat) fitted.values = colMeans(post.fitted.values) else fitted.values=NULL
+
   # Compute WAIC:
   lppd = sum(log(colMeans(exp(post.log.like.point))))
   p_waic = sum(apply(post.log.like.point, 2, function(x) sd(x)^2))
   WAIC = -2*(lppd - p_waic)
 
-  # Return a named list:
-  list(coefficients = colMeans(post.coefficients),
-       fitted.values = colMeans(post.fitted.values),
-       post.coefficients = post.coefficients,
-       post.pred = post.pred,
-       post.fitted.values = post.fitted.values,
-       post.lambda = post.lambda, post.sigma = post.sigma,
-       post.log.like.point = post.log.like.point,
-       WAIC = WAIC, p_waic = p_waic)
+  # Return a named list
+  if(beta_sampled){
+    result = list(coefficients = colMeans(post.beta),
+                  post.beta = post.beta,
+                  post.othercoefs = post.params,
+                  post.pred = post.pred,
+                  post.sigma = post.sigma,
+                  post.log.like.point = post.log.like.point,
+                  WAIC = WAIC, p_waic = p_waic, post.lambda = post.lambda,
+                  fitted.values = fitted.values, post.fitted.values = post.fitted.values)
+  } else {
+    result = list(coefficients = colMeans(post.coefficients),
+                  post.coefficients = post.coefficients,
+                  post.pred = post.pred,
+                  post.sigma = post.sigma,
+                  post.log.like.point = post.log.like.point,
+                  WAIC = WAIC, p_waic = p_waic, post.lambda = post.lambda,
+                  fitted.values = fitted.values, post.fitted.values = post.fitted.values)
+  }
+  return(result)
 }
 
 
@@ -1013,7 +1146,7 @@ spline_star = function(y,
     .args = as.list(match.call())[-1]
     .args[c('use_MCMC', 'nburn', 'nskip', 'verbose')] <- NULL
     if(is.null(psi)){
-      warning("psi must be set when using exact sampler; used default value of 1000")
+      message("psi must be set when using exact sampler; used default value of 1000")
       .args$psi = 1000
     }
     return(do.call(spline_star_exact, .args))
@@ -1190,5 +1323,3 @@ spline_star = function(y,
 
   return(list(post_ytilde))
 }
-
-
