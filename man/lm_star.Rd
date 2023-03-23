@@ -47,6 +47,7 @@ an object of \code{class} "lmstar", which is a list with the following elements:
 \item \code{coefficients} the MLEs of the coefficients
 \item \code{fitted.values} the fitted values at the MLEs
 \item \code{g.hat} a function containing the (known or estimated) transformation
+\item \code{ginv.hat} a function containing the inverse of the transformation
 \item \code{sigma.hat} the MLE of the standard deviation
 \item \code{mu.hat} the MLE of the conditional mean (on the transformed scale)
 \item \code{z.hat} the estimated latent data (on the transformed scale) at the MLEs

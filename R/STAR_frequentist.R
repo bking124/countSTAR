@@ -32,6 +32,7 @@
 #' \item \code{coefficients} the MLEs of the coefficients
 #' \item \code{fitted.values} the fitted values at the MLEs
 #' \item \code{g.hat} a function containing the (known or estimated) transformation
+#' \item \code{ginv.hat} a function containing the inverse of the transformation
 #' \item \code{sigma.hat} the MLE of the standard deviation
 #' \item \code{mu.hat} the MLE of the conditional mean (on the transformed scale)
 #' \item \code{z.hat} the estimated latent data (on the transformed scale) at the MLEs
@@ -303,6 +304,7 @@ lm_star = function(formula, data=NULL, transformation = 'np',
   z <- list(coefficients = theta_hat,
             fitted.values = y_hat,
             g.hat = g,
+            ginv.hat = g_inv,
             sigma.hat = sigma_hat,
             mu.hat = mu_hat,
             z.hat = z_hat,
@@ -317,24 +319,38 @@ lm_star = function(formula, data=NULL, transformation = 'np',
   return(z)
 }
 
-#' Compute a predictive distribution for the integer-valued response in STAR linear model
+#' Predict method for response in STAR linear model
 #'
-#' A Monte Carlo approach for estimating the (plug-in) predictive distribution for the STAR
-#' linear model. The algorithm iteratively samples (i) the latent data given the observed
-#' data, (ii) the latent predictive data given the latent data from (i), and
-#' (iii) (inverse) transforms and rounds the latent predictive data to obtain a
-#' draw from the integer-valued predictive distribution.
+#' Outputs predicted values based on an lmstar fit and optionally prediction intervals based
+#' on the the (plug-in) predictive distribution for the STAR linear model
 #'
 #' @param object Object of class "lmstar" as output by \code{\link{lm_star}}
-#' @param newdata An optional \code{m x p} matrix with out-of-sample predictors. If omitted, the fitted values are used.
-#' @param N number of Monte Carlo samples from the posterior predictive distribution; default is 1000
+#' @param newdata An optional matrix/data frame  in which to look for variables with which to predict.
+#' If omitted, the fitted values are used.
+#' @param interval logical; whether or not to include prediction intervals (default FALSE)
+#' @param level Level for prediction intervals
+#' @param N number of Monte Carlo samples from the posterior predictive distribution
+#' used to approximate intervals; default is 1000
 #'
-#' @return \code{N x m} samples from the posterior predictive distribution
-#' at the \code{m} test points
+#' @return Either a a vector of predictions (if interval=FALSE) or a matrix of predictions and
+#' bounds with column names fit, lwr, and upr
 #'
-#' @note The ``plug-in" predictive distribution is a crude approximation. Better
-#' approaches are available using the Bayesian models, which provide samples
+#' @details
+#' If interval=TRUE, then \code{predict.lmstar} uses a Monte Carlo approach to estimating the (plug-in)
+#' predictive distribution for the STAR linear model. The algorithm iteratively samples
+#' (i) the latent data given the observed data, (ii) the latent predictive data given the latent data from (i),
+#' and (iii) (inverse) transforms and rounds the latent predictive data to obtain a
+#' draw from the integer-valued predictive distribution.
+#'
+#' The appropriate quantiles of these Monte Carlo draws are computed and reported as the prediction interval.
+#'
+#' @note
+#' The ``plug-in" predictive distribution is a crude approximation. Better
+#' approaches are available using the Bayesian models, e.g. \code{\link{blm_star}}, which provide samples
 #' from the posterior predictive distribution.
+#'
+#' For highly skewed responses, prediction intervals especially at lower levels may
+#' not include the predicted value itself, since the mean is often much larger than the median.
 #'
 #'
 #' @examples
@@ -351,12 +367,12 @@ lm_star = function(formula, data=NULL, transformation = 'np',
 #' # Using these draws, compute prediction intervals for STAR:
 #' PI_y = t(apply(y_pred, 2, quantile, c(0.05, 1 - 0.05)))
 #'
-#' # Plot the results: PIs and CIs
+#' # Plot the results: PIs
 #' plot(x, y, ylim = range(y, PI_y), main = 'STAR: 90% Prediction Intervals')
 #' lines(x, PI_y[,1], col='darkgray', type='s', lwd=4);
 #' lines(x, PI_y[,2], col='darkgray', type='s', lwd=4)
 #' @export
-predict.lmstar <- function(object, newdata = NULL, N=1000){
+predict.lmstar <- function(object, newdata = NULL, interval=FALSE, level=0.95, N=1000){
   if (!inherits(object, "lmstar"))
     stop("Not a lmstar object")
 
@@ -365,6 +381,9 @@ predict.lmstar <- function(object, newdata = NULL, N=1000){
   y_max <- object$y_max
   X <- object$X
   g <- object$g.hat
+  g_inv <- object$ginv.hat
+  sigma_hat <- object$sigma.hat
+  fit <- object$lmfit
 
   # Sample size:
   n = length(y)
@@ -373,7 +392,9 @@ predict.lmstar <- function(object, newdata = NULL, N=1000){
   if (missing(newdata) || is.null(newdata)) {
     X.test = X
   } else {
-    X.test = newdata
+    Terms <- delete.response(terms(fit))
+    m = model.frame(Terms, newdata, na.action = na.pass, xlev = fit$xlevels)
+    X.test <- model.matrix(Terms, m, contrasts.arg = fit$contrasts)
   }
 
   # Number of test points:
@@ -386,43 +407,74 @@ predict.lmstar <- function(object, newdata = NULL, N=1000){
   # Number of predictors:
   p = ncol(X)
 
-  # Define the grid for approximations using equally-spaced + quantile points:
-  t_grid = sort(unique(round(c(
-    seq(0, min(2*max(y), y_max), length.out = 250),
-    quantile(unique(y[y < y_max] + 1), seq(0, 1, length.out = 250))), 8)))
+  # Get fitted values at new points
+  #First calculate new mu_hat
+  mu_hat = X.test%*%object$coefficients
+  mu_hat = mu_hat[,,drop=TRUE]
 
-  # (Approximate) inverse transformation function:
-  g_inv = g_inv_approx(g = g, t_grid = t_grid)
-
-  # Sample z_star from the posterior distribution:
-  y_pred = matrix(NA, nrow = N, ncol = m)
-
-  # Recurring terms:
-  a_y = a_j(y, y_max = y_max); a_yp1 = a_j(y + 1, y_max = y_max)
-  XtXinv = chol2inv(chol(crossprod(X)))
-  cholS0 = chol(diag(m) + tcrossprod(X.test%*%XtXinv, X.test))
-
-  for(nsi in 1:N){
-    # sample [z* | y]
-    z_star_s = rtruncnormRcpp(y_lower = g(a_y),
-                              y_upper = g(a_yp1),
-                              mu = object$mu.hat,
-                              sigma = rep(object$sigma.hat, n),
-                              u_rand = runif(n = n))
-
-    # sample [z~ | z*]:
-    # first, estimate the lm using z* as data:
-    beta_hat = XtXinv%*%crossprod(X, z_star_s)
-    mu_hat = X.test%*%beta_hat
-    s_hat = sqrt(sum((z_star_s - X%*%beta_hat)^2/(n - p - 1)))
-    # next, sample z~:
-    z_tilde = mu_hat +
-      s_hat*crossprod(cholS0, rnorm(m))/sqrt(rchisq(n = 1, df = n - p - 1)/(n - p - 1))
-
-    # save the (inverse) transformed and rounded sims:
-    y_pred[nsi,] = round_floor(g_inv(z_tilde), y_max = y_max)
+  #Estimate an upper bound for the (infinite) summation:
+  if(y_max < Inf){
+    Jmax = rep(y_max + 1, n)
+  } else {
+    Jmax = round_floor(g_inv(qnorm(0.9999, mean = mu_hat, sd = sigma_hat)), y_max = y_max)
+    Jmax[Jmax > 2*max(y)] = 2*max(y) # cap at 2*max(y) to avoid excessive computations
   }
-  y_pred
+  Jmaxmax = max(Jmax) # overall max
+
+  # Point prediction:
+  y_hat = expectation_gRcpp(g_a_j = g(a_j(0:Jmaxmax, y_max = y_max)),
+                            g_a_jp1 = g(a_j(1:(Jmaxmax + 1), y_max = y_max)),
+                            mu = mu_hat, sigma = rep(sigma_hat, n),
+                            Jmax = Jmax)
+  y_hat <- y_hat[,,drop=TRUE]
+  names(y_hat) <- 1:length(y_hat)
+
+  if(interval){
+    # Define the grid for approximations using equally-spaced + quantile points:
+    t_grid = sort(unique(round(c(
+      seq(0, min(2*max(y), y_max), length.out = 250),
+      quantile(unique(y[y < y_max] + 1), seq(0, 1, length.out = 250))), 8)))
+
+    # (Approximate) inverse transformation function:
+    g_inv = g_inv_approx(g = g, t_grid = t_grid)
+
+    # Sample z_star from the posterior distribution:
+    y_pred = matrix(NA, nrow = N, ncol = m)
+
+    # Recurring terms:
+    a_y = a_j(y, y_max = y_max); a_yp1 = a_j(y + 1, y_max = y_max)
+    XtXinv = chol2inv(chol(crossprod(X)))
+    cholS0 = chol(diag(m) + tcrossprod(X.test%*%XtXinv, X.test))
+
+    for(nsi in 1:N){
+      # sample [z* | y]
+      z_star_s = rtruncnormRcpp(y_lower = g(a_y),
+                                y_upper = g(a_yp1),
+                                mu = object$mu.hat,
+                                sigma = rep(object$sigma.hat, n),
+                                u_rand = runif(n = n))
+
+      # sample [z~ | z*]:
+      # first, estimate the lm using z* as data:
+      beta_hat = XtXinv%*%crossprod(X, z_star_s)
+      mu_hat = X.test%*%beta_hat
+      s_hat = sqrt(sum((z_star_s - X%*%beta_hat)^2/(n - p - 1)))
+      # next, sample z~:
+      z_tilde = mu_hat +
+        s_hat*crossprod(cholS0, rnorm(m))/sqrt(rchisq(n = 1, df = n - p - 1)/(n - p - 1))
+
+      # save the (inverse) transformed and rounded sims:
+      y_pred[nsi,] = round_floor(g_inv(z_tilde), y_max = y_max)
+    }
+    alpha=1-level
+    quants = t(apply(y_pred, 2, quantile, c(alpha/2, 1-(alpha/2))))
+    result = cbind(y_hat, quants)
+    colnames(result) = c("fit", "lwr", "upr")
+    return(result)
+
+  } else {
+    return(y_hat)
+  }
 }
 
 #' Compute asymptotic confidence intervals for STAR linear regression

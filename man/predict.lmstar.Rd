@@ -2,32 +2,47 @@
 % Please edit documentation in R/STAR_frequentist.R
 \name{predict.lmstar}
 \alias{predict.lmstar}
-\title{Compute a predictive distribution for the integer-valued response in STAR linear model}
+\title{Predict method for response in STAR linear model}
 \usage{
-\method{predict}{lmstar}(object, newdata = NULL, N = 1000)
+\method{predict}{lmstar}(object, newdata = NULL, interval = FALSE, level = 0.95, N = 1000)
 }
 \arguments{
 \item{object}{Object of class "lmstar" as output by \code{\link{lm_star}}}
 
-\item{newdata}{An optional \code{m x p} matrix with out-of-sample predictors. If omitted, the fitted values are used.}
+\item{newdata}{An optional matrix/data frame  in which to look for variables with which to predict.
+If omitted, the fitted values are used.}
 
-\item{N}{number of Monte Carlo samples from the posterior predictive distribution; default is 1000}
+\item{interval}{logical; whether or not to include prediction intervals (default FALSE)}
+
+\item{level}{Level for prediction intervals}
+
+\item{N}{number of Monte Carlo samples from the posterior predictive distribution
+used to approximate intervals; default is 1000}
 }
 \value{
-\code{N x m} samples from the posterior predictive distribution
-at the \code{m} test points
+Either a a vector of predictions (if interval=FALSE) or a matrix of predictions and
+bounds with column names fit, lwr, and upr
 }
 \description{
-A Monte Carlo approach for estimating the (plug-in) predictive distribution for the STAR
-linear model. The algorithm iteratively samples (i) the latent data given the observed
-data, (ii) the latent predictive data given the latent data from (i), and
-(iii) (inverse) transforms and rounds the latent predictive data to obtain a
+Outputs predicted values based on an lmstar fit and optionally prediction intervals based
+on the the (plug-in) predictive distribution for the STAR linear model
+}
+\details{
+If interval=TRUE, then \code{predict.lmstar} uses a Monte Carlo approach to estimating the (plug-in)
+predictive distribution for the STAR linear model. The algorithm iteratively samples
+(i) the latent data given the observed data, (ii) the latent predictive data given the latent data from (i),
+and (iii) (inverse) transforms and rounds the latent predictive data to obtain a
 draw from the integer-valued predictive distribution.
+
+The appropriate quantiles of these Monte Carlo draws are computed and reported as the prediction interval.
 }
 \note{
 The ``plug-in" predictive distribution is a crude approximation. Better
-approaches are available using the Bayesian models, which provide samples
+approaches are available using the Bayesian models, e.g. \code{\link{blm_star}}, which provide samples
 from the posterior predictive distribution.
+
+For highly skewed responses, prediction intervals especially at lower levels may
+not include the predicted value itself, since the mean is often much larger than the median.
 }
 \examples{
 # Simulate data with count-valued response y:
@@ -43,7 +58,7 @@ y_pred = predict(fit)
 # Using these draws, compute prediction intervals for STAR:
 PI_y = t(apply(y_pred, 2, quantile, c(0.05, 1 - 0.05)))
 
-# Plot the results: PIs and CIs
+# Plot the results: PIs
 plot(x, y, ylim = range(y, PI_y), main = 'STAR: 90\% Prediction Intervals')
 lines(x, PI_y[,1], col='darkgray', type='s', lwd=4);
 lines(x, PI_y[,2], col='darkgray', type='s', lwd=4)
