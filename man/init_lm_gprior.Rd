@@ -4,20 +4,24 @@
 \alias{init_lm_gprior}
 \title{Initialize linear regression parameters assuming a g-prior}
 \usage{
-init_lm_gprior(y, X)
+init_lm_gprior(y, X, X_test = NULL)
 }
 \arguments{
 \item{y}{\code{n x 1} vector of data}
 
 \item{X}{\code{n x p} matrix of predictors}
+
+\item{X_test}{\code{n0 x p} matrix of predictors at test points (default is NULL)}
 }
 \value{
-a named list \code{params} containing
+a named list \code{params} containing at least
 \enumerate{
 \item \code{mu}: vector of conditional means (fitted values)
 \item \code{sigma}: the conditional standard deviation
 \item \code{coefficients}: a named list of parameters that determine \code{mu}
 }
+Additionally, if X_test is not NULL, then the list includes an element
+\code{mu_test}, the vector of conditional means at the test points
 }
 \description{
 Initialize the parameters for a linear regression model assuming a

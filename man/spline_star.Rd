@@ -74,7 +74,8 @@ from the posterior predictive distribution at the observation points \code{tau}
 }
 \description{
 Compute samples from the predictive
-distributions of a STAR spline regression model.
+distributions of a STAR spline regression model using either a Gibbs sampling approach
+or exact Monte Carlo sampling (default is Gibbs sampling which scales better for large n)
 }
 \details{
 STAR defines a count-valued probability model by

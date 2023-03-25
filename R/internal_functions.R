@@ -5,8 +5,7 @@
 #'
 #' @param y \code{n x 1} vector of observed counts
 #' @param X \code{n x p} matrix of predictors
-#' @param X_test \code{n0 x p} matrix of predictors for test data;
-#' default is the observed covariates \code{X}
+#' @param X_test \code{n0 x p} matrix of predictors for test data
 #' @param transformation transformation to use for the latent data; must be one of
 #' \itemize{
 #' \item "identity" (identity transformation)
@@ -34,13 +33,16 @@
 #' @return a list with the following elements:
 #' \itemize{
 #' \item \code{coefficients} the posterior mean of the regression coefficients
-#' \item \code{post_beta}: \code{nsave x p} samples from the posterior distribution
+#' \item \code{post.beta}: \code{nsave x p} samples from the posterior distribution
 #' of the regression coefficients
-#' \item \code{post_ytilde}: \code{nsave x n0} samples
+#' \item \code{post.pred}: draws from the posterior predictive distribution of \code{y}
+#' \item \code{post.pred.test}: \code{nsave x n0} samples
 #' from the posterior predictive distribution at test points \code{X_test}
-#' \item \code{post_g}: \code{nsave} posterior samples of the transformation
+#' (if given, otherwise NULL)
+#' \item \code{sigma}: The estimated latent data standard deviation
+#' \item \code{post.g}: \code{nsave} posterior samples of the transformation
 #' evaluated at the unique \code{y} values (only applies for 'bnp' transformations)
-#' \item \code{marg_like}: the marginal likelihood (if requested; otherwise NULL)
+#' \item \code{marg.like}: the marginal likelihood (if requested; otherwise NULL)
 #' }
 #'
 #' @details STAR defines a count-valued probability model by
@@ -135,7 +137,7 @@ blm_star_exact = function(y, X, X_test = X,
 
   if(is.null(psi)){
     psi = n # default
-    warning("G-prior prior variance psi not set; using default of psi=n")
+    message("G-prior prior variance psi not set; using default of psi=n")
   }
   #----------------------------------------------------------------------------
   # Define the transformation:
@@ -254,7 +256,9 @@ blm_star_exact = function(y, X, X_test = X,
   if(transformation == 'bnp'){
     # MC draws:
     post_beta = array(NA, c(nsave,p))
-    post_z = post_ytilde = array(NA, c(nsave, n)) # storage
+    post_z = post_pred = array(NA, c(nsave, n)) # storage
+    if(!is.null(X_test)) post_predtest = array(NA, c(nsave, nrow(X_test)))
+    post.log.like.point = array(NA, c(nsave, n)) # Pointwise log-likelihood
     post_g = array(NA, c(nsave, length(unique(y))))
 
     for(s in 1:nsave){
@@ -282,15 +286,27 @@ blm_star_exact = function(y, X, X_test = X,
       # Posterior samples of the coefficients:
       post_beta[s,] = V1[s,] + tcrossprod(psi/(1+psi)*XtXinvXt, t(post_z[s,]))
 
-      # Predictive samples of ztilde:
-      ztilde = tcrossprod(post_beta[s,], X_test) + sigma_epsilon*rnorm(n = nrow(X_test))
+      # Predictive samples of ztilde at design points
+      ztilde = tcrossprod(post_beta[s,], X) + sigma_epsilon*rnorm(n = nrow(X))
 
-      # Predictive samples of ytilde:
-      post_ytilde[s,] = round_floor(g_inv(ztilde), y_max)
+      # Predictive samples of ytilde at design points:
+      post_pred[s,] = round_floor(g_inv(ztilde), y_max)
+
+      if(!is.null(X_test)){
+        # Predictive samples of ztilde at design points
+        ztilde = tcrossprod(post_beta[s,], X_test) + sigma_epsilon*rnorm(n = nrow(X_test))
+        # Predictive samples of ytilde at design points:
+        post_predtest[s,] = round_floor(g_inv(ztilde), y_max)
+      }
 
       # Posterior samples of the transformation:
       post_g[s,] = g(sort(unique(y)))
 
+      #Pointwise log-likelihood
+      post.log.like.point[s, ] = logLikePointRcpp(g_a_j = g_a_y,
+                                                  g_a_jp1 = g_a_yp1,
+                                                  mu = X%*%post_beta[s,],
+                                                  sigma = rep(sigma_epsilon, n))
     }
 
   } else {
@@ -304,15 +320,36 @@ blm_star_exact = function(y, X, X_test = X,
     post_beta = V1 + t(tcrossprod(psi/(1+psi)*XtXinvXt, post_z))
 
     # Predictive samples of ztilde:
-    post_ztilde = tcrossprod(post_beta, X_test) + sigma_epsilon*rnorm(n = nsave*nrow(X_test))
+    post_ztilde = tcrossprod(post_beta, X) + sigma_epsilon*rnorm(n = nsave*nrow(X))
 
     # Predictive samples of ytilde:
-    post_ytilde = t(apply(post_ztilde, 1, function(z){
+    post_pred = t(apply(post_ztilde, 1, function(z){
       round_floor(g_inv(z), y_max)
     }))
 
+    if(!is.null(X_test)){
+      # Predictive samples of ztilde:
+      post_ztilde = tcrossprod(post_beta, X_test) + sigma_epsilon*rnorm(n = nsave*nrow(X_test))
+
+      # Predictive samples of ytilde:
+      post_predtest = t(apply(post_ztilde, 1, function(z){
+        round_floor(g_inv(z), y_max)
+      }))
+    }
+
     # Not needed: transformation is fixed
     post_g = NULL
+
+    #Pointwise log-likelihood
+    post.log.like.point = apply(post_beta, 1, function(beta){logLikePointRcpp(g_a_j = g_a_y,
+                                                g_a_jp1 = g_a_yp1,
+                                                mu = as.vector(X%*%beta),
+                                                sigma = rep(sigma_epsilon, n))})
+    post.log.like.point = t(post.log.like.point)
+  }
+
+  if(is.null(X_test)){
+    post_predtest = NULL
   }
 
   # Estimated coefficients:
@@ -332,10 +369,13 @@ blm_star_exact = function(y, X, X_test = X,
 
   return(list(
     coefficients = beta_hat,
-    post_beta = post_beta,
-    post_ytilde = post_ytilde,
-    post_g = post_g,
-    marg_like = marg_like))
+    post.beta = post_beta,
+    post.pred = post_pred,
+    post.predtest = post_predtest,
+    post.log.like.point = post.log.like.point,
+    sigma = sigma_epsilon,
+    post.g = post_g,
+    marg.like = marg_like))
 }
 
 #' Gibbs sampler for STAR linear regression with BNP transformation
@@ -1338,16 +1378,18 @@ bart_star_ispline = function(y,
 #' is used for drawing the parameter of the transformation function.
 #'
 #' @param y \code{n x 1} vector of observed counts
-#' @param sample_params a function that inputs data \code{y} and a named list \code{params} containing
+#' @param sample_params a function that inputs data \code{y} and a named list
+#' \code{params} containing at least
 #' \enumerate{
 #' \item \code{mu}: vector of conditional means (fitted values)
 #' \item \code{sigma}: the conditional standard deviation
 #' \item \code{coefficients}: a named list of parameters that determine \code{mu}
 #' }
-#' and outputs an updated list \code{params} of samples from the full conditional posterior
-#' distribution of \code{coefficients} and \code{sigma} (and updates \code{mu})
+#' and optionally a fourth element \code{mu_test} which contains the vector of conditional means
+#' at test points. The output is an updated list \code{params} of samples from the full conditional posterior
+#' distribution of \code{coefficients} and \code{sigma} (along with updates of \code{mu} and \code{mu_test} if applicable)
 #' @param init_params an initializing function that inputs data \code{y}
-#' and initializes the named list \code{params} of \code{mu}, \code{sigma}, and \code{coefficients}
+#' and initializes the named list \code{params} of \code{mu}, \code{sigma}, \code{coefficients} and \code{mu_test} (if desired)
 #' @param lambda_prior the prior mean for the transformation g() is the Box-Cox function with
 #' parameter \code{lambda_prior}
 #' @param y_max a fixed and known upper bound for all observations; default is \code{Inf}
@@ -1362,12 +1404,8 @@ bart_star_ispline = function(y,
 #' @param stop_adapt_perc stop adapting at the proposal covariance at \code{stop_adapt_perc*nburn}
 #' @param verbose logical; if TRUE, print time remaining
 #'
-#' @return a list with the following elements:
+#' @return A list with at least the following elements:
 #' \itemize{
-#' \item \code{coefficients}: the posterior mean of the coefficients
-#' \item \code{fitted.values}: the posterior mean of the conditional expectation of the counts \code{y}
-#' \item \code{post.coefficients}: posterior draws of the coefficients
-#' \item \code{post.fitted.values}: posterior draws of the conditional mean of the counts \code{y}
 #' \item \code{post.pred}: draws from the posterior predictive distribution of \code{y}
 #' \item \code{post.sigma}: draws from the posterior distribution of \code{sigma}
 #' \item \code{post.log.like.point}: draws of the log-likelihood for each of the \code{n} observations
@@ -1376,7 +1414,31 @@ bart_star_ispline = function(y,
 #' \item \code{post.g}: draws from the posterior distribution of the transformation \code{g}
 #' \item \code{post.sigma.gamma}: draws from the posterior distribution of \code{sigma.gamma},
 #' the prior standard deviation of the transformation g() coefficients
+#' \item \code{fitted.values}: the posterior mean of the conditional expectation of the counts \code{y}
+#' (\code{NULL} if \code{save_y_hat=FALSE})
+#' \item \code{post.fitted.values}: posterior draws of the conditional mean of the counts \code{y}
+#' (\code{NULL} if \code{save_y_hat=FALSE})
 #' }
+#' along with other elements depending on the nature of the initiliazation and sampling functions. See details for more info.
+#'
+#' @details
+#' If the coefficients list from \code{init_params} and \code{sample_params} contains a named element \code{beta},
+#' e.g. for linear regression, then the function output contains
+#' \itemize{
+#' \item \code{coefficients}: the posterior mean of the beta coefficients
+#' \item \code{post.beta}: draws from the posterior distribution of \code{beta}
+#' \item \code{post.othercoefs}: draws from the posterior distribution of any other sampled coefficients, e.g. variance terms
+#' }
+#'
+#' If no \code{beta} exists in the parameter coefficients, then the output list just contains
+#' \itemize{
+#' \item \code{coefficients}: the posterior mean of all coefficients
+#' \item \code{post.beta}: draws from the posterior distribution of all coefficients
+#' }
+#'
+#' Additionally, if \code{init_params} and \code{sample_params} have output \code{mu_test}, then the sampler will output
+#' \code{post.predtest}, which contains draws from the posterior predictive distribution at test points.
+#'
 #'
 #' @examples
 #'
@@ -1387,8 +1449,9 @@ bart_star_ispline = function(y,
 #'
 #' # STAR: unknown I-spline transformation
 #' fit = genMCMC_star_ispline(y = y,
-#'                          sample_params = function(y, params) sample_params_lm(y, X, params),
-#'                          init_params = function(y) init_params_lm(y, X))
+#'                          sample_params = function(y, params) rSTAR:::sample_lm_gprior(y, X, params),
+#'                          init_params = function(y) rSTAR:::init_lm_gprior(y, X))
+#'
 #' # Posterior mean of each coefficient:
 #' coef(fit)
 #'
@@ -1414,7 +1477,7 @@ genMCMC_star_ispline = function(y,
                              y_max = Inf,
                              nsave = 5000,
                              nburn = 5000,
-                             nskip = 2,
+                             nskip = 0,
                              save_y_hat = FALSE,
                              target_acc_rate = 0.3,
                              adapt_rate = 0.75,
@@ -1477,8 +1540,20 @@ genMCMC_star_ispline = function(y,
   if(is.null(params$mu) || is.null(params$sigma) || is.null(params$coefficients))
     stop("The sample_params() function must return 'mu', 'sigma', and 'coefficients'")
 
+  # Does the sampler return beta? If so, we want to store separately
+  beta_sampled = !is.null(params$coefficients$beta)
+
+  #Does the sampler return mu_test
+  testpoints = !is.null(params$mu_test)
+  if(testpoints) n0 <- length(params$mu_test)
+
   # Length of parameters:
-  p = length(unlist(params$coefficients))
+  if(beta_sampled){
+    p = length(params$coefficients$beta)
+    p_other = length(unlist(params$coefficients))-p
+  } else{
+    p = length(unlist(params$coefficients))
+  }
   #----------------------------------------------------------------------------
   # Define the I-Spline components:
 
@@ -1557,10 +1632,22 @@ genMCMC_star_ispline = function(y,
   total_count_accept = numeric(nsave + nburn)
 
   # Store MCMC output:
-  post.fitted.values = array(NA, c(nsave, n))
-  post.coefficients = array(NA, c(nsave, p),
-                            dimnames = list(NULL, names(unlist((params$coefficients)))))
+  if(save_y_hat)  post.fitted.values = array(NA, c(nsave, n)) else post.fitted.values = NULL
+  if(beta_sampled){
+    post.beta = array(NA, c(nsave, p),
+                      dimnames = list(NULL, names(unlist(params$coefficients['beta']))))
+    if(p_other > 0){
+      post.params = array(NA, c(nsave, p_other),
+                          dimnames = list(NULL, names(unlist(within(params$coefficients,rm(beta))))))
+    } else {
+      post.params = NULL
+    }
+  } else {
+    post.coefficients = array(NA, c(nsave, p),
+                              dimnames = list(NULL, names(unlist((params$coefficients)))))
+  }
   post.pred = array(NA, c(nsave, n))
+  if(testpoints) post.predtest = array(NA, c(nsave, n0))
   post.mu = array(NA, c(nsave, n))
   post.sigma = post.sigma.gamma = numeric(nsave)
   post.g = array(NA, c(nsave, length(t_g)))
@@ -1666,11 +1753,22 @@ genMCMC_star_ispline = function(y,
         isave = isave + 1
 
         # Posterior samples of the model parameters:
-        post.coefficients[isave,] = unlist(params$coefficients)
+        if(beta_sampled){
+          post.beta[isave,] = params$coefficients$beta
+          if(!is.null(post.params)) post.params[isave, ] = unlist(within(params$coefficients, rm(beta)))
+        } else{
+          post.coefficients[isave,] = unlist(params$coefficients)
+        }
 
         # Posterior predictive distribution:
         u = rnorm(n = n, mean = params$mu, sd = params$sigma); g_grid = B_I_grid%*%gamma
         post.pred[isave,] = round_floor(sapply(u, function(ui) t_grid[which.min(abs(ui - g_grid))]))
+
+        #Posterior predictive at test points
+        if(testpoints){
+          u = rnorm(n = n, mean = params$mu_test, sd = params$sigma); g_grid = B_I_grid%*%gamma
+          post.pred[isave,] = round_floor(sapply(u, function(ui) t_grid[which.min(abs(ui - g_grid))]))
+        }
 
         # Conditional expectation:
         if(save_y_hat){
@@ -1717,16 +1815,33 @@ genMCMC_star_ispline = function(y,
   p_waic = sum(apply(post.log.like.point, 2, function(x) sd(x)^2))
   WAIC = -2*(lppd - p_waic)
 
-  # Return a named list:
-  list(coefficients = colMeans(post.coefficients),
-       fitted.values = colMeans(post.fitted.values),
-       post.coefficients = post.coefficients,
-       post.pred = post.pred,
-       post.fitted.values = post.fitted.values,
-       post.sigma = post.sigma,
-       post.log.like.point = post.log.like.point,
-       WAIC = WAIC, p_waic = p_waic,post.g = post.g,
-       post.sigma.gamma = post.sigma.gamma)
+  if(!testpoints){
+    post.predtest = NULL
+  }
+  # Return a named list
+  if(beta_sampled){
+    result = list(coefficients = colMeans(post.beta),
+                  post.beta = post.beta,
+                  post.othercoefs = post.params,
+                  post.pred = post.pred,
+                  post.predtest = post.predtest,
+                  post.sigma = post.sigma,
+                  post.log.like.point = post.log.like.point,
+                  WAIC = WAIC, p_waic = p_waic,
+                  post.g = post.g, post.sigma.gamma = post.sigma.gamma,
+                  fitted.values = fitted.values, post.fitted.values = post.fitted.values)
+  } else {
+    result = list(coefficients = colMeans(post.coefficients),
+                  post.coefficients = post.coefficients,
+                  post.pred = post.pred,
+                  post.predtest = post.predtest,
+                  post.sigma = post.sigma,
+                  post.log.like.point = post.log.like.point,
+                  WAIC = WAIC, p_waic = p_waic,
+                  post.g = post.g, post.sigma.gamma = post.sigma.gamma,
+                  fitted.values = fitted.values, post.fitted.values = post.fitted.values)
+  }
+  return(result)
 }
 
 
@@ -2953,13 +3068,16 @@ truncnorm_mom = function(a, b, mu, sig){
 #'
 #' @param y \code{n x 1} vector of data
 #' @param X \code{n x p} matrix of predictors
+#' @param X_test \code{n0 x p} matrix of predictors at test points (default is NULL)
 #'
-#' @return a named list \code{params} containing
+#' @return a named list \code{params} containing at least
 #' \enumerate{
 #' \item \code{mu}: vector of conditional means (fitted values)
 #' \item \code{sigma}: the conditional standard deviation
 #' \item \code{coefficients}: a named list of parameters that determine \code{mu}
 #' }
+#' Additionally, if X_test is not NULL, then the list includes an element
+#' \code{mu_test}, the vector of conditional means at the test points
 #'
 #' @note The parameters in \code{coefficients} are:
 #' \itemize{
@@ -2979,7 +3097,7 @@ truncnorm_mom = function(a, b, mu, sig){
 #' names(params$coefficients)
 #'
 #' @keywords internal
-init_lm_ridge = function(y, X){
+init_lm_ridge = function(y, X, X_test=NULL){
 
   # Initialize the linear model:
   n = nrow(X); p = ncol(X)
@@ -2992,6 +3110,9 @@ init_lm_ridge = function(y, X){
   # Fitted values:
   mu = X%*%beta
 
+  #Mean at the test points (if passed in)
+  if(!is.null(X_test)) mu_test = X_test%*%beta
+
   # Observation SD:
   sigma = sd(y - mu)
 
@@ -3003,7 +3124,11 @@ init_lm_ridge = function(y, X){
   coefficients = list(beta = beta,
                       sigma_beta = sigma_beta)
 
-  list(mu = mu, sigma = sigma, coefficients = coefficients)
+  result = list(mu = mu, sigma = sigma, coefficients = coefficients)
+  if(!is.null(X_test)){
+    result = c(result, list(mu_test = mu_test))
+  }
+  return(result)
 }
 #' Sample linear regressionparameters assuming a ridge prior
 #'
@@ -3022,9 +3147,10 @@ init_lm_ridge = function(y, X){
 #' @param A the prior scale for \code{sigma_beta}, which we assume follows a Uniform(0, A) prior.
 #' @param XtX the \code{p x p} matrix of \code{crossprod(X)} (one-time cost);
 #' if NULL, compute within the function
+#' @param X_test matrix of predictors at test points (default is NULL)
 #'
 #' @return The updated named list \code{params} with draws from the full conditional distributions
-#' of \code{sigma} and \code{coefficients} (and updated \code{mu}).
+#' of \code{sigma} and \code{coefficients} (along with updated \code{mu} and \code{mu_test} if applicable).
 #'
 #' @note The parameters in \code{coefficients} are:
 #' \itemize{
@@ -3048,7 +3174,7 @@ init_lm_ridge = function(y, X){
 #'
 #' @keywords internal
 #' @import truncdist
-sample_lm_ridge = function(y, X, params, A = 10^4, XtX = NULL){
+sample_lm_ridge = function(y, X, params, A = 10^4, XtX = NULL, X_test=NULL){
 
   # Dimensions:
   n = nrow(X); p = ncol(X)
@@ -3080,6 +3206,9 @@ sample_lm_ridge = function(y, X, params, A = 10^4, XtX = NULL){
   # Conditional mean:
   mu = X%*%beta
 
+  #Mean at the test points (if passed in)
+  if(!is.null(X_test)) mu_test = X_test%*%beta
+
   # Observation SD:
   sigma =  1/sqrt(rgamma(n = 1,
                          shape = .001 + n/2,
@@ -3099,7 +3228,11 @@ sample_lm_ridge = function(y, X, params, A = 10^4, XtX = NULL){
   coefficients$beta = beta
   coefficients$sigma_beta = sigma_beta
 
-  list(mu = mu, sigma = sigma, coefficients = coefficients)
+  result = list(mu = mu, sigma = sigma, coefficients = coefficients)
+  if(!is.null(X_test)){
+    result = c(result, list(mu_test = mu_test))
+  }
+  return(result)
 
 }
 #' Initialize linear regression parameters assuming a horseshoe prior
@@ -3110,13 +3243,16 @@ sample_lm_ridge = function(y, X, params, A = 10^4, XtX = NULL){
 #'
 #' @param y \code{n x 1} vector of data
 #' @param X \code{n x p} matrix of predictors
+#' @param X_test \code{n0 x p} matrix of predictors at test points (default is NULL)
 #'
-#' @return a named list \code{params} containing
+#' @return a named list \code{params} containing at least
 #' \enumerate{
-#' \item \code{mu} \code{n x 1} vector of conditional means (fitted values)
-#' \item \code{sigma} the conditional standard deviation
-#' \item \code{coefficients} a named list of parameters that determine \code{mu}
+#' \item \code{mu}: vector of conditional means (fitted values)
+#' \item \code{sigma}: the conditional standard deviation
+#' \item \code{coefficients}: a named list of parameters that determine \code{mu}
 #' }
+#' Additionally, if X_test is not NULL, then the list includes an element
+#' \code{mu_test}, the vector of conditional means at the test points
 #'
 #' @note The parameters in \code{coefficients} are:
 #' \itemize{
@@ -3140,7 +3276,7 @@ sample_lm_ridge = function(y, X, params, A = 10^4, XtX = NULL){
 #' names(params$coefficients)
 #'
 #' @keywords internal
-init_lm_hs = function(y, X){
+init_lm_hs = function(y, X, X_test=NULL){
 
   # Initialize the linear model:
   n = nrow(X); p = ncol(X)
@@ -3152,6 +3288,9 @@ init_lm_hs = function(y, X){
 
   # Fitted values:
   mu = X%*%beta
+
+  #Mean at the test points (if passed in)
+  if(!is.null(X_test)) mu_test = X_test%*%beta
 
   # Observation SD:
   sigma = sd(y - mu)
@@ -3174,7 +3313,11 @@ init_lm_hs = function(y, X){
                       lambda_beta = lambda_beta,
                       xi_lambda_beta = xi_lambda_beta)
 
-  list(mu = mu, sigma = sigma, coefficients = coefficients)
+  result = list(mu = mu, sigma = sigma, coefficients = coefficients)
+  if(!is.null(X_test)){
+    result = c(result, list(mu_test = mu_test))
+  }
+  return(result)
 }
 #' Sample linear regression parameters assuming horseshoe prior
 #'
@@ -3192,9 +3335,10 @@ init_lm_hs = function(y, X){
 #' }
 #' @param XtX the \code{p x p} matrix of \code{crossprod(X)} (one-time cost);
 #' if NULL, compute within the function
+#' @param X_test matrix of predictors at test points (default is NULL)
 #'
 #' @return The updated named list \code{params} with draws from the full conditional distributions
-#' of \code{sigma} and \code{coefficients} (and updated \code{mu}).
+#' of \code{sigma} and \code{coefficients} (along with updated \code{mu} and \code{mu_test} if applicable).
 #'
 #' @note The parameters in \code{coefficients} are:
 #' \itemize{
@@ -3221,7 +3365,7 @@ init_lm_hs = function(y, X){
 #' names(params$coefficients)
 #'
 #' @keywords internal
-sample_lm_hs = function(y, X, params, XtX = NULL){
+sample_lm_hs = function(y, X, params, XtX = NULL, X_test=NULL){
 
   # Dimensions:
   n = nrow(X); p = ncol(X)
@@ -3252,6 +3396,9 @@ sample_lm_hs = function(y, X, params, XtX = NULL){
 
   # Conditional mean:
   mu = X%*%beta
+
+  #Mean at the test points (if passed in)
+  if(!is.null(X_test)) mu_test = X_test%*%beta
 
   # Observation SD:
   sigma =  1/sqrt(rgamma(n = 1,
@@ -3287,8 +3434,11 @@ sample_lm_hs = function(y, X, params, XtX = NULL){
   coefficients$sigma_beta = sigma_beta
 
 
-  list(mu = mu, sigma = sigma, coefficients = coefficients)
-
+  result = list(mu = mu, sigma = sigma, coefficients = coefficients)
+  if(!is.null(X_test)){
+    result = c(result, list(mu_test = mu_test))
+  }
+  return(result)
 }
 
 #' Initialize linear regression parameters assuming a g-prior
@@ -3298,13 +3448,16 @@ sample_lm_hs = function(y, X, params, XtX = NULL){
 #'
 #' @param y \code{n x 1} vector of data
 #' @param X \code{n x p} matrix of predictors
+#' @param X_test \code{n0 x p} matrix of predictors at test points (default is NULL)
 #'
-#' @return a named list \code{params} containing
+#' @return a named list \code{params} containing at least
 #' \enumerate{
 #' \item \code{mu}: vector of conditional means (fitted values)
 #' \item \code{sigma}: the conditional standard deviation
 #' \item \code{coefficients}: a named list of parameters that determine \code{mu}
 #' }
+#' Additionally, if X_test is not NULL, then the list includes an element
+#' \code{mu_test}, the vector of conditional means at the test points
 #'
 #' @note The parameters in \code{coefficients} are:
 #' \itemize{
@@ -3323,7 +3476,7 @@ sample_lm_hs = function(y, X, params, XtX = NULL){
 #' names(params$coefficients)
 #'
 #' @keywords internal
-init_lm_gprior = function(y, X){
+init_lm_gprior = function(y, X, X_test=NULL){
 
   # Initialize the linear model:
   n = nrow(X); p = ncol(X)
@@ -3336,13 +3489,20 @@ init_lm_gprior = function(y, X){
   # Fitted values:
   mu = X%*%beta
 
+  #Mean at the test points (if passed in)
+  if(!is.null(X_test)) mu_test = X_test%*%beta
+
   # Observation SD:
   sigma = sd(y - mu)
 
   # Named list of coefficients:
   coefficients = list(beta = beta)
 
-  list(mu = mu, sigma = sigma, coefficients = coefficients)
+  result = list(mu = mu, sigma = sigma, coefficients = coefficients)
+  if(!is.null(X_test)){
+    result = c(result, list(mu_test = mu_test))
+  }
+  return(result)
 }
 #' Sample the linear regression parameters assuming a g-prior
 #'
@@ -3360,9 +3520,10 @@ init_lm_gprior = function(y, X){
 #' @param psi the prior variance for the g-prior
 #' @param XtX the \code{p x p} matrix of \code{crossprod(X)} (one-time cost);
 #' if NULL, compute within the function
+#' @param X_test matrix of predictors at test points (default is NULL)
 #'
 #' @return The updated named list \code{params} with draws from the full conditional distributions
-#' of \code{sigma} and \code{coefficients} (and updated \code{mu}).
+#' of \code{sigma} and \code{coefficients} (along with updated \code{mu} and \code{mu_test} if applicable).
 #'
 #' @note The parameters in \code{coefficients} are:
 #' \itemize{
@@ -3385,7 +3546,7 @@ init_lm_gprior = function(y, X){
 #'
 #' @keywords internal
 #' @import truncdist
-sample_lm_gprior = function(y, X, params, psi = NULL, XtX = NULL){
+sample_lm_gprior = function(y, X, params, psi = NULL, XtX = NULL, X_test=NULL){
 
   # Dimensions:
   n = nrow(X); p = ncol(X)
@@ -3412,6 +3573,9 @@ sample_lm_gprior = function(y, X, params, psi = NULL, XtX = NULL){
   # Conditional mean:
   mu = X%*%beta
 
+  #Mean at the test points (if passed in)
+  if(!is.null(X_test)) mu_test = X_test%*%beta
+
   # Observation SD:
   sigma =  1/sqrt(rgamma(n = 1,
                          shape = .001 + n/2,
@@ -3420,6 +3584,9 @@ sample_lm_gprior = function(y, X, params, psi = NULL, XtX = NULL){
   # Update the coefficients:
   coefficients$beta = beta
 
-  list(mu = mu, sigma = sigma, coefficients = coefficients)
-
+  result = list(mu = mu, sigma = sigma, coefficients = coefficients)
+  if(!is.null(X_test)){
+    result = c(result, list(mu_test = mu_test))
+  }
+  return(result)
 }

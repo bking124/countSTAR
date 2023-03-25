@@ -4,7 +4,7 @@
 \alias{sample_lm_gprior}
 \title{Sample the linear regression parameters assuming a g-prior}
 \usage{
-sample_lm_gprior(y, X, params, psi = NULL, XtX = NULL)
+sample_lm_gprior(y, X, params, psi = NULL, XtX = NULL, X_test = NULL)
 }
 \arguments{
 \item{y}{\code{n x 1} vector of data}
@@ -22,10 +22,12 @@ sample_lm_gprior(y, X, params, psi = NULL, XtX = NULL)
 
 \item{XtX}{the \code{p x p} matrix of \code{crossprod(X)} (one-time cost);
 if NULL, compute within the function}
+
+\item{X_test}{matrix of predictors at test points (default is NULL)}
 }
 \value{
 The updated named list \code{params} with draws from the full conditional distributions
-of \code{sigma} and \code{coefficients} (and updated \code{mu}).
+of \code{sigma} and \code{coefficients} (along with updated \code{mu} and \code{mu_test} if applicable).
 }
 \description{
 Sample the parameters for a linear regression model assuming a
