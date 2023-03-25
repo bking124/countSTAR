@@ -57,7 +57,7 @@ the expected counts, E(y), which may be slow to compute}
 \item{verbose}{logical; if TRUE, print time remaining}
 }
 \value{
-a list with the following elements:
+a list with at least the following elements:
 \itemize{
 \item \code{coefficients}: the posterior mean of the coefficients
 \item \code{fitted.values}: the posterior mean of the conditional expectation of the counts \code{y}

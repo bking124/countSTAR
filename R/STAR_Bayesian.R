@@ -1,10 +1,82 @@
 #' STAR Bayesian Linear Regression
 #'
 #'
+#' @param y \code{n x 1} vector of observed counts
+#' @param X \code{n x p} matrix of predictors
+#' @param X_test \code{n0 x p} matrix of predictors for test data
+#' @param transformation transformation to use for the latent process; must be one of
+#' \itemize{
+#' \item "identity" (identity transformation)
+#' \item "log" (log transformation)
+#' \item "sqrt" (square root transformation)
+#' \item "np" (nonparametric transformation estimated from empirical CDF)
+#' \item "pois" (transformation for moment-matched marginal Poisson CDF)
+#' \item "neg-bin" (transformation for moment-matched marginal Negative Binomial CDF)
+#' \item "box-cox" (box-cox transformation with learned parameter)
+#' \item "ispline" (transformation is modeled as unknown, monotone function
+#' using I-splines)
+#' \item "bnp" (Bayesian nonparametric transformation using the Bayesian bootstrap)
+#' }
+#' @param y_max a fixed and known upper bound for all observations; default is \code{Inf}
+#' @param prior prior to use for the latent linear regression; currently implemented options
+#' are "gprior", "horseshoe", and "ridge". Not all modeling options and transformations are
+#' available with the latter two priors.
+#' @param use_MCMC = TRUE,
+#' @param nsave number of MCMC iterations to save (or MC samples to draw if use_MCMC=FALSE)
+#' @param nburn number of MCMC iterations to discard
+#' @param nskip number of MCMC iterations to skip between saving iterations,
+#' i.e., save every (nskip + 1)th draw
+#' @param method_sigma method to estimate the latent data standard deviation in exact sampler;
+#' must be one of
+#' \itemize{
+#' \item "mle" use the MLE from the STAR EM algorithm
+#' \item "mmle" use the marginal MLE (Note: slower!)
+#' }
+#' @param approx_Fz logical; in BNP transformation, apply a (fast and stable)
+#' normal approximation for the marginal CDF of the latent data
+#' @param approx_Fy logical; in BNP transformation, approximate
+#' the marginal CDF of \code{y} using the empirical CDF
+#' @param psi prior variance (g-prior)
+#' @param compute_marg logical; if TRUE, compute and return the
+#' marginal likelihood (only available when using exact sampler, i.e. use_MCMC=FALSE)
+#'
 #' @return a list with the following elements:
 #'
+#'
+#' @details STAR defines a count-valued probability model by
+#' (1) specifying a Gaussian model for continuous *latent* data and
+#' (2) connecting the latent data to the observed data via a
+#' *transformation and rounding* operation. Here, the continuous
+#' latent data model is a linear regression.
+#'
+#' There are several options for the transformation. First, the transformation
+#' can belong to the *Box-Cox* family, which includes the known transformations
+#' 'identity', 'log', and 'sqrt', as well as a version in which the Box-Cox parameter
+#' is inferred within the MCMC sampler ('box-cox'). Second, the transformation
+#' can be estimated (before model fitting) using the empirical distribution of the
+#' data \code{y}. Options in this case include the empirical cumulative
+#' distribution function (CDF), which is fully nonparametric ('np'), or the parametric
+#' alternatives based on Poisson ('pois') or Negative-Binomial ('neg-bin')
+#' distributions. For the parametric distributions, the parameters of the distribution
+#' are estimated using moments (means and variances) of \code{y}. The distribution-based
+#' transformations approximately preserve the mean and variance of the count data \code{y}
+#' on the latent data scale, which lends interpretability to the model parameters.
+#' Lastly, the transformation can be modeled using the Bayesian bootstrap ('bnp'),
+#' which is a Bayesian nonparametric model and incorporates the uncertainty
+#' about the transformation into posterior and predictive inference.
+#'
+#' The Monte Carlo sampler (\code{use_MCMC=FALSE}) produces direct, discrete, and joint draws
+#' from the posterior distribution and the posterior predictive distribution
+#' of the linear regression model with a g-prior.
+#'
+#' @note The 'bnp' transformation (without the \code{Fy} approximation) is
+#' slower than the other transformations because of the way
+#' the \code{TruncatedNormal} sampler must be updated as the lower and upper
+#' limits change (due to the sampling of \code{g}). Thus, computational
+#' improvements are likely available.
+#'
 #' @export
-blm_star <- function(y, X, X_test = X,
+blm_star <- function(y, X, X_test = NULL,
                      transformation = 'np',
                      y_max = Inf,
                      prior = "gprior",
@@ -50,39 +122,41 @@ blm_star <- function(y, X, X_test = X,
   if(use_MCMC==FALSE){
     .args = as.list(match.call())[-1]
     .args[c('prior','use_MCMC', 'nburn', 'nskip')] <- NULL
-    return(do.call(blm_star_exact, .args))
+    result = do.call(blm_star_exact, .args)
+    return(result[!sapply(result,is.null)])
   }
 
   #Getting here must mean use_MCMC==TRUE
   if(transformation=="bnp"){
     .args = as.list(match.call())[-1]
     .args[c('transformation','prior','use_MCMC','method_sigma', 'compute_marg')] <- NULL
-    return(do.call(blm_star_bnpgibbs, .args))
+    result = do.call(blm_star_bnpgibbs, .args)
+    return(result[!sapply(result,is.null)])
   }
 
   #Now we set the appropriate init and sample functions
   if(prior=="gprior"){
-    init_params = function(y){init_lm_gprior(y, X)}
-    sample_params = function(y, params){sample_lm_gprior(y=y, X=X, params=params)}
+    init_params = function(y){init_lm_gprior(y, X, X_test=X_test)}
+    sample_params = function(y, params){sample_lm_gprior(y=y, X=X, params=params, X_test=X_test)}
   }
   else if (prior == "ridge"){
-    init_params = function(y){init_lm_ridge(y, X)}
-    sample_params = function(y, params){sample_lm_ridge(y=y, X=X, params=params)}
+    init_params = function(y){init_lm_ridge(y, X, X_test=X_test)}
+    sample_params = function(y, params){sample_lm_ridge(y=y, X=X, params=params, X_test=X_test)}
   }
   else{
-    init_params = function(y){init_lm_hs(y, X)}
-    sample_params = function(y, params){sample_lm_hs(y=y, X=X, params=params)}
+    init_params = function(y){init_lm_hs(y, X, X_test=X_test)}
+    sample_params = function(y, params){sample_lm_hs(y=y, X=X, params=params, X_test=X_test)}
   }
 
   #Invoke the appropriate generic MCMC sampler
   .args = as.list(match.call())[-1]
-  .args[c('transformation','prior','use_MCMC','method_sigma', 'compute_marg',
+  .args[c('X', 'X_test', 'transformation','prior','use_MCMC','method_sigma', 'compute_marg',
           'approx_Fz','approx_Fy', 'psi')] <- NULL
   .args$sample_params = sample_params
   .args$init_params = init_params
 
   if(transformation=="ispline"){
-    .args[['transformation']] <- NULL
+    .args[['X', 'X_test','transformation']] <- NULL
     result = do.call(genMCMC_star_ispline, .args)
   } else {
     result = do.call(genMCMC_star, .args)
@@ -131,19 +205,37 @@ blm_star <- function(y, X, X_test = X,
 #' the expected counts, E(y), which may be slow to compute
 #' @param verbose logical; if TRUE, print time remaining
 #'
-#' @return a list with the following elements:
+#' @return a list with at least the following elements:
 #' \itemize{
-#' \item \code{coefficients}: the posterior mean of the coefficients
-#' \item \code{fitted.values}: the posterior mean of the conditional expectation of the counts \code{y}
-#' \item \code{post.coefficients}: posterior draws of the coefficients
-#' \item \code{post.fitted.values}: posterior draws of the conditional mean of the counts \code{y}
 #' \item \code{post.pred}: draws from the posterior predictive distribution of \code{y}
-#' \item \code{post.lambda}: draws from the posterior distribution of \code{lambda}
 #' \item \code{post.sigma}: draws from the posterior distribution of \code{sigma}
 #' \item \code{post.log.like.point}: draws of the log-likelihood for each of the \code{n} observations
 #' \item \code{WAIC}: Widely-Applicable/Watanabe-Akaike Information Criterion
 #' \item \code{p_waic}: Effective number of parameters based on WAIC
+#' \item \code{post.lambda}: draws from the posterior distribution of \code{lambda}
+#' (NULL unless \code{transformation='box-cox'})
+#' \item \code{fitted.values}: the posterior mean of the conditional expectation of the counts \code{y}
+#' (\code{NULL} if \code{save_y_hat=FALSE})
+#' \item \code{post.fitted.values}: posterior draws of the conditional mean of the counts \code{y}
+#' (\code{NULL} if \code{save_y_hat=FALSE})
 #' }
+#' If the coefficients list from \code{init_params} and \code{sample_params} contains a named element \code{beta},
+#' e.g. for linear regression, then the function output contains
+#' \itemize{
+#' \item \code{coefficients}: the posterior mean of the beta coefficients
+#' \item \code{post.beta}: draws from the posterior distribution of \code{beta}
+#' \item \code{post.othercoefs}: draws from the posterior distribution of any other sampled coefficients, e.g. variance terms
+#' }
+#'
+#' If no \code{beta} exists in the parameter coefficients, then the output list just contains
+#' \itemize{
+#' \item \code{coefficients}: the posterior mean of all coefficients
+#' \item \code{post.beta}: draws from the posterior distribution of all coefficients
+#' }
+#'
+#' Additionally, if \code{init_params} and \code{sample_params} have output \code{mu_test}, then the sampler will output
+#' \code{post.predtest}, which contains draws from the posterior predictive distribution at test points.
+#'
 #'
 #' @details STAR defines a count-valued probability model by
 #' (1) specifying a Gaussian model for continuous *latent* data and
@@ -172,9 +264,9 @@ blm_star <- function(y, X, X_test = X,
 #' y = sim_dat$y; X = sim_dat$X
 #'
 #' # STAR: log-transformation:
-#' fit_log = star_MCMC(y = y,
-#'                          sample_params = function(y, params) sample_params_lm(y, X, params),
-#'                          init_params = function(y) init_params_lm(y, X),
+#' fit_log = genMCMC_star(y = y,
+#'                          sample_params = function(y, params) rSTAR:::sample_lm_gprior(y, X, params),
+#'                          init_params = function(y) rSTAR:::init_lm_gprior(y, X),
 #'                          transformation = 'log')
 #' # Posterior mean of each coefficient:
 #' coef(fit_log)
@@ -190,26 +282,6 @@ blm_star <- function(y, X, X_test = X,
 #'            function(x) mean(x==0)), main = 'Proportion of Zeros', xlab='');
 #' abline(v = mean(y==0), lwd=4, col ='blue')
 #'
-#' # STAR: nonparametric transformation
-#' fit = star_MCMC(y = y,
-#'                 sample_params = function(y, params) sample_params_lm(y, X, params),
-#'                 init_params = function(y) init_params_lm(y, X),
-#'                 transformation = 'np')
-#'
-#' # Posterior mean of each coefficient:
-#' coef(fit)
-#'
-#' # WAIC:
-#' fit$WAIC
-#'
-#' # MCMC diagnostics:
-#' plot(as.ts(fit$post.coefficients[,1:3]))
-#'
-#' # Posterior predictive check:
-#' hist(apply(fit$post.pred, 1,
-#'            function(x) mean(x==0)), main = 'Proportion of Zeros', xlab='');
-#' abline(v = mean(y==0), lwd=4, col ='blue')
-#'
 #'}
 #' @export
 genMCMC_star = function(y,
@@ -219,7 +291,7 @@ genMCMC_star = function(y,
                      y_max = Inf,
                      nsave = 5000,
                      nburn = 5000,
-                     nskip = 2,
+                     nskip = 0,
                      save_y_hat = FALSE,
                      verbose = TRUE){
 
@@ -295,6 +367,10 @@ genMCMC_star = function(y,
   # Does the sampler return beta? If so, we want to store separately
   beta_sampled = !is.null(params$coefficients$beta)
 
+  #Does the sampler return mu_test
+  testpoints = !is.null(params$mu_test)
+  if(testpoints) n0 <- length(params$mu_test)
+
   # Length of parameters:
   if(beta_sampled){
     p = length(params$coefficients$beta)
@@ -325,6 +401,7 @@ genMCMC_star = function(y,
   }
 
   post.pred = array(NA, c(nsave, n))
+  if(testpoints) post.predtest = array(NA, c(nsave, n0))
   post.mu = array(NA, c(nsave, n))
   post.sigma = numeric(nsave)
   post.log.like.point = array(NA, c(nsave, n)) # Pointwise log-likelihood
@@ -394,6 +471,11 @@ genMCMC_star = function(y,
         # Posterior predictive distribution:
         post.pred[isave,] = round_floor(g_inv(rnorm(n = n, mean = params$mu, sd = params$sigma)), y_max=y_max)
 
+        #Posterior predictive at test points
+        if(testpoints){
+          post.predtest[isave,] = round_floor(g_inv(rnorm(n = n, mean = params$mu_test, sd = params$sigma)), y_max=y_max)
+        }
+
         # Conditional expectation:
         if(save_y_hat){
           Jmax = ceiling(round_floor(g_inv(
@@ -437,12 +519,17 @@ genMCMC_star = function(y,
   p_waic = sum(apply(post.log.like.point, 2, function(x) sd(x)^2))
   WAIC = -2*(lppd - p_waic)
 
+  if(!testpoints){
+    post.predtest = NULL
+  }
+
   # Return a named list
   if(beta_sampled){
     result = list(coefficients = colMeans(post.beta),
                   post.beta = post.beta,
                   post.othercoefs = post.params,
                   post.pred = post.pred,
+                  post.predtest = post.predtest,
                   post.sigma = post.sigma,
                   post.log.like.point = post.log.like.point,
                   WAIC = WAIC, p_waic = p_waic, post.lambda = post.lambda,
@@ -451,6 +538,7 @@ genMCMC_star = function(y,
     result = list(coefficients = colMeans(post.coefficients),
                   post.coefficients = post.coefficients,
                   post.pred = post.pred,
+                  post.predtest = post.predtest,
                   post.sigma = post.sigma,
                   post.log.like.point = post.log.like.point,
                   WAIC = WAIC, p_waic = p_waic, post.lambda = post.lambda,
@@ -494,7 +582,7 @@ genMCMC_star = function(y,
 #' the expected counts, E(y), which may be slow to compute
 #' @param verbose logical; if TRUE, print time remaining
 #'
-#' @return a list with the following elements:
+#' @return a list with at least the following elements:
 #' \itemize{
 #' \item \code{coefficients}: the posterior mean of the coefficients
 #' \item \code{fitted.values}: the posterior mean of the conditional expectation of the counts \code{y}
@@ -1020,7 +1108,8 @@ bart_star = function(y,
 #' Estimation for Bayesian STAR spline regression
 #'
 #' Compute samples from the predictive
-#' distributions of a STAR spline regression model.
+#' distributions of a STAR spline regression model using either a Gibbs sampling approach
+#' or exact Monte Carlo sampling (default is Gibbs sampling which scales better for large n)
 #'
 #' @param y \code{n x 1} vector of observed counts
 #' @param tau \code{n x 1} vector of observation points; if NULL, assume equally-spaced on [0,1]

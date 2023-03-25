@@ -23,8 +23,7 @@ blm_star_exact(
 
 \item{X}{\code{n x p} matrix of predictors}
 
-\item{X_test}{\code{n0 x p} matrix of predictors for test data;
-default is the observed covariates \code{X}}
+\item{X_test}{\code{n0 x p} matrix of predictors for test data}
 
 \item{transformation}{transformation to use for the latent data; must be one of
 \itemize{
@@ -62,13 +61,16 @@ marginal likelihood}
 a list with the following elements:
 \itemize{
 \item \code{coefficients} the posterior mean of the regression coefficients
-\item \code{post_beta}: \code{nsave x p} samples from the posterior distribution
+\item \code{post.beta}: \code{nsave x p} samples from the posterior distribution
 of the regression coefficients
-\item \code{post_ytilde}: \code{nsave x n0} samples
+\item \code{post.pred}: draws from the posterior predictive distribution of \code{y}
+\item \code{post.pred.test}: \code{nsave x n0} samples
 from the posterior predictive distribution at test points \code{X_test}
-\item \code{post_g}: \code{nsave} posterior samples of the transformation
+(if given, otherwise NULL)
+\item \code{sigma}: The estimated latent data standard deviation
+\item \code{post.g}: \code{nsave} posterior samples of the transformation
 evaluated at the unique \code{y} values (only applies for 'bnp' transformations)
-\item \code{marg_like}: the marginal likelihood (if requested; otherwise NULL)
+\item \code{marg.like}: the marginal likelihood (if requested; otherwise NULL)
 }
 }
 \description{

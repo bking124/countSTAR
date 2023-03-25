@@ -12,7 +12,7 @@ genMCMC_star(
   y_max = Inf,
   nsave = 5000,
   nburn = 5000,
-  nskip = 2,
+  nskip = 0,
   save_y_hat = FALSE,
   verbose = TRUE
 )
@@ -58,19 +58,36 @@ the expected counts, E(y), which may be slow to compute}
 \item{verbose}{logical; if TRUE, print time remaining}
 }
 \value{
-a list with the following elements:
+a list with at least the following elements:
 \itemize{
-\item \code{coefficients}: the posterior mean of the coefficients
-\item \code{fitted.values}: the posterior mean of the conditional expectation of the counts \code{y}
-\item \code{post.coefficients}: posterior draws of the coefficients
-\item \code{post.fitted.values}: posterior draws of the conditional mean of the counts \code{y}
 \item \code{post.pred}: draws from the posterior predictive distribution of \code{y}
-\item \code{post.lambda}: draws from the posterior distribution of \code{lambda}
 \item \code{post.sigma}: draws from the posterior distribution of \code{sigma}
 \item \code{post.log.like.point}: draws of the log-likelihood for each of the \code{n} observations
 \item \code{WAIC}: Widely-Applicable/Watanabe-Akaike Information Criterion
 \item \code{p_waic}: Effective number of parameters based on WAIC
+\item \code{post.lambda}: draws from the posterior distribution of \code{lambda}
+(NULL unless \code{transformation='box-cox'})
+\item \code{fitted.values}: the posterior mean of the conditional expectation of the counts \code{y}
+(\code{NULL} if \code{save_y_hat=FALSE})
+\item \code{post.fitted.values}: posterior draws of the conditional mean of the counts \code{y}
+(\code{NULL} if \code{save_y_hat=FALSE})
 }
+If the coefficients list from \code{init_params} and \code{sample_params} contains a named element \code{beta},
+e.g. for linear regression, then the function output contains
+\itemize{
+\item \code{coefficients}: the posterior mean of the beta coefficients
+\item \code{post.beta}: draws from the posterior distribution of \code{beta}
+\item \code{post.othercoefs}: draws from the posterior distribution of any other sampled coefficients, e.g. variance terms
+}
+
+If no \code{beta} exists in the parameter coefficients, then the output list just contains
+\itemize{
+\item \code{coefficients}: the posterior mean of all coefficients
+\item \code{post.beta}: draws from the posterior distribution of all coefficients
+}
+
+Additionally, if \code{init_params} and \code{sample_params} have output \code{mu_test}, then the sampler will output
+\code{post.predtest}, which contains draws from the posterior predictive distribution at test points.
 }
 \description{
 Run the MCMC algorithm for STAR given
@@ -109,9 +126,9 @@ sim_dat = simulate_nb_lm(n = 100, p = 5)
 y = sim_dat$y; X = sim_dat$X
 
 # STAR: log-transformation:
-fit_log = star_MCMC(y = y,
-                         sample_params = function(y, params) sample_params_lm(y, X, params),
-                         init_params = function(y) init_params_lm(y, X),
+fit_log = genMCMC_star(y = y,
+                         sample_params = function(y, params) rSTAR:::sample_lm_gprior(y, X, params),
+                         init_params = function(y) rSTAR:::init_lm_gprior(y, X),
                          transformation = 'log')
 # Posterior mean of each coefficient:
 coef(fit_log)
@@ -124,26 +141,6 @@ plot(as.ts(fit_log$post.coefficients[,1:3]))
 
 # Posterior predictive check:
 hist(apply(fit_log$post.pred, 1,
-           function(x) mean(x==0)), main = 'Proportion of Zeros', xlab='');
-abline(v = mean(y==0), lwd=4, col ='blue')
-
-# STAR: nonparametric transformation
-fit = star_MCMC(y = y,
-                sample_params = function(y, params) sample_params_lm(y, X, params),
-                init_params = function(y) init_params_lm(y, X),
-                transformation = 'np')
-
-# Posterior mean of each coefficient:
-coef(fit)
-
-# WAIC:
-fit$WAIC
-
-# MCMC diagnostics:
-plot(as.ts(fit$post.coefficients[,1:3]))
-
-# Posterior predictive check:
-hist(apply(fit$post.pred, 1,
            function(x) mean(x==0)), main = 'Proportion of Zeros', xlab='');
 abline(v = mean(y==0), lwd=4, col ='blue')
 

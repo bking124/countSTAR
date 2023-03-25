@@ -111,7 +111,7 @@ sim_dat = simulate_nb_friedman(n = 100, p = 10)
 y = sim_dat$y; X = sim_dat$X
 
 # BART-STAR with unknown I-spline transformation
-fit = bart_star_MCMC_ispline(y = y, X = X)
+fit = bart_star_ispline(y = y, X = X)
 
 # Fitted values
 plot_fitted(y = sim_dat$Ey,

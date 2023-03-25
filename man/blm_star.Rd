@@ -7,7 +7,7 @@
 blm_star(
   y,
   X,
-  X_test = X,
+  X_test = NULL,
   transformation = "np",
   y_max = Inf,
   prior = "gprior",
@@ -22,9 +22,97 @@ blm_star(
   compute_marg = FALSE
 )
 }
+\arguments{
+\item{y}{\code{n x 1} vector of observed counts}
+
+\item{X}{\code{n x p} matrix of predictors}
+
+\item{X_test}{\code{n0 x p} matrix of predictors for test data}
+
+\item{transformation}{transformation to use for the latent process; must be one of
+\itemize{
+\item "identity" (identity transformation)
+\item "log" (log transformation)
+\item "sqrt" (square root transformation)
+\item "np" (nonparametric transformation estimated from empirical CDF)
+\item "pois" (transformation for moment-matched marginal Poisson CDF)
+\item "neg-bin" (transformation for moment-matched marginal Negative Binomial CDF)
+\item "box-cox" (box-cox transformation with learned parameter)
+\item "ispline" (transformation is modeled as unknown, monotone function
+using I-splines)
+\item "bnp" (Bayesian nonparametric transformation using the Bayesian bootstrap)
+}}
+
+\item{y_max}{a fixed and known upper bound for all observations; default is \code{Inf}}
+
+\item{prior}{prior to use for the latent linear regression; currently implemented options
+are "gprior", "horseshoe", and "ridge". Not all modeling options and transformations are
+available with the latter two priors.}
+
+\item{use_MCMC}{= TRUE,}
+
+\item{nsave}{number of MCMC iterations to save (or MC samples to draw if use_MCMC=FALSE)}
+
+\item{nburn}{number of MCMC iterations to discard}
+
+\item{nskip}{number of MCMC iterations to skip between saving iterations,
+i.e., save every (nskip + 1)th draw}
+
+\item{method_sigma}{method to estimate the latent data standard deviation in exact sampler;
+must be one of
+\itemize{
+\item "mle" use the MLE from the STAR EM algorithm
+\item "mmle" use the marginal MLE (Note: slower!)
+}}
+
+\item{approx_Fz}{logical; in BNP transformation, apply a (fast and stable)
+normal approximation for the marginal CDF of the latent data}
+
+\item{approx_Fy}{logical; in BNP transformation, approximate
+the marginal CDF of \code{y} using the empirical CDF}
+
+\item{psi}{prior variance (g-prior)}
+
+\item{compute_marg}{logical; if TRUE, compute and return the
+marginal likelihood (only available when using exact sampler, i.e. use_MCMC=FALSE)}
+}
 \value{
 a list with the following elements:
 }
 \description{
 STAR Bayesian Linear Regression
+}
+\details{
+STAR defines a count-valued probability model by
+(1) specifying a Gaussian model for continuous *latent* data and
+(2) connecting the latent data to the observed data via a
+*transformation and rounding* operation. Here, the continuous
+latent data model is a linear regression.
+
+There are several options for the transformation. First, the transformation
+can belong to the *Box-Cox* family, which includes the known transformations
+'identity', 'log', and 'sqrt', as well as a version in which the Box-Cox parameter
+is inferred within the MCMC sampler ('box-cox'). Second, the transformation
+can be estimated (before model fitting) using the empirical distribution of the
+data \code{y}. Options in this case include the empirical cumulative
+distribution function (CDF), which is fully nonparametric ('np'), or the parametric
+alternatives based on Poisson ('pois') or Negative-Binomial ('neg-bin')
+distributions. For the parametric distributions, the parameters of the distribution
+are estimated using moments (means and variances) of \code{y}. The distribution-based
+transformations approximately preserve the mean and variance of the count data \code{y}
+on the latent data scale, which lends interpretability to the model parameters.
+Lastly, the transformation can be modeled using the Bayesian bootstrap ('bnp'),
+which is a Bayesian nonparametric model and incorporates the uncertainty
+about the transformation into posterior and predictive inference.
+
+The Monte Carlo sampler (\code{use_MCMC=FALSE}) produces direct, discrete, and joint draws
+from the posterior distribution and the posterior predictive distribution
+of the linear regression model with a g-prior.
+}
+\note{
+The 'bnp' transformation (without the \code{Fy} approximation) is
+slower than the other transformations because of the way
+the \code{TruncatedNormal} sampler must be updated as the lower and upper
+limits change (due to the sampling of \code{g}). Thus, computational
+improvements are likely available.
 }
