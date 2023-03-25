@@ -127,6 +127,7 @@ times the Gaussian MLE standard deviation; default is 10</p></dd>
 <p>an object of <code>class</code> "lmstar", which is a list with the following elements:</p><ul><li><p><code>coefficients</code> the MLEs of the coefficients</p></li>
 <li><p><code>fitted.values</code> the fitted values at the MLEs</p></li>
 <li><p><code>g.hat</code> a function containing the (known or estimated) transformation</p></li>
+<li><p><code>ginv.hat</code> a function containing the inverse of the transformation</p></li>
 <li><p><code>sigma.hat</code> the MLE of the standard deviation</p></li>
 <li><p><code>mu.hat</code> the MLE of the conditional mean (on the transformed scale)</p></li>
 <li><p><code>z.hat</code> the estimated latent data (on the transformed scale) at the MLEs</p></li>
@@ -168,7 +169,7 @@ Semiparametric count data regression for self‐reported mental health.
 <span class="r-in"><span><span class="co"># Fitted coefficients:</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit_em</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> (Intercept)          X1          X2 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  0.01416009  0.40923444 -0.11967267 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  0.06907972  0.46567169  0.18433657 </span>
 <span class="r-in"><span><span class="co"># Fitted values:</span></span></span>
 <span class="r-in"><span><span class="va">y_hat</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/fitted.values.html" class="external-link">fitted</a></span><span class="op">(</span><span class="va">fit_em</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">y_hat</span>, <span class="va">y</span><span class="op">)</span>;</span></span>

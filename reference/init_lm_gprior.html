@@ -54,7 +54,7 @@ g-prior for the coefficients.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">init_lm_gprior</span><span class="op">(</span><span class="va">y</span>, <span class="va">X</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">init_lm_gprior</span><span class="op">(</span><span class="va">y</span>, <span class="va">X</span>, X_test <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -66,15 +66,21 @@ g-prior for the coefficients.</p>
 <dt>X</dt>
 <dd><p><code>n x p</code> matrix of predictors</p></dd>
 
+
+<dt>X_test</dt>
+<dd><p><code>n0 x p</code> matrix of predictors at test points (default is NULL)</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     
 
-<p>a named list <code>params</code> containing</p><ol><li><p><code>mu</code>: vector of conditional means (fitted values)</p></li>
+<p>a named list <code>params</code> containing at least</p><ol><li><p><code>mu</code>: vector of conditional means (fitted values)</p></li>
 <li><p><code>sigma</code>: the conditional standard deviation</p></li>
 <li><p><code>coefficients</code>: a named list of parameters that determine <code>mu</code></p></li>
-</ol></div>
+</ol><p>Additionally, if X_test is not NULL, then the list includes an element
+<code>mu_test</code>, the vector of conditional means at the test points</p>
+    </div>
     <div class="section level2">
     <h2 id="note">Note<a class="anchor" aria-label="anchor" href="#note"></a></h2>
     <p>The parameters in <code>coefficients</code> are:</p><ul><li><p><code>beta</code>: the <code>p x 1</code> vector of regression coefficients

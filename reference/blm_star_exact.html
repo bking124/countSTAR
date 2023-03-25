@@ -80,8 +80,7 @@ distributions of a STAR linear regression model with a g-prior.</p>
 
 
 <dt>X_test</dt>
-<dd><p><code>n0 x p</code> matrix of predictors for test data;
-default is the observed covariates <code>X</code></p></dd>
+<dd><p><code>n0 x p</code> matrix of predictors for test data</p></dd>
 
 
 <dt>transformation</dt>
@@ -133,13 +132,16 @@ marginal likelihood</p></dd>
     
 
 <p>a list with the following elements:</p><ul><li><p><code>coefficients</code> the posterior mean of the regression coefficients</p></li>
-<li><p><code>post_beta</code>: <code>nsave x p</code> samples from the posterior distribution
+<li><p><code>post.beta</code>: <code>nsave x p</code> samples from the posterior distribution
 of the regression coefficients</p></li>
-<li><p><code>post_ytilde</code>: <code>nsave x n0</code> samples
-from the posterior predictive distribution at test points <code>X_test</code></p></li>
-<li><p><code>post_g</code>: <code>nsave</code> posterior samples of the transformation
+<li><p><code>post.pred</code>: draws from the posterior predictive distribution of <code>y</code></p></li>
+<li><p><code>post.pred.test</code>: <code>nsave x n0</code> samples
+from the posterior predictive distribution at test points <code>X_test</code>
+(if given, otherwise NULL)</p></li>
+<li><p><code>sigma</code>: The estimated latent data standard deviation</p></li>
+<li><p><code>post.g</code>: <code>nsave</code> posterior samples of the transformation
 evaluated at the unique <code>y</code> values (only applies for 'bnp' transformations)</p></li>
-<li><p><code>marg_like</code>: the marginal likelihood (if requested; otherwise NULL)</p></li>
+<li><p><code>marg.like</code>: the marginal likelihood (if requested; otherwise NULL)</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

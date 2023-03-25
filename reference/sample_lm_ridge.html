@@ -57,7 +57,7 @@ ridge prior for the (non-intercept) coefficients. The number of predictors
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">sample_lm_ridge</span><span class="op">(</span><span class="va">y</span>, <span class="va">X</span>, <span class="va">params</span>, A <span class="op">=</span> <span class="fl">10</span><span class="op">^</span><span class="fl">4</span>, XtX <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">sample_lm_ridge</span><span class="op">(</span><span class="va">y</span>, <span class="va">X</span>, <span class="va">params</span>, A <span class="op">=</span> <span class="fl">10</span><span class="op">^</span><span class="fl">4</span>, XtX <span class="op">=</span> <span class="cn">NULL</span>, X_test <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -85,13 +85,17 @@ ridge prior for the (non-intercept) coefficients. The number of predictors
 <dd><p>the <code>p x p</code> matrix of <code>crossprod(X)</code> (one-time cost);
 if NULL, compute within the function</p></dd>
 
+
+<dt>X_test</dt>
+<dd><p>matrix of predictors at test points (default is NULL)</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     
 
 <p>The updated named list <code>params</code> with draws from the full conditional distributions
-of <code>sigma</code> and <code>coefficients</code> (and updated <code>mu</code>).</p>
+of <code>sigma</code> and <code>coefficients</code> (along with updated <code>mu</code> and <code>mu_test</code> if applicable).</p>
     </div>
     <div class="section level2">
     <h2 id="note">Note<a class="anchor" aria-label="anchor" href="#note"></a></h2>
