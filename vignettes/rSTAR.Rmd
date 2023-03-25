@@ -46,6 +46,14 @@ z^*(x) = \mu_\theta(x) + \epsilon(x), \quad \epsilon(x) \stackrel{iid}{\sim}N(0,
 $$
 where $\mu_\theta(x)$ is the conditional expectation of the transformed latent data with unknown parameters $\theta$. Examples include linear, additive, and tree-based regression models. 
 
+### The Rounding Operator
+The rounding operator $h$ is a many-to-one function that sets $y = j$ whenever $y^*\in \mathcal{A}_j$ or equivalently when $z^*=g(y^*) \in g(\mathcal{A}_j)$ .  It could take many different forms, but generally the floor function, i.e  where $\mathcal{A}_j := [j, j+1)$ works well as a default, with the modification $g(\mathcal{A}_0) := (-\infty, 0)$ so that $y = 0$ whenever $z^* < 0$. This latter modification ensures that much of the latent space is mapped to zero, and therefore STAR models can easily account for zero-inflation. Furthermore, when there is a known upper bound $K$ for the data, there is an additional change to incorporate this structure, namely we let $g(\mathcal{A}_K) := [g(a_K), \infty)$. 
+
+The rounding operator and its inverse are implemented in `rSTAR` with the functions `a_j()` and `round_fun()`, although these rarely need to be employed by the end user. Instead, the only thing that might need to be specified by the user would be whether an upper bound for the data exists, in which case there is a simple option of setting `y_max` in each of the modeling functions that will then be passed to the rounding function. 
+
+### The Transformation Function
+
+
 ## Integer-Valued Data: The Roaches Dataset
 As an example of complex count-valued data, consider the `roaches` data from @Gelman_Hill_2006.
 The response variable, $y_i$, is the number of roaches caught in traps in apartment $i$, with $i=1,\ldots, n = 262$. 
@@ -142,23 +150,17 @@ P-values for all individual coefficients as well as the p-value for *any* effect
 print(pvals(fit_em))
 ```
 
-Finally, we can get predictions at new data points (or the training data) using `predict`, which actually outputs samples from the (plug-in) predictive distribution at the MLEs. This output can then be used to create prediction intervals if desired, or alternatively the samples can be compared with the empirical PMF of $y$ using `plot_pmf`.
+Finally, we can get predictions at new data points (or the training data) using `predict`, which actually outputs samples from the . Optionally, prediction intervals can be estimated using the (plug-in) predictive distribution at the MLEs (see ```?predict.lmstar``` for details). Note that "plug-in" predictive distribution is a crude approximation, and better approaches for uncertainty quantification are available using the Bayesian models.
 ```{r predict-lm}
 #Compute the predictive draws (just using observed points here)
 y_pred = predict(fit_em)
-
-# Using these draws, compute prediction intervals for STAR
-PI_y = t(apply(y_pred, 2, quantile, c(0.05, 1 - 0.05)))
-
-# Plot empirical PMf of y vs PMF from predictive draws
-plot_pmf(y, y_pred)
 ```
 
 ### Machine Learning Models
 In addition to the linear model, `rSTAR` also has implementations for STAR models paired with more flexible regression methods, in particular random forests and generalized boosted machines.  
 
 ### A Generic EM Algorithm
-The EM algorithm updates the parameters until convergence to the maximum likelihood estimators (MLEs), and is implemented in `star_EM`:
+The EM algorithm updates the parameters until convergence to the maximum likelihood estimators (MLEs), and is implemented in `genEM_star()`:
 
 ## Bayesian inference for STAR models
 

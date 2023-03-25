@@ -52,4 +52,4 @@ STAR methods with custom latent regression models using the
 `genEM_star()` and `genMCMC_star()` functions.
 
 Please submit any issues or feature requests to
-<https://github.com/bking124/rSTAR>.
+<https://github.com/bking124/rSTAR/issues>.

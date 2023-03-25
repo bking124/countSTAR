@@ -34,5 +34,5 @@ Analysis Type | Method (`function`) | Dependent Package
  
  In addition to these ready to use functions, users can also implement STAR methods with custom latent regression models using the `genEM_star()` and `genMCMC_star()` functions.
 
-Please submit any issues or feature requests to https://github.com/bking124/rSTAR.
+Please submit any issues or feature requests to https://github.com/bking124/rSTAR/issues.
 
