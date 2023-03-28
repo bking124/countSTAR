@@ -17,7 +17,7 @@ using namespace Rcpp;
 //'
 //' @note This function uses \code{Rcpp} for computational efficiency.
 //'
-//' @useDynLib rSTAR
+//' @useDynLib countSTAR
 //' @import Rcpp
 //' @keywords internal
 // [[Rcpp::export]]
@@ -58,7 +58,7 @@ arma::vec expectation_gRcpp(arma::vec g_a_j, arma::vec g_a_jp1,
 //'
 //' @note This function uses \code{Rcpp} for computational efficiency.
 //'
-//' @useDynLib rSTAR
+//' @useDynLib countSTAR
 //' @import Rcpp
 //' @keywords internal
 // [[Rcpp::export]]
@@ -103,7 +103,7 @@ arma::mat interval_gRcpp(arma::vec g_a_j, arma::vec g_a_jp1,
 //'
 //' @note This function uses \code{Rcpp} for computational efficiency.
 //'
-//' @useDynLib rSTAR
+//' @useDynLib countSTAR
 //' @import Rcpp
 //' @keywords internal
 // [[Rcpp::export]]
@@ -151,7 +151,7 @@ arma::vec rtruncnormRcpp(arma::vec y_lower, arma::vec y_upper,
 //'
 //' @note This function uses \code{Rcpp} for computational efficiency.
 //'
-//' @useDynLib rSTAR
+//' @useDynLib countSTAR
 //' @import Rcpp
 //' @keywords internal
 // [[Rcpp::export]]
@@ -184,7 +184,7 @@ double logLikeRcpp(arma::vec g_a_j, arma::vec g_a_jp1,
 //'
 //' @note This function uses \code{Rcpp} for computational efficiency.
 //'
-//' @useDynLib rSTAR
+//' @useDynLib countSTAR
 //' @import Rcpp
 //' @keywords internal
 // [[Rcpp::export]]
@@ -218,7 +218,7 @@ arma::vec logLikePointRcpp(arma::vec g_a_j, arma::vec g_a_jp1,
 //'
 //' @note This function uses \code{Rcpp} for computational efficiency.
 //'
-//' @useDynLib rSTAR
+//' @useDynLib countSTAR
 //' @import Rcpp
 //' @keywords internal
 // [[Rcpp::export]]
@@ -253,7 +253,7 @@ arma::vec expectation2_gRcpp(arma::vec g_a_j, arma::vec g_a_jp1,
 //'
 //' @note This function uses \code{Rcpp} for computational efficiency.
 //'
-//' @useDynLib rSTAR
+//' @useDynLib countSTAR
 //' @import Rcpp
 //' @keywords internal
 // [[Rcpp::export]]
@@ -286,7 +286,7 @@ arma::mat pmaxRcpp(arma::vec v1, arma::vec v2){
 //'
 //' @note This function uses \code{Rcpp} for computational efficiency.
 //'
-//' @useDynLib rSTAR
+//' @useDynLib countSTAR
 //' @import Rcpp
 //' @keywords internal
 // [[Rcpp::export]]
@@ -327,7 +327,7 @@ arma::mat pminRcpp(arma::vec v1, arma::vec v2){
 //'
 //' @note This function uses \code{Rcpp} for computational efficiency.
 //'
-//' @useDynLib rSTAR
+//' @useDynLib countSTAR
 //' @import Rcpp
 //' @keywords internal
 // [[Rcpp::export]]
@@ -371,7 +371,7 @@ arma::mat expectation_identity(arma::vec a, arma::mat Jmax,
 //'
 //' @note This function uses \code{Rcpp} for computational efficiency.
 //'
-//' @useDynLib rSTAR
+//' @useDynLib countSTAR
 //' @import Rcpp
 //' @keywords internal
 // [[Rcpp::export]]
@@ -415,7 +415,7 @@ arma::mat expectation_log(arma::vec a, arma::mat Jmax,
 //'
 //' @note This function uses \code{Rcpp} for computational efficiency.
 //'
-//' @useDynLib rSTAR
+//' @useDynLib countSTAR
 //' @import Rcpp
 //' @keywords internal
 // [[Rcpp::export]]

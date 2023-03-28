@@ -13,7 +13,7 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 
 // expectation_gRcpp
 arma::vec expectation_gRcpp(arma::vec g_a_j, arma::vec g_a_jp1, arma::vec mu, arma::vec sigma, arma::vec Jmax);
-RcppExport SEXP _rSTAR_expectation_gRcpp(SEXP g_a_jSEXP, SEXP g_a_jp1SEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP JmaxSEXP) {
+RcppExport SEXP _countSTAR_expectation_gRcpp(SEXP g_a_jSEXP, SEXP g_a_jp1SEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP JmaxSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -28,7 +28,7 @@ END_RCPP
 }
 // interval_gRcpp
 arma::mat interval_gRcpp(arma::vec g_a_j, arma::vec g_a_jp1, arma::vec L_mu, arma::vec U_mu, arma::vec sigma, arma::vec Jmax);
-RcppExport SEXP _rSTAR_interval_gRcpp(SEXP g_a_jSEXP, SEXP g_a_jp1SEXP, SEXP L_muSEXP, SEXP U_muSEXP, SEXP sigmaSEXP, SEXP JmaxSEXP) {
+RcppExport SEXP _countSTAR_interval_gRcpp(SEXP g_a_jSEXP, SEXP g_a_jp1SEXP, SEXP L_muSEXP, SEXP U_muSEXP, SEXP sigmaSEXP, SEXP JmaxSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -44,7 +44,7 @@ END_RCPP
 }
 // rtruncnormRcpp
 arma::vec rtruncnormRcpp(arma::vec y_lower, arma::vec y_upper, arma::vec mu, arma::vec sigma, arma::vec u_rand);
-RcppExport SEXP _rSTAR_rtruncnormRcpp(SEXP y_lowerSEXP, SEXP y_upperSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP u_randSEXP) {
+RcppExport SEXP _countSTAR_rtruncnormRcpp(SEXP y_lowerSEXP, SEXP y_upperSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP u_randSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -59,7 +59,7 @@ END_RCPP
 }
 // logLikeRcpp
 double logLikeRcpp(arma::vec g_a_j, arma::vec g_a_jp1, arma::vec mu, arma::vec sigma);
-RcppExport SEXP _rSTAR_logLikeRcpp(SEXP g_a_jSEXP, SEXP g_a_jp1SEXP, SEXP muSEXP, SEXP sigmaSEXP) {
+RcppExport SEXP _countSTAR_logLikeRcpp(SEXP g_a_jSEXP, SEXP g_a_jp1SEXP, SEXP muSEXP, SEXP sigmaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -73,7 +73,7 @@ END_RCPP
 }
 // logLikePointRcpp
 arma::vec logLikePointRcpp(arma::vec g_a_j, arma::vec g_a_jp1, arma::vec mu, arma::vec sigma);
-RcppExport SEXP _rSTAR_logLikePointRcpp(SEXP g_a_jSEXP, SEXP g_a_jp1SEXP, SEXP muSEXP, SEXP sigmaSEXP) {
+RcppExport SEXP _countSTAR_logLikePointRcpp(SEXP g_a_jSEXP, SEXP g_a_jp1SEXP, SEXP muSEXP, SEXP sigmaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -87,7 +87,7 @@ END_RCPP
 }
 // expectation2_gRcpp
 arma::vec expectation2_gRcpp(arma::vec g_a_j, arma::vec g_a_jp1, arma::vec mu, arma::vec sigma, arma::vec Jmax);
-RcppExport SEXP _rSTAR_expectation2_gRcpp(SEXP g_a_jSEXP, SEXP g_a_jp1SEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP JmaxSEXP) {
+RcppExport SEXP _countSTAR_expectation2_gRcpp(SEXP g_a_jSEXP, SEXP g_a_jp1SEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP JmaxSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -102,7 +102,7 @@ END_RCPP
 }
 // pmaxRcpp
 arma::mat pmaxRcpp(arma::vec v1, arma::vec v2);
-RcppExport SEXP _rSTAR_pmaxRcpp(SEXP v1SEXP, SEXP v2SEXP) {
+RcppExport SEXP _countSTAR_pmaxRcpp(SEXP v1SEXP, SEXP v2SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -114,7 +114,7 @@ END_RCPP
 }
 // pminRcpp
 arma::mat pminRcpp(arma::vec v1, arma::vec v2);
-RcppExport SEXP _rSTAR_pminRcpp(SEXP v1SEXP, SEXP v2SEXP) {
+RcppExport SEXP _countSTAR_pminRcpp(SEXP v1SEXP, SEXP v2SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -126,7 +126,7 @@ END_RCPP
 }
 // expectation_identity
 arma::mat expectation_identity(arma::vec a, arma::mat Jmax, arma::mat Mu, arma::vec sigma_t, arma::mat Offset);
-RcppExport SEXP _rSTAR_expectation_identity(SEXP aSEXP, SEXP JmaxSEXP, SEXP MuSEXP, SEXP sigma_tSEXP, SEXP OffsetSEXP) {
+RcppExport SEXP _countSTAR_expectation_identity(SEXP aSEXP, SEXP JmaxSEXP, SEXP MuSEXP, SEXP sigma_tSEXP, SEXP OffsetSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -141,7 +141,7 @@ END_RCPP
 }
 // expectation_log
 arma::mat expectation_log(arma::vec a, arma::mat Jmax, arma::mat Mu, arma::vec sigma_t, arma::mat Offset);
-RcppExport SEXP _rSTAR_expectation_log(SEXP aSEXP, SEXP JmaxSEXP, SEXP MuSEXP, SEXP sigma_tSEXP, SEXP OffsetSEXP) {
+RcppExport SEXP _countSTAR_expectation_log(SEXP aSEXP, SEXP JmaxSEXP, SEXP MuSEXP, SEXP sigma_tSEXP, SEXP OffsetSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -156,7 +156,7 @@ END_RCPP
 }
 // expectation_sqrt
 arma::mat expectation_sqrt(arma::vec a, arma::mat Jmax, arma::mat Mu, arma::vec sigma_t, arma::mat Offset);
-RcppExport SEXP _rSTAR_expectation_sqrt(SEXP aSEXP, SEXP JmaxSEXP, SEXP MuSEXP, SEXP sigma_tSEXP, SEXP OffsetSEXP) {
+RcppExport SEXP _countSTAR_expectation_sqrt(SEXP aSEXP, SEXP JmaxSEXP, SEXP MuSEXP, SEXP sigma_tSEXP, SEXP OffsetSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -171,21 +171,21 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_rSTAR_expectation_gRcpp", (DL_FUNC) &_rSTAR_expectation_gRcpp, 5},
-    {"_rSTAR_interval_gRcpp", (DL_FUNC) &_rSTAR_interval_gRcpp, 6},
-    {"_rSTAR_rtruncnormRcpp", (DL_FUNC) &_rSTAR_rtruncnormRcpp, 5},
-    {"_rSTAR_logLikeRcpp", (DL_FUNC) &_rSTAR_logLikeRcpp, 4},
-    {"_rSTAR_logLikePointRcpp", (DL_FUNC) &_rSTAR_logLikePointRcpp, 4},
-    {"_rSTAR_expectation2_gRcpp", (DL_FUNC) &_rSTAR_expectation2_gRcpp, 5},
-    {"_rSTAR_pmaxRcpp", (DL_FUNC) &_rSTAR_pmaxRcpp, 2},
-    {"_rSTAR_pminRcpp", (DL_FUNC) &_rSTAR_pminRcpp, 2},
-    {"_rSTAR_expectation_identity", (DL_FUNC) &_rSTAR_expectation_identity, 5},
-    {"_rSTAR_expectation_log", (DL_FUNC) &_rSTAR_expectation_log, 5},
-    {"_rSTAR_expectation_sqrt", (DL_FUNC) &_rSTAR_expectation_sqrt, 5},
+    {"_countSTAR_expectation_gRcpp", (DL_FUNC) &_countSTAR_expectation_gRcpp, 5},
+    {"_countSTAR_interval_gRcpp", (DL_FUNC) &_countSTAR_interval_gRcpp, 6},
+    {"_countSTAR_rtruncnormRcpp", (DL_FUNC) &_countSTAR_rtruncnormRcpp, 5},
+    {"_countSTAR_logLikeRcpp", (DL_FUNC) &_countSTAR_logLikeRcpp, 4},
+    {"_countSTAR_logLikePointRcpp", (DL_FUNC) &_countSTAR_logLikePointRcpp, 4},
+    {"_countSTAR_expectation2_gRcpp", (DL_FUNC) &_countSTAR_expectation2_gRcpp, 5},
+    {"_countSTAR_pmaxRcpp", (DL_FUNC) &_countSTAR_pmaxRcpp, 2},
+    {"_countSTAR_pminRcpp", (DL_FUNC) &_countSTAR_pminRcpp, 2},
+    {"_countSTAR_expectation_identity", (DL_FUNC) &_countSTAR_expectation_identity, 5},
+    {"_countSTAR_expectation_log", (DL_FUNC) &_countSTAR_expectation_log, 5},
+    {"_countSTAR_expectation_sqrt", (DL_FUNC) &_countSTAR_expectation_sqrt, 5},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_rSTAR(DllInfo *dll) {
+RcppExport void R_init_countSTAR(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }

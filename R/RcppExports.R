@@ -16,11 +16,11 @@
 #'
 #' @note This function uses \code{Rcpp} for computational efficiency.
 #'
-#' @useDynLib rSTAR
+#' @useDynLib countSTAR
 #' @import Rcpp
 #' @keywords internal
 expectation_gRcpp <- function(g_a_j, g_a_jp1, mu, sigma, Jmax) {
-    .Call('_rSTAR_expectation_gRcpp', PACKAGE = 'rSTAR', g_a_j, g_a_jp1, mu, sigma, Jmax)
+    .Call('_countSTAR_expectation_gRcpp', PACKAGE = 'countSTAR', g_a_j, g_a_jp1, mu, sigma, Jmax)
 }
 
 #' Estimate confidence intervals/bands for a STAR process
@@ -39,11 +39,11 @@ expectation_gRcpp <- function(g_a_j, g_a_jp1, mu, sigma, Jmax) {
 #'
 #' @note This function uses \code{Rcpp} for computational efficiency.
 #'
-#' @useDynLib rSTAR
+#' @useDynLib countSTAR
 #' @import Rcpp
 #' @keywords internal
 interval_gRcpp <- function(g_a_j, g_a_jp1, L_mu, U_mu, sigma, Jmax) {
-    .Call('_rSTAR_interval_gRcpp', PACKAGE = 'rSTAR', g_a_j, g_a_jp1, L_mu, U_mu, sigma, Jmax)
+    .Call('_countSTAR_interval_gRcpp', PACKAGE = 'countSTAR', g_a_j, g_a_jp1, L_mu, U_mu, sigma, Jmax)
 }
 
 #' Sample from a truncated normal distribution
@@ -63,11 +63,11 @@ interval_gRcpp <- function(g_a_j, g_a_jp1, L_mu, U_mu, sigma, Jmax) {
 #'
 #' @note This function uses \code{Rcpp} for computational efficiency.
 #'
-#' @useDynLib rSTAR
+#' @useDynLib countSTAR
 #' @import Rcpp
 #' @keywords internal
 rtruncnormRcpp <- function(y_lower, y_upper, mu, sigma, u_rand) {
-    .Call('_rSTAR_rtruncnormRcpp', PACKAGE = 'rSTAR', y_lower, y_upper, mu, sigma, u_rand)
+    .Call('_countSTAR_rtruncnormRcpp', PACKAGE = 'countSTAR', y_lower, y_upper, mu, sigma, u_rand)
 }
 
 #' Compute the log-likelihood for STAR
@@ -84,11 +84,11 @@ rtruncnormRcpp <- function(y_lower, y_upper, mu, sigma, u_rand) {
 #'
 #' @note This function uses \code{Rcpp} for computational efficiency.
 #'
-#' @useDynLib rSTAR
+#' @useDynLib countSTAR
 #' @import Rcpp
 #' @keywords internal
 logLikeRcpp <- function(g_a_j, g_a_jp1, mu, sigma) {
-    .Call('_rSTAR_logLikeRcpp', PACKAGE = 'rSTAR', g_a_j, g_a_jp1, mu, sigma)
+    .Call('_countSTAR_logLikeRcpp', PACKAGE = 'countSTAR', g_a_j, g_a_jp1, mu, sigma)
 }
 
 #' Compute the pointwise log-likelihood for STAR
@@ -105,11 +105,11 @@ logLikeRcpp <- function(g_a_j, g_a_jp1, mu, sigma) {
 #'
 #' @note This function uses \code{Rcpp} for computational efficiency.
 #'
-#' @useDynLib rSTAR
+#' @useDynLib countSTAR
 #' @import Rcpp
 #' @keywords internal
 logLikePointRcpp <- function(g_a_j, g_a_jp1, mu, sigma) {
-    .Call('_rSTAR_logLikePointRcpp', PACKAGE = 'rSTAR', g_a_j, g_a_jp1, mu, sigma)
+    .Call('_countSTAR_logLikePointRcpp', PACKAGE = 'countSTAR', g_a_j, g_a_jp1, mu, sigma)
 }
 
 #' Compute E(Y^2) for a STAR process
@@ -127,11 +127,11 @@ logLikePointRcpp <- function(g_a_j, g_a_jp1, mu, sigma) {
 #'
 #' @note This function uses \code{Rcpp} for computational efficiency.
 #'
-#' @useDynLib rSTAR
+#' @useDynLib countSTAR
 #' @import Rcpp
 #' @keywords internal
 expectation2_gRcpp <- function(g_a_j, g_a_jp1, mu, sigma, Jmax) {
-    .Call('_rSTAR_expectation2_gRcpp', PACKAGE = 'rSTAR', g_a_j, g_a_jp1, mu, sigma, Jmax)
+    .Call('_countSTAR_expectation2_gRcpp', PACKAGE = 'countSTAR', g_a_j, g_a_jp1, mu, sigma, Jmax)
 }
 
 #' pmax() in Rcpp
@@ -144,11 +144,11 @@ expectation2_gRcpp <- function(g_a_j, g_a_jp1, mu, sigma, Jmax) {
 #'
 #' @note This function uses \code{Rcpp} for computational efficiency.
 #'
-#' @useDynLib rSTAR
+#' @useDynLib countSTAR
 #' @import Rcpp
 #' @keywords internal
 pmaxRcpp <- function(v1, v2) {
-    .Call('_rSTAR_pmaxRcpp', PACKAGE = 'rSTAR', v1, v2)
+    .Call('_countSTAR_pmaxRcpp', PACKAGE = 'countSTAR', v1, v2)
 }
 
 #' pmin() in Rcpp
@@ -161,11 +161,11 @@ pmaxRcpp <- function(v1, v2) {
 #'
 #' @note This function uses \code{Rcpp} for computational efficiency.
 #'
-#' @useDynLib rSTAR
+#' @useDynLib countSTAR
 #' @import Rcpp
 #' @keywords internal
 pminRcpp <- function(v1, v2) {
-    .Call('_rSTAR_pminRcpp', PACKAGE = 'rSTAR', v1, v2)
+    .Call('_countSTAR_pminRcpp', PACKAGE = 'countSTAR', v1, v2)
 }
 
 #' Estimate the mean for a STAR process
@@ -182,11 +182,11 @@ pminRcpp <- function(v1, v2) {
 #'
 #' @note This function uses \code{Rcpp} for computational efficiency.
 #'
-#' @useDynLib rSTAR
+#' @useDynLib countSTAR
 #' @import Rcpp
 #' @keywords internal
 expectation_identity <- function(a, Jmax, Mu, sigma_t, Offset) {
-    .Call('_rSTAR_expectation_identity', PACKAGE = 'rSTAR', a, Jmax, Mu, sigma_t, Offset)
+    .Call('_countSTAR_expectation_identity', PACKAGE = 'countSTAR', a, Jmax, Mu, sigma_t, Offset)
 }
 
 #' Estimate the mean for a STAR process
@@ -203,11 +203,11 @@ expectation_identity <- function(a, Jmax, Mu, sigma_t, Offset) {
 #'
 #' @note This function uses \code{Rcpp} for computational efficiency.
 #'
-#' @useDynLib rSTAR
+#' @useDynLib countSTAR
 #' @import Rcpp
 #' @keywords internal
 expectation_log <- function(a, Jmax, Mu, sigma_t, Offset) {
-    .Call('_rSTAR_expectation_log', PACKAGE = 'rSTAR', a, Jmax, Mu, sigma_t, Offset)
+    .Call('_countSTAR_expectation_log', PACKAGE = 'countSTAR', a, Jmax, Mu, sigma_t, Offset)
 }
 
 #' Estimate the mean for a STAR process
@@ -224,10 +224,10 @@ expectation_log <- function(a, Jmax, Mu, sigma_t, Offset) {
 #'
 #' @note This function uses \code{Rcpp} for computational efficiency.
 #'
-#' @useDynLib rSTAR
+#' @useDynLib countSTAR
 #' @import Rcpp
 #' @keywords internal
 expectation_sqrt <- function(a, Jmax, Mu, sigma_t, Offset) {
-    .Call('_rSTAR_expectation_sqrt', PACKAGE = 'rSTAR', a, Jmax, Mu, sigma_t, Offset)
+    .Call('_countSTAR_expectation_sqrt', PACKAGE = 'countSTAR', a, Jmax, Mu, sigma_t, Offset)
 }
 
