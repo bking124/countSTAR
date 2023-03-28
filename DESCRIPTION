@@ -1,4 +1,4 @@
-Package: rSTAR
+Package: countSTAR
 Type: Package
 Title: Modeling Integer-Valued Data  via Simultaneous Transformation and Rounding (STAR)
 Version: 1.0.0
