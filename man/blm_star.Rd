@@ -77,10 +77,23 @@ the marginal CDF of \code{y} using the empirical CDF}
 marginal likelihood (only available when using exact sampler, i.e. use_MCMC=FALSE)}
 }
 \value{
-a list with the following elements:
+a list with at least the following elements:
+\itemize{
+\item \code{coefficients}: the posterior mean of the regression coefficients
+\item \code{post.beta}: posterior draws of the regression coefficients
+\item \code{post.pred}: draws from the posterior predictive distribution of \code{y}
+\item \code{post.log.like.point}: draws of the log-likelihood for each of the \code{n} observations
+\item \code{WAIC}: Widely-Applicable/Watanabe-Akaike Information Criterion
+\item \code{p_waic}: Effective number of parameters based on WAIC
+}
+If test points are passed in, then the list will also have \code{post.predtest},
+which contains draws from the posterior predictive distribution at test points.
+
+Other elements may be present depending on the choice of prior, transformation,
+and sampling approach.
 }
 \description{
-STAR Bayesian Linear Regression
+Posterior inference for STAR linear model
 }
 \details{
 STAR defines a count-valued probability model by

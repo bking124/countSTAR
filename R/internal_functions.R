@@ -355,6 +355,11 @@ blm_star_exact = function(y, X, X_test = X,
   # Estimated coefficients:
   beta_hat = rowMeans(tcrossprod(psi/(1+psi)*XtXinvXt, post_z))
 
+  # Compute WAIC:
+  lppd = sum(log(colMeans(exp(post.log.like.point))))
+  p_waic = sum(apply(post.log.like.point, 2, function(x) sd(x)^2))
+  WAIC = -2*(lppd - p_waic)
+
   # # Alternative way to compute the predictive draws
   # ntilde = ncol(X_test)
   # XtildeXtXinv = X_test%*%XtXinv
@@ -373,6 +378,7 @@ blm_star_exact = function(y, X, X_test = X,
     post.pred = post_pred,
     post.predtest = post_predtest,
     post.log.like.point = post.log.like.point,
+    WAIC = WAIC, p_waic = p_waic,
     sigma = sigma_epsilon,
     post.g = post_g,
     marg.like = marg_like))
