@@ -24,7 +24,7 @@ License: GPL-2
 Encoding: UTF-8
 LazyData: true
 LinkingTo: Rcpp, RcppArmadillo
-Imports: coda, dbarts, FastGP, gbm, graphics, grDevices, gtools, Matrix, spikeSlabGAM, splines2, randomForest, Rcpp, RcppArmadillo, TruncatedNormal, truncdist
+Imports: coda, dbarts, FastGP, gbm, graphics, grDevices, gtools, Matrix, spikeSlabGAM, splines2, randomForest, Rcpp, RcppArmadillo, TruncatedNormal, truncdist, KFAS
 RoxygenNote: 7.2.3
 Suggests: 
     knitr,
