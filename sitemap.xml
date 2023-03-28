@@ -1,213 +1,219 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://bking124.github.io/rSTAR/404.html</loc>
+    <loc>https://bking124.github.io/countSTAR/404.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/articles/index.html</loc>
+    <loc>https://bking124.github.io/countSTAR/articles/countSTAR.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/articles/rSTAR.html</loc>
+    <loc>https://bking124.github.io/countSTAR/articles/index.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/authors.html</loc>
+    <loc>https://bking124.github.io/countSTAR/authors.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/index.html</loc>
+    <loc>https://bking124.github.io/countSTAR/index.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/BrentMethod.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/BrentMethod.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/a_j.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/a_j.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/bam_star.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/bam_star.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/bart_star.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/bart_star.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/bart_star_ispline.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/bart_star_ispline.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/blm_star.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/blm_star.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/blm_star_bnpgibbs.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/blm_star_bnpgibbs.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/blm_star_exact.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/blm_star_exact.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/computeTimeRemaining.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/computeTimeRemaining.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/confint.lmstar.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/confint.lmstar.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/credBands.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/credBands.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/ergMean.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/ergMean.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/expectation2_gRcpp.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/expectation2_gRcpp.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/expectation_gRcpp.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/expectation_gRcpp.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/expectation_identity.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/expectation_identity.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/expectation_log.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/expectation_log.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/expectation_sqrt.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/expectation_sqrt.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/g_bc.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/g_bc.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/g_bnp.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/g_bnp.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/g_cdf.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/g_cdf.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/g_inv_approx.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/g_inv_approx.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/g_inv_bc.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/g_inv_bc.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/gbm_star.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/gbm_star.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/genEM_star.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/genEM_star.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/genMCMC_star.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/genMCMC_star.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/genMCMC_star_ispline.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/genMCMC_star_ispline.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/getEffSize.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/getEffSize.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/index.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/index.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/init_bam_orthog.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/init_bam_orthog.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/init_bam_thin.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/init_bam_thin.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/init_lm_gprior.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/init_lm_gprior.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/init_lm_hs.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/init_lm_hs.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/init_lm_ridge.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/init_lm_ridge.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/init_params_mean.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/init_params_mean.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/interval_gRcpp.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/interval_gRcpp.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/invlogit.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/invlogit.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/lm_star.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/lm_star.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/logLikePointRcpp.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/logLikePointRcpp.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/logLikeRcpp.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/logLikeRcpp.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/logit.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/logit.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/plot_coef.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/plot_coef.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/plot_fitted.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/plot_fitted.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/plot_pmf.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/plot_pmf.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/pmaxRcpp.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/pmaxRcpp.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/pminRcpp.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/pminRcpp.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/predict.lmstar.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/predict.lmstar.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/pvals.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/pvals.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/randomForest_star.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/randomForest_star.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/round_floor.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/round_floor.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/rtruncnormRcpp.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/rtruncnormRcpp.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/sampleFastGaussian.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/sampleFastGaussian.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/sample_bam_orthog.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/sample_bam_orthog.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/sample_bam_thin.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/sample_bam_thin.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/sample_lm_gprior.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/sample_lm_gprior.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/sample_lm_hs.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/sample_lm_hs.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/sample_lm_ridge.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/sample_lm_ridge.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/sample_params_mean.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/sample_params_mean.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/simBaS.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/simBaS.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/simulate_nb_friedman.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/simulate_nb_friedman.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/simulate_nb_lm.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/simulate_nb_lm.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/splineBasis.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/splineBasis.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/spline_star.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/spline_star.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/spline_star_exact.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/spline_star_exact.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/truncnorm_mom.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/truncnorm_mom.html</loc>
   </url>
   <url>
-    <loc>https://bking124.github.io/rSTAR/reference/uni.slice.html</loc>
+    <loc>https://bking124.github.io/countSTAR/reference/uni.slice.html</loc>
+  </url>
+  <url>
+    <loc>https://bking124.github.io/countSTAR/reference/update_struct.html</loc>
+  </url>
+  <url>
+    <loc>https://bking124.github.io/countSTAR/reference/warpDLM.html</loc>
   </url>
 </urlset>

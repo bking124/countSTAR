@@ -2,9 +2,9 @@ pandoc: 2.19.2
 pkgdown: 2.0.7
 pkgdown_sha: ~
 articles:
-  rSTAR: rSTAR.html
-last_built: 2023-03-25T22:36Z
+  countSTAR: countSTAR.html
+last_built: 2023-03-28T21:31Z
 urls:
-  reference: https://bking124.github.io/rSTAR/reference
-  article: https://bking124.github.io/rSTAR/articles
+  reference: https://bking124.github.io/countSTAR/reference
+  article: https://bking124.github.io/countSTAR/articles
 
