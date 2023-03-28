@@ -31,5 +31,5 @@ Suggests:
     rmarkdown,
     rstanarm
 VignetteBuilder: knitr
-URL: https://bking124.github.io/rSTAR/
-     https://github.com/bking124/rSTAR
+URL: https://bking124.github.io/countSTAR/
+     https://github.com/bking124/countSTAR
