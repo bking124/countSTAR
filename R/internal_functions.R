@@ -436,6 +436,7 @@ blm_star_exact = function(y, X, X_test = X,
 #' about the transformation into posterior and predictive inference.
 #'
 #' @examples
+#' \dontrun{
 #' # Simulate some data:
 #' sim_dat = simulate_nb_lm(n = 500, p = 10)
 #' y = sim_dat$y; X = sim_dat$X
@@ -446,6 +447,7 @@ blm_star_exact = function(y, X, X_test = X,
 #'
 #' # Check the efficiency of the MCMC samples:
 #' getEffSize(fit$post_beta)
+#' }
 #'
 #' @keywords internal
 blm_star_bnpgibbs = function(y, X, X_test = X,
