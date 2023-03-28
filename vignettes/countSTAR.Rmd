@@ -1,9 +1,9 @@
 ---
-title: "Getting Started with rSTAR"
+title: "Getting Started with countSTAR"
 output: rmarkdown::html_vignette
 number_sections: true
 vignette: >
-  %\VignetteIndexEntry{Getting Started with rSTAR}
+  %\VignetteIndexEntry{Getting Started with countSTAR}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 
@@ -18,9 +18,9 @@ knitr::opts_chunk$set(
 )
 ```
 # Introduction
-The `rSTAR` package implements a variety of methods to analyze diverse integer-valued data, with a special focus on count-valued data. The package functionality is broadly split into three categories: Bayesian estimation of STAR models (@Kowal_Canale_STAR, @Kowal_Wu_Conjugate), frequentist/classical estimation (@Kowal_Wu_Frequentist), and time series analysis using warped Dynamic Linear Models (@king2021warped).
+The `countSTAR` package implements a variety of methods to analyze diverse integer-valued data, with a special focus on count-valued data. The package functionality is broadly split into three categories: Bayesian estimation of STAR models (@Kowal_Canale_STAR, @Kowal_Wu_Conjugate), frequentist/classical estimation (@Kowal_Wu_Frequentist), and time series analysis using warped Dynamic Linear Models (@king2021warped).
 
-We give a brief description of the STAR framework, before diving into specific examples that show the `rSTAR` functionality.
+We give a brief description of the STAR framework, before diving into specific examples that show the `countSTAR` functionality.
 
 # Simultaneous Transformation and Rounding (STAR) Models
 
@@ -49,10 +49,10 @@ where $\mu_\theta(x)$ is the conditional expectation of the transformed latent d
 ## The Rounding Operator
 The rounding operator $h$ is a many-to-one function that sets $y = j$ whenever $y^*\in \mathcal{A}_j$ or equivalently when $z^*=g(y^*) \in g(\mathcal{A}_j)$ .  It could take many different forms, but generally the floor function, i.e  where $\mathcal{A}_j := [j, j+1)$ works well as a default, with the modification $g(\mathcal{A}_0) := (-\infty, 0)$ so that $y = 0$ whenever $z^* < 0$. This latter modification ensures that much of the latent space is mapped to zero, and therefore STAR models can easily account for zero-inflation. Furthermore, when there is a known upper bound `y_max`$=K$ for the data, there is an additional change to incorporate this structure, namely we let $g(\mathcal{A}_K) := [g(a_K), \infty)$. 
 
-The rounding operator and its inverse are implemented in `rSTAR` with the functions `a_j()` and `round_fun()`, although these rarely need to be employed by the end user. Instead, the only thing that might need to be specified by the user would be whether an upper bound for the data exists, in which case there is a simple option of setting `y_max` in each of the modeling functions that will then be passed to the rounding function. 
+The rounding operator and its inverse are implemented in `countSTAR` with the functions `a_j()` and `round_fun()`, although these rarely need to be employed by the end user. Instead, the only thing that might need to be specified by the user would be whether an upper bound for the data exists, in which case there is a simple option of setting `y_max` in each of the modeling functions that will then be passed to the rounding function. 
 
 ## The Transformation Function
-There are a variety of options for the transformation function $g$, ranging from fixed functions to a-priori data-driven transformations to transformations learned along with the rest of the model. All models in `rSTAR` support three common fixed transformations: log, square root ('sqrt'), and the identity transformation (essentially a rounding-only model). Furthermore, all functions support a set of transformations which are learned by matching marginal moments of the data $y$ to the latent $z$. In particular, "transformation='pois'" uses a moment-matched marginal Poisson CDF, "transformation='neg-bin'" uses a moment-matched marginal Negative Binomial CDF, and finally "transformation='np'" is a nonparametric transformation estimated from the empirical CDF of $y$. Details on the estimation of these transformations can be found in @Kowal_Wu_Frequentist.  In particular the "np" transformation has proven very effective, especially for heaped data, and is the default across all functions.
+There are a variety of options for the transformation function $g$, ranging from fixed functions to a-priori data-driven transformations to transformations learned along with the rest of the model. All models in `countSTAR` support three common fixed transformations: log, square root ('sqrt'), and the identity transformation (essentially a rounding-only model). Furthermore, all functions support a set of transformations which are learned by matching marginal moments of the data $y$ to the latent $z$. In particular, "transformation='pois'" uses a moment-matched marginal Poisson CDF, "transformation='neg-bin'" uses a moment-matched marginal Negative Binomial CDF, and finally "transformation='np'" is a nonparametric transformation estimated from the empirical CDF of $y$. Details on the estimation of these transformations can be found in @Kowal_Wu_Frequentist.  In particular the "np" transformation has proven very effective, especially for heaped data, and is the default across all functions.
 
 Some STAR methods also support ways of learning the transformation alongside the model. The "box-cox" transformation assumes the transformation falls in the Box-Cox family and the sampler samples the $\lambda$ parameter. With "transformation='ispline'", the transformation is modeled as an unknown, monotone function using I-splines. The Robust Adaptive Metropolis (RAM) sampler
 is used for drawing the parameter of the transformation function. Finally, the "bnp" option models the transformation using the Bayesian bootstrap, which is a Bayesian nonparametric model and incorporates the uncertainty about the transformation into posterior and predictive inference. These learned transformations are not always available in every function; check the appropriate help page to see what options are supported.
@@ -93,10 +93,10 @@ A pest management treatment was applied to a subset of 158 apartments, with the 
 Frequentist (or classical) estimation and inference for STAR models is provided by an EM algorithm. Sufficient for estimation is an `estimator` function which solves the least squares (or Gaussian maximum likelihood) problem associated with $\mu_\theta$---or in other words, the estimator that *would* be used for Gaussian or continuous data. Specifically, `estimator` inputs data and outputs a list with two elements: the estimated `coefficients` $\hat \theta$ and the `fitted.values` $\hat \mu_\theta(x_i) = \mu_{\hat \theta}(x_i)$.
 
 ## The Classical Linear Model
-For many applications, the STAR linear model is often the first method to try. In `rSTAR`, the linear model is implemented with the `lm_star` function, which aims to mimic the functionality of `lm` by allowing users to input a formula. Standard functions like `coef` and `fitted` can be used on the output to extract coefficients and fitted values, respectively.
+For many applications, the STAR linear model is often the first method to try. In `countSTAR`, the linear model is implemented with the `lm_star` function, which aims to mimic the functionality of `lm` by allowing users to input a formula. Standard functions like `coef` and `fitted` can be used on the output to extract coefficients and fitted values, respectively.
 
 ```{r freq-lm}
-library(rSTAR)
+library(countSTAR)
 
 # Select a transformation:
 transformation = 'log' # Log transformation
@@ -161,7 +161,7 @@ y_pred = predict(fit_em)
 ```
 
 ## Machine Learning Models
-In addition to the linear model, `rSTAR` also has implementations for STAR models paired with more flexible regression methods, in particular random forests (`randomForest_star()`) and generalized boosted machines (`gbm_star()`). In these functions, the user directly inputs the set of predictors $X$ alongside any test points in $X_test$, as can be seen in the example below
+In addition to the linear model, `countSTAR` also has implementations for STAR models paired with more flexible regression methods, in particular random forests (`randomForest_star()`) and generalized boosted machines (`gbm_star()`). In these functions, the user directly inputs the set of predictors $X$ alongside any test points in $X_test$, as can be seen in the example below
 ```{r freq-ml}
 # Select a transformation:
 transformation = 'np' # Estimated transformation using empirical CDF
@@ -203,9 +203,9 @@ n = nrow(X); p = ncol(X)
 
 fit_mcmc = genMCMC_star(y = y,
                           sample_params = function(y, params)
-                            rSTAR:::sample_lm_ridge(y, X, params),
+                            countSTAR:::sample_lm_ridge(y, X, params),
                          init_params = function(y) 
-                           rSTAR:::init_lm_ridge(y,X),
+                           countSTAR:::init_lm_ridge(y,X),
                          transformation = 'log', verbose = FALSE)
 ```
 
@@ -244,7 +244,7 @@ abline(v = mean(y==0), lwd=4, col ='blue')
 ```
 
 
-## Additional features in `rSTAR` 
+## Additional features in `countSTAR` 
 
 * Residual diagnostics in `star_EM`
 

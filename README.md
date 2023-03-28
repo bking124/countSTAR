@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# rSTAR: Modeling Integer-Valued Data via Simultaneous Transformation and Rounding
+# countSTAR: Modeling Integer-Valued Data via Simultaneous Transformation and Rounding
 
 ### Overview
 
@@ -13,7 +13,7 @@ skewness, over- and underdispersion, and in some cases may be bounded or
 censored. Flexible and interpretable models for *integer-valued
 processes* are therefore highly useful in practice.
 
-`rSTAR` implements a variety of methods for modeling such processes,
+`countSTAR` implements a variety of methods for modeling such processes,
 based on the idea of Simultaneous Transformation and Rounding (STAR).
 Estimation, inference, and prediction for STAR are available for both
 *Bayesian* and *frequentist* models. The bulk of methods serve for
@@ -31,10 +31,11 @@ zero-inflation, (iii) over- or under-dispersion, (iv) heaping, and (v)
 bounded or censored data.
 
 Detailed information on the different options for STAR models and how
-they are implemented in `rSTAR` can be found in the vignette, accessible
-on the [website](https://bking124.github.io/rSTAR/articles/rSTAR.html)
-or by running the command `vignette("rSTAR")`. A basic breakdown of the
-available modeling functions is shown below:
+they are implemented in `countSTAR` can be found in the vignette,
+accessible on the
+[website](https://bking124.github.io/countSTAR/articles/countSTAR.html)
+or by running the command `vignette("countSTAR")`. A basic breakdown of
+the available modeling functions is shown below:
 
 | Analysis Type                   | Method (`function`)                                | Dependent Package |
 |---------------------------------|----------------------------------------------------|-------------------|
@@ -52,4 +53,4 @@ STAR methods with custom latent regression models using the
 `genEM_star()` and `genMCMC_star()` functions.
 
 Please submit any issues or feature requests to
-<https://github.com/bking124/rSTAR/issues>.
+<https://github.com/bking124/countSTAR/issues>.
