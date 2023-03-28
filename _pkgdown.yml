@@ -26,6 +26,10 @@ reference:
   - bart_star
   - spline_star
   - genMCMC_star
+- title: WarpDLMs (Count Time Series Modeling)
+  desc: Methods for warped Dynamic Linear Models to perform Bayesian inference and forecasting for count-valued time series
+- contents:
+  - warpDLM
 - title: Helper Functions
 - subtitle: Transformation and Rounding Functions
 - contents:
