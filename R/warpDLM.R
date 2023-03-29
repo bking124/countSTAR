@@ -35,7 +35,7 @@
 #' \item \code{KFAS_mod}: the final KFAS model representing the latent DLM
 #' }
 #'
-#' @importFrom KFAS simulateSSM
+#' @importFrom KFAS simulateSSM SSMtrend is.SSModel
 #' @export
 warpDLM <- function(y, type = c("level", "trend"), transformation = c("np", "identity", "log", "sqrt","pois", "neg-bin"),
                     y_max=Inf, R0=10, nsave = 5000, nburn = 5000, nskip = 2, n.ahead=1){

@@ -29,7 +29,8 @@ RoxygenNote: 7.2.3
 Suggests: 
     knitr,
     rmarkdown,
-    rstanarm
+    rstanarm,
+    bayesplot
 VignetteBuilder: knitr
 URL: https://bking124.github.io/countSTAR/
      https://github.com/bking124/countSTAR

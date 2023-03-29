@@ -1,3 +1,18 @@
+@article{chipman2010bart,
+abstract = {We develop a Bayesian "sum-of-trees" model where each tree is constrained by a regularization prior to be a weak learner, and fitting and inference are accomplished via an iterative Bayesian backfitting MCMC algorithm that generates samples from a posterior. Effectively, BART is a nonparametric Bayesian regression approach which uses dimensionally adaptive random basis elements. Motivated by ensemble methods in general, and boosting algorithms in particular, BART is defined by a statistical model: a prior and a likelihood. This approach enables full posterior inference including point and interval estimates of the unknown regression function as well as the marginal effects of potential predictors. By keeping track of predictor inclusion frequencies, BART can also be used for model-free variable selection. BART's many features are illustrated with a bake-off against competing methods on 42 different data sets, with a simulation experiment and on a drug discovery classification problem. {\textcopyright} 2010 Institute of Mathematical Statistics.},
+author = {Chipman, Hugh A. and George, Edward I. and McCulloch, Robert E.},
+doi = {10.1214/09-AOAS285},
+issn = {19326157},
+journal = {Annals of Applied Statistics},
+keywords = {Bayesian backfitting,Boosting,CART,Classification,Ensemble,MCMC,Nonparametric regression,Probit model,Random basis,Regularizatio,Sum-of-trees model,Variable selection,Weak learner},
+number = {1},
+pages = {266--298},
+publisher = {Institute of Mathematical Statistics},
+title = {{BART: Bayesian additive regression trees}},
+volume = {6},
+year = {2012}
+}
+
 @article{king2021warped,
   title={Warped dynamic linear models for time series of counts},
   author={King, Brian and Kowal, Daniel},
@@ -6,7 +21,7 @@
   year={2021}
 }
 
-@article{Kowal_Canale_STAR,
+@article{Kowal2020a,
   title={Simultaneous transformation and rounding (STAR) models for integer-valued data},
   volume={14}, url={http://dx.doi.org/10.1214/20-EJS1707}, DOI={10.1214/20-ejs1707},
   number={1}, journal={Electronic Journal of Statistics},
@@ -14,19 +29,25 @@
   author={Kowal, Daniel and Canale, Antonio},
   year={2020}, month={Jan} }
 
-@article{Kowal_Wu_Frequentist,
-  title={Semiparametric count data regression for self‐reported mental health},
-  url={http://dx.doi.org/10.1111/biom.13617}, DOI={10.1111/biom.13617},
-  journal={Biometrics}, publisher={Wiley},
-  author={Kowal, Daniel and Wu, Bohan},
-  year={2022}, month={Jan}, language={en}}
+@article{kowal2021semiparametric,
+author = {Kowal, Daniel R. and Wu, Bohan},
+title = {Semiparametric count data regression for self-reported mental health},
+journal = {Biometrics},
+year={2021},
+  publisher={Wiley Online Library},
+keywords = {generalized linear model, health data, questionnaire data, transformation},
+doi = {https://doi.org/10.1111/biom.13617},
+url = {https://onlinelibrary.wiley.com/doi/abs/10.1111/biom.13617},
+eprint = {https://onlinelibrary.wiley.com/doi/pdf/10.1111/biom.13617},
+abstract = {Abstract ‘‘For how many days during the past 30 days was your mental health not good?” The responses to this question measure self-reported mental health and can be linked to important covariates in the National Health and Nutrition Examination Survey (NHANES). However, these count variables present major distributional challenges: The data are overdispersed, zero-inflated, bounded by 30, and heaped in 5- and 7-day increments. To address these challenges—which are especially common for health questionnaire data—we design a semiparametric estimation and inference framework for count data regression. The data-generating process is defined by simultaneously transforming and rounding (star) a latent Gaussian regression model. The transformation is estimated nonparametrically and the rounding operator ensures the correct support for the discrete and bounded data. Maximum likelihood estimators are computed using an expectation-maximization (EM) algorithm that is compatible with any continuous data model estimable by least squares. star regression includes asymptotic hypothesis testing and confidence intervals, variable selection via information criteria, and customized diagnostics. Simulation studies validate the utility of this framework. Using star regression, we identify key factors associated with self-reported mental health and demonstrate substantial improvements in goodness-of-fit compared to existing count data regression models.}
+}
 
-@article{Kowal_Wu_Conjugate,
-  title={Semiparametric discrete data regression with Monte Carlo inference and prediction},
-  author={Kowal, Daniel and Wu, Bohan},
-  journal={arXiv preprint arXiv:2110.12316},
-  eprint= {2110.12316},
-  year={2021}
+@article{kowalSTARconjugate,
+author={Kowal, Daniel and Wu, Bohan},
+title = {Semiparametric discrete data regression with Monte Carlo inference and prediction},
+year = {2022},
+eprint = {arXiv:2110.12316},
+url = {https://arxiv.org/abs/2110.12316}
 }
 
 @book{Gelman_Hill_2006,
