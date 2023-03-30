@@ -19,19 +19,19 @@ knitr::opts_chunk$set(
 )
 ```
 # Introduction
-The `countSTAR` package implements a variety of methods to analyze diverse integer-valued data, with a special focus on count-valued data. The package functionality is broadly split into three categories: Bayesian estimation of STAR models (@Kowal2020a, @kowalSTARconjugate), frequentist/classical estimation (@kowal2021semiparametric), and time series analysis using warped Dynamic Linear Models (@king2021warped).
+The `countSTAR` package implements a variety of methods to analyze diverse count-valued data, all based on the idea of Simultaneous Transformation and Rounding (STAR). The package functionality is broadly split into three categories: Bayesian estimation of STAR models (@Kowal2020a, @kowalSTARconjugate), frequentist/classical estimation (@kowal2021semiparametric), and time series analysis using warped Dynamic Linear Models (@king2021warped).
 
 We give a brief description of the STAR framework, before diving into specific examples that show the `countSTAR` functionality.
 
-# Simultaneous Transformation and Rounding (STAR) Models
+# STAR Model Overview
 
-STAR models build upon continuous data models to provide a *valid integer-valued data-generating process*. An example STAR model for linear regression is as follows:
+STAR models build upon continuous data models to provide a *valid count-valued data-generating process*. An example STAR model for linear regression is as follows:
 \begin{align*}
 y_i &= \mbox{floor}(y_i^*) \\
 z_i^* &= \log(y_i^*) \\
 z_i^* &= x_i'\beta + \epsilon_i, \quad \epsilon_i \stackrel{iid}{\sim}N(0, \sigma^2)
 \end{align*}
-The latent data $y_i^*$ act as a *continuous proxy* for the count data $y_i$, which is easier to model yet has a simple mapping via the floor function to the observed data. The latent data $y_i^*$ are transformed to $z_i^*$, as in common practice, and modeled using Gaussian linear regression. This model inherits the same structure as before, but the data-generating process is now integer-valued.  
+The latent data $y_i^*$ act as a *continuous proxy* for the count data $y_i$, which is easier to model yet has a simple mapping via the floor function to the observed data. The latent data $y_i^*$ are transformed to $z_i^*$, as in common practice, and modeled using Gaussian linear regression. This model inherits the same structure as before, but the data-generating process is now count-valued.  
 
 More generally, STAR models are defined via a *rounding operator* $h$, a (known or unknown) *transformation* $g$, and a *continuous data model* $\Pi_\theta$ with unknown parameters $\theta$:
 \begin{align*}
@@ -53,13 +53,22 @@ The rounding operator $h$ is a many-to-one function that sets $y = j$ whenever $
 The rounding operator and its inverse are implemented in `countSTAR` with the functions `a_j()` and `round_fun()`, although these rarely need to be employed by the end user. Instead, the only thing that might need to be specified by the user would be whether an upper bound for the data exists, in which case there is a simple option of setting `y_max` in each of the modeling functions that will then be passed to the rounding function. 
 
 ## The Transformation Function
-There are a variety of options for the transformation function $g$, ranging from fixed functions to a-priori data-driven transformations to transformations learned along with the rest of the model. All models in `countSTAR` support three common fixed transformations: log, square root ('sqrt'), and the identity transformation (essentially a rounding-only model). Furthermore, all functions support a set of transformations which are learned by matching marginal moments of the data $y$ to the latent $z$. In particular, "transformation='pois'" uses a moment-matched marginal Poisson CDF, "transformation='neg-bin'" uses a moment-matched marginal Negative Binomial CDF, and finally "transformation='np'" is a nonparametric transformation estimated from the empirical CDF of $y$. Details on the estimation of these transformations can be found in @kowal2021semiparametric.  In particular the "np" transformation has proven very effective, especially for heaped data, and is the default across all functions.
+There are a variety of options for the transformation function $g$, ranging from fixed functions to a-priori data-driven transformations to transformations learned along with the rest of the model. All models in `countSTAR` support three common fixed transformations: log, square root ('sqrt'), and the identity transformation (essentially a rounding-only model). Furthermore, all functions support a set of transformations which are learned by matching marginal moments of the data $y$ to the latent $z$:
+* `transformation='pois'` uses a moment-matched marginal Poisson CDF
+* `transformation='neg-bin'` uses a moment-matched marginal Negative Binomial CDF
+* `transformation='np'` is a nonparametric transformation estimated from the empirical CDF of $y$. 
 
-Some STAR methods also support ways of learning the transformation alongside the model. The "box-cox" transformation assumes the transformation falls in the Box-Cox family and the sampler samples the $\lambda$ parameter. With "transformation='ispline'", the transformation is modeled as an unknown, monotone function using I-splines. The Robust Adaptive Metropolis (RAM) sampler
-is used for drawing the parameter of the transformation function. Finally, the "bnp" option models the transformation using the Bayesian bootstrap, which is a Bayesian nonparametric model and incorporates the uncertainty about the transformation into posterior and predictive inference. These learned transformations are not always available in every function; check the appropriate help page to see what options are supported.
+Details on the estimation of these transformations can be found in @kowal2021semiparametric.  In particular the "np" transformation has proven very effective, especially for heaped data, and is the default across all functions.
+
+Some STAR methods also support ways of learning the transformation alongside the model:
+* `transformation='box-cox'`: the transformation is assumed to belong to the Box-Cox family; the sampler samples the $\lambda$ parameter
+* `transformation='ispline'`: the transformation is modeled as an unknown, monotone function using I-splines. The Robust Adaptive Metropolis (RAM) sampler is used for drawing the parameter of the transformation function. 
+* `transformation='bnp'`: the transformation is modeled using the Bayesian bootstrap, a Bayesian nonparametric model that incorporates the uncertainty about the transformation into posterior and predictive inference. 
+
+These learned transformations are not always available in every function; check the appropriate help page to see what options are supported.
 
 
-# Integer-Valued Data: The Roaches Dataset
+# Count-Valued Data: The Roaches Dataset
 As an example of complex count-valued data, consider the `roaches` data from @Gelman_Hill_2006.
 The response variable, $y_i$, is the number of roaches caught in traps in apartment $i$, with $i=1,\ldots, n = 262$. 
 
@@ -100,8 +109,7 @@ For many applications, the STAR linear model is often the first method to try. I
 library(countSTAR)
 
 # Select a transformation:
-transformation = 'log' # Log transformation
-#transformation = 'np' # Estimated transformation using empirical CDF
+transformation = 'np' # Estimated transformation using empirical CDF
 
 # EM algorithm for STAR (using the log-link)
 fit_em = lm_star(y ~ roach1 + treatment + senior + log(exposure2),
@@ -115,27 +123,13 @@ n = nrow(fit_em$X); p = ncol(fit_em$X)
 round(coef(fit_em), 3)
 ```
 
-Here the `log` transformation was used, but other options are available; see `?lm_star` for details. 
+Here the `np` transformation was used, but other options are available; see `?lm_star` for details. 
 
 Based on the fitted STAR linear model, we may further obtain *confidence intervals* for the estimated coefficients using `confint`:
 
 ```{r conf}
-# Confidence interval for the j=2 column:
-j = 2
-ci_j = confint(fit_em, level = 0.95,
-        j = j,
-        include_plot = FALSE)
-print(round(ci_j, 3))
-
-# Confidence for all columns:
-ci_all = sapply(1:p, function(j)
-  confint(fit_em, level = 0.95,
-        j = j,
-        include_plot = FALSE))
-colnames(ci_all) = colnames(fit_em$X); 
-rownames(ci_all) = c('Lower', 'Upper')
-print(t(round(ci_all, 3)))
-
+# Confidence interval for all coefficients
+confint(fit_em)
 ```
 
 Similarly, *p-values* are available using likelihood ratio tests, which can be applied for individual coefficients,
@@ -196,7 +190,7 @@ z_i^* &= x_i'\beta + \epsilon_i, \quad \epsilon_i \stackrel{iid}{\sim}N(0, \sigm
 \sigma^2 &\sim \mbox{Gamma}(\alpha=0.001, \beta=0.001) \;.
 \end{align*}
 The model is completed by assigning a prior structure for $\beta$. The default in `countSTAR` is Zellner's g-prior, which has the most functionality, but other options are available (namely horseshoe and ridge priors). The model is estimated using `blm_star()`. Note that for the Bayesian models in `countSTAR`, the user must supply the design matrix $X$ (and if predictions are desired, a matrix of predictors at the test points). We apply this to the roaches data, now using the default nonparametric transformation.
-```{r bayes-lm}
+```{r bayes-lm, results='hide', message=FALSE}
 X = model.matrix(y ~ roach1 + treatment + senior + log(exposure2),
                  data = roaches)
 
@@ -205,7 +199,7 @@ n = nrow(X); p = ncol(X)
 
 fit_blm = blm_star(y = y, X=X, transformation = 'np')
 ```
-By default, the function uses a Gibbs sampler to draw from the posterior, but in some settings exact inference can be performed (see @kowalSTARconjugate for details). To enable this, one can simply set `use_MCMC=FALSE`. In either case, the output of the function should be much the same, with the exception that $\sigma_\beta$ is estimated a priori and thus has no posterior draws.
+By default, the function uses a Gibbs sampler to draw from the posterior, but in some settings exact inference can be performed (see @kowalSTARconjugate for details). To enable this, one can simply set `use_MCMC=FALSE`. In either case, the output of the function should be much the same, with the exception that $\sigma$ is estimated a priori and thus has no posterior draws.
 
 Posterior expectations and posterior credible intervals from the model are available as follows:
 
@@ -218,22 +212,21 @@ ci_all_bayes = apply(fit_blm$post.beta,
       2, function(x) quantile(x, c(.025, .975)))
 
 # Rename and print:
-colnames(ci_all_bayes) = colnames(X); rownames(ci_all_bayes) = c('Lower', 'Upper')
+rownames(ci_all_bayes) = c('Lower', 'Upper')
 print(t(round(ci_all_bayes, 3)))
 ```
 
 We may further evaluate the model based on posterior diagnostics and posterior predictive checks on the simulated versus observed proportion of zeros. Posterior predictive checks are easily visualized using the [bayesplot](https://mc-stan.org/bayesplot/index.html) package.
 
-```{r diag}
+```{r diag, warning=FALSE, message=FALSE}
 # MCMC diagnostics for posterior draws of the regression coefficients
-colnames(fit_blm$post.beta) = colnames(X)
 plot(as.ts(fit_blm$post.beta), main = 'Trace plots', cex.lab = .75)
 
 # (Summary of) effective sample sizes across coefficients:
 getEffSize(fit_blm$post.beta)
 
 # Posterior predictive check using bayesplot
-library(bayesplot)
+suppressMessages(library(bayesplot))
 prop_zero <- function(y) mean(y == 0)
 (ppc_stat(y=roaches$y, yrep=fit_blm$post.pred, stat = "prop_zero"))
 ```
@@ -262,10 +255,10 @@ print(waic)
 ```
 
 ## Other Models
-`starCount` also implements Bayesian additive models. With the function `bam_star()`, we can specify covariates to be modeled linearly and others to be modeled non-linearly using spline bases. As a word of warning, the additive models do take significantly longer to fit. For exploring the relationship between one predictor and count outcome $y$, one can also use spline regression as implemented in `spline_star()`. See the appropriate help pages for examples on how to run the models.
+`countSTAR` also implements Bayesian additive models. With the function `bam_star()`, we can specify covariates to be modeled linearly and others to be modeled non-linearly using spline bases. As a word of warning, the additive models do take significantly longer to fit. For exploring the relationship between one predictor and count outcome $y$, one can also use spline regression as implemented in `spline_star()`. See the appropriate help pages for examples on how to run the models.
 
 # Count Time Series Modeling: warpDLM
-Up to this point, all of the attention has focused on static regression where the data does not depend on time. However, the ideas of simultaneous transformation and rounding were extended to the time series domain in @king2021warped. They proposed linking the time-dependent count data $y_t$ to a powerful time series framework known as Dynamic Linear Models (DLMs). A DLM is defined by two equations: (i) the observation equation, which specifies how the observations are related to the latent state vector and (ii) the state evolution equation, which describes how the states are updated in a Markovian fashion. More concretely, we represent it in the following form:
+Up to this point, all of the attention has focused on static regression where the data does not depend on time. However, the ideas of simultaneous transformation and rounding were extended to the time series domain in @king2021warped. In that work, we proposed linking time-dependent count data $y_t$ to a powerful time series framework known as Dynamic Linear Models (DLMs). A DLM is defined by two equations: (i) the observation equation, which specifies how the observations are related to the latent state vector and (ii) the state evolution equation, which describes how the states are updated in a Markovian fashion. More concretely, we represent it in the following form:
 \begin{align*}
     z_t &= F_t \theta_t + v_t, \quad v_t \sim N_n(0, V_t) \\
     \theta_t &= G_t \theta_{t-1} +  w_t, \quad w_t \sim N_p( 0, W_t)
@@ -278,7 +271,27 @@ Of course, given the Gaussian assumptions of the model, a DLM alone is not appro
         \{z_t\}_{t=1}^T &\sim \text{DLM} 
 \end{align*}
 
-The DLM form shown earlier is very general. To keep things simple, `countSTAR` implements only a few options for the DLM, namely the local level model and the local linear trend model. These two common forms have a long history and are also referred to as structural time series models (implemented in base R via `StructTS()`). With `countSTAR`, warpDLM time series modeling is accomplished via the `warpDLM()` function. In the below, we apply the model to a time series dataset included in base R concerning yearly numbers of important discoveries from 1860 to 1959 (`?discoveries` for more information).
+The DLM form shown earlier is very general. To keep things simple, `countSTAR` implements only a few options for the DLM, namely the local level model and the local linear trend model. A local level model (also known as a random walk with noise model) has a univariate state $\theta_t:=\mu_t$, and the DLM equations are simply
+\begin{align*}
+    z_t &= \mu_t + v_t, \quad v_t \sim N(0, V) \\
+    \mu_t &= \mu_{t-1} +  w_t, \quad w_t \sim N(0, W)
+\end{align*}
+The local linear trend model extends the local level model, incorporating a time varying drift $\nu_t$ in the dynamics. It is often described in the following three equation format:
+\begin{align*}
+    z_t &= \mu_t + v_t, \quad v_t \sim N(0, V) \\
+    \mu_t &= \mu_{t-1} + \nu_{t-1} +  w_{\mu,t}, \quad w_{\mu,t} \sim N( 0, W_
+    \mu) \\
+    \nu_t &= \nu_{t-1} +  w_{\nu,t}, \quad w_{\nu,t} \sim N( 0, W_\nu)
+\end{align*}
+This can in turn be recast into the general two-equation DLM form. Namely, if we let $\theta_t:=(\mu_t, \nu_t)$, the local linear trend is written as
+
+\begin{align*}
+z_t & = \begin{pmatrix} 1 & 0 \end{pmatrix} \begin{pmatrix} \mu_t \\ \nu_t \end{pmatrix} + v_t, \quad v_t \sim N(0, V) \\
+\begin{pmatrix} \mu_t \\ \nu_t \end{pmatrix} & = \begin{bmatrix} 1 & 1 \\ 0 & 1 \end{bmatrix} \begin{pmatrix} \mu_{t-1} \\ \nu_{t-1} \end{pmatrix}  + \boldsymbol{w_t}, \quad \boldsymbol{w_t} \sim N\begin{pmatrix} \boldsymbol{0}, \begin{bmatrix} W_
+    \mu & 0 \\ 0 & W_\nu \end{bmatrix} \end{pmatrix}
+\end{align*}
+
+These two common forms have a long history and are also referred to as structural time series models (implemented in base R via `StructTS()`). With `countSTAR`, warpDLM time series modeling is accomplished via the `warpDLM()` function. In the below, we apply the model to a time series dataset included in base R concerning yearly numbers of important discoveries from 1860 to 1959 (`?discoveries` for more information).
 ```{r warpDLM}
 #Visualize the data
 plot(discoveries)
@@ -290,4 +303,5 @@ Once again, we can check fit using posterior predictive checks. The median of th
 ```{r warpPPC}
 ppc_ribbon(y=as.vector(discoveries), yrep=warpfit$post_pred)
 ```
+
 # References 
