@@ -4,7 +4,7 @@
 \alias{predict.lmstar}
 \title{Predict method for response in STAR linear model}
 \usage{
-\method{predict}{lmstar}(object, newdata = NULL, interval = FALSE, level = 0.95, N = 1000)
+\method{predict}{lmstar}(object, newdata = NULL, interval = FALSE, level = 0.95, N = 1000, ...)
 }
 \arguments{
 \item{object}{Object of class "lmstar" as output by \code{\link{lm_star}}}
@@ -18,6 +18,8 @@ If omitted, the fitted values are used.}
 
 \item{N}{number of Monte Carlo samples from the posterior predictive distribution
 used to approximate intervals; default is 1000}
+
+\item{...}{Ignored}
 }
 \value{
 Either a a vector of predictions (if interval=FALSE) or a matrix of predictions and

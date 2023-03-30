@@ -4,19 +4,21 @@
 \alias{confint.lmstar}
 \title{Compute asymptotic confidence intervals for STAR linear regression}
 \usage{
-\method{confint}{lmstar}(object, j, level = 0.95, include_plot = TRUE)
+\method{confint}{lmstar}(object, parm, level = 0.95, ...)
 }
 \arguments{
 \item{object}{Object of class "lmstar" as output by \code{\link{lm_star}}}
 
-\item{j}{the scalar column index for the desired confidence interval}
+\item{parm}{a specification of which parameters are to be given confidence intervals,
+either a vector of numbers or a vector of names. If missing, all parameters are considered.}
 
 \item{level}{confidence level; default is 0.95}
 
-\item{include_plot}{logical; if TRUE, include a plot of the profile likelihood}
+\item{...}{Ignored}
 }
 \value{
-the upper and lower endpoints of the confidence interval
+A matrix (or vector) with columns giving lower and upper confidence limits for each parameter.
+These will be labelled as (1-level)/2 and 1 - (1-level)/2 in % (by default 2.5% and 97.5%).
 }
 \description{
 For a linear regression model within the STAR framework,
@@ -25,22 +27,17 @@ Confidence intervals are computed by inverting the likelihood ratio test and
 profiling the log-likelihood.
 }
 \examples{
-# Simulate data with count-valued response y:
+#Simulate data with count-valued response y:
 sim_dat = simulate_nb_lm(n = 100, p = 2)
 y = sim_dat$y; X = sim_dat$X
 
-# Select a transformation:
+#Select a transformation:
 transformation = 'np'
 
 #Estimate model
 fit = lm_star(y~X, transformation=transformation)
 
-# Confidence interval for the intercept:
-ci_beta_0 = confint(fit, j = 1)
-ci_beta_0
-
-# Confidence interval for the slope:
-ci_beta_1 = confint(fit, j = 2)
-ci_beta_1
+#Confidence interval for all parameters
+confint(fit)
 
 }

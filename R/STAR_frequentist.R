@@ -331,6 +331,7 @@ lm_star = function(formula, data=NULL, transformation = 'np',
 #' @param level Level for prediction intervals
 #' @param N number of Monte Carlo samples from the posterior predictive distribution
 #' used to approximate intervals; default is 1000
+#' @param ... Ignored
 #'
 #' @return Either a a vector of predictions (if interval=FALSE) or a matrix of predictions and
 #' bounds with column names fit, lwr, and upr
@@ -372,7 +373,7 @@ lm_star = function(formula, data=NULL, transformation = 'np',
 #' lines(x, PI_y[,1], col='darkgray', type='s', lwd=4);
 #' lines(x, PI_y[,2], col='darkgray', type='s', lwd=4)
 #' @export
-predict.lmstar <- function(object, newdata = NULL, interval=FALSE, level=0.95, N=1000){
+predict.lmstar <- function(object, newdata = NULL, interval=FALSE, level=0.95, N=1000, ...){
   if (!inherits(object, "lmstar"))
     stop("Not a lmstar object")
 
@@ -485,35 +486,32 @@ predict.lmstar <- function(object, newdata = NULL, interval=FALSE, level=0.95, N
 #' profiling the log-likelihood.
 #'
 #' @param object Object of class "lmstar" as output by \code{\link{lm_star}}
-#' @param j the scalar column index for the desired confidence interval
+#' @param parm a specification of which parameters are to be given confidence intervals,
+#' either a vector of numbers or a vector of names. If missing, all parameters are considered.
 #' @param level confidence level; default is 0.95
-#' @param include_plot logical; if TRUE, include a plot of the profile likelihood
-#' @return the upper and lower endpoints of the confidence interval
+#' @param ... Ignored
+#'
+#' @return A matrix (or vector) with columns giving lower and upper confidence limits for each parameter.
+#' These will be labelled as (1-level)/2 and 1 - (1-level)/2 in % (by default 2.5% and 97.5%).
 #'
 #' @examples
-#' # Simulate data with count-valued response y:
+#' #Simulate data with count-valued response y:
 #' sim_dat = simulate_nb_lm(n = 100, p = 2)
 #' y = sim_dat$y; X = sim_dat$X
 #'
-#' # Select a transformation:
+#' #Select a transformation:
 #' transformation = 'np'
 #'
 #' #Estimate model
 #' fit = lm_star(y~X, transformation=transformation)
 #'
-#' # Confidence interval for the intercept:
-#' ci_beta_0 = confint(fit, j = 1)
-#' ci_beta_0
+#' #Confidence interval for all parameters
+#' confint(fit)
 #'
-#' # Confidence interval for the slope:
-#' ci_beta_1 = confint(fit, j = 2)
-#' ci_beta_1
-#'
-#' @importFrom stats splinefun
 #' @export
-confint.lmstar = function(object, j,
+confint.lmstar = function(object, parm,
                           level = 0.95,
-                          include_plot = TRUE){
+                           ...){
   if (!inherits(object, "lmstar"))
     stop("Not a lmstar object")
 
@@ -531,6 +529,13 @@ confint.lmstar = function(object, j,
   # Dimensions:
   n = length(y);
 
+  #Format parm so that it's numeric
+  pnames <- colnames(X)
+  if (missing(parm))
+    parm <- 1:ncol(X)
+  else if (!is.numeric(parm))
+    parm <- match(parm, pnames)
+
   # Initialization:
   z2_hat = z_hat^2 # Second moment
 
@@ -538,99 +543,93 @@ confint.lmstar = function(object, j,
   z_lower = g(a_j(y, y_max = y_max))
   z_upper = g(a_j(y + 1, y_max = y_max))
 
-  # For s=1 comparison:
-  mu_hat0 = rep(0,n);  # This will be updated to a warm-start within the loop
+  #Format output (code borrowed from confint.lm)
+  a <- (1 - level)/2
+  a <- c(a, 1 - a)
+  pct <- paste(format(100 * a, trim = TRUE, scientific = FALSE, digits = 3),"%")
+  ci <- array(NA_real_, dim = c(length(parm), 2L),
+              dimnames = list(pnames[parm], pct))
 
-  # Construct a sequence of theta values for predictor j:
-  n_coarse = 50 # Length of sequence
-  # Max distance from the MLE in the EM sequence:
-  d_max = max(coef(object)[j] - min(theta_all[,j]),
-              max(theta_all[,j]) - coef(object)[j])
-  theta_seq_coarse = seq(from = coef(object)[j] - 2*d_max - 2*diff(range(theta_all[,j])),
-                         to = coef(object)[j] + 2*d_max + 2*diff(range(theta_all[,j])),
-                         length.out = n_coarse)
+  #Run through loop for length(parm) predictors
+  for(i in 1:length(parm)){
+    # For s=1 comparison:
+    mu_hat0 = rep(0,n);  # This will be updated to a warm-start within the loop
+    j=parm[i]
+    # Construct a sequence of theta values for predictor j:
+    n_coarse = 50 # Length of sequence
+    # Max distance from the MLE in the EM sequence:
+    d_max = max(coef(object)[j] - min(theta_all[,j]),
+                max(theta_all[,j]) - coef(object)[j])
+    theta_seq_coarse = seq(from = coef(object)[j] - 2*d_max - 2*diff(range(theta_all[,j])),
+                           to = coef(object)[j] + 2*d_max + 2*diff(range(theta_all[,j])),
+                           length.out = n_coarse)
 
-  # Store the profile log-likelihood:
-  prof.logLik = numeric(n_coarse)
+    # Store the profile log-likelihood:
+    prof.logLik = numeric(n_coarse)
 
-  # Note: could call the EM algorithm directly, but this does not allow for a "warm start"
-  # prof.logLik = sapply(theta_seq_coarse, function(theta_j){
-  #  star_EM(y = y, estimator = function(y) lm(y ~ -1 + X[,-j] + offset(theta_j*X[,j])),
-  #          transformation = transformation, y_max = y_max,
-  #          sd_init = sd_init, tol = tol, max_iters = max_iters)$logLik
-  # })
+    # theta_j's with log-like's that exceed this threshold will belong to the confidence set
+    conf_thresh = object$logLik - qchisq(1 - level, df = 1, lower.tail = FALSE)/2
 
-  # theta_j's with log-like's that exceed this threshold will belong to the confidence set
-  conf_thresh = object$logLik - qchisq(1 - level, df = 1, lower.tail = FALSE)/2
+    ng = 1;
+    while(ng <= n_coarse){
 
-  ng = 1;
-  while(ng <= n_coarse){
+      # theta_j is fixed:
+      theta_j = theta_seq_coarse[ng]
 
-    # theta_j is fixed:
-    theta_j = theta_seq_coarse[ng]
+      for(s in 1:max_iters){
+        # Estimation (with the jth coefficient fixed at theta_j)
+        fit = lm(z_hat ~ -1 + X[,-j] + offset(theta_j*X[,j]))
+        mu_hat = fit$fitted.values
+        sigma_hat = sqrt((sum(z2_hat) + sum(mu_hat^2) - 2*sum(z_hat*mu_hat))/n)
 
-    for(s in 1:max_iters){
-      # Estimation (with the jth coefficient fixed at theta_j)
-      fit = lm(z_hat ~ -1 + X[,-j] + offset(theta_j*X[,j]))
-      mu_hat = fit$fitted.values
-      sigma_hat = sqrt((sum(z2_hat) + sum(mu_hat^2) - 2*sum(z_hat*mu_hat))/n)
+        # First and second moments of latent variables:
+        z_mom = truncnorm_mom(a = z_lower, b = z_upper, mu = mu_hat, sig = sigma_hat)
+        z_hat = z_mom$m1; z2_hat= z_mom$m2;
 
-      # First and second moments of latent variables:
-      z_mom = truncnorm_mom(a = z_lower, b = z_upper, mu = mu_hat, sig = sigma_hat)
-      z_hat = z_mom$m1; z2_hat= z_mom$m2;
-
-      # Check whether to stop:
-      if(mean((mu_hat - mu_hat0)^2) < tol) break
-      mu_hat0 = mu_hat
-    }
-
-    prof.logLik[ng] = logLikeRcpp(g_a_j = z_lower,
-                                  g_a_jp1 = z_upper,
-                                  mu = mu_hat,
-                                  sigma = rep(sigma_hat,n))
-
-    # Check at the final iteration:
-    if(ng == n_coarse){
-      # Bad lower endpoint:
-      if(prof.logLik[which.min(theta_seq_coarse)] >= conf_thresh - 5){
-        # Expand theta downward:
-        theta_seq_coarse = c(theta_seq_coarse,
-                             min(theta_seq_coarse) - 2*median(abs(diff(theta_seq_coarse))))
-      }
-      # Bad upper endpoint:
-      if(prof.logLik[which.max(theta_seq_coarse)] >= conf_thresh - 5){
-        # Expand theta upward:
-        theta_seq_coarse = c(theta_seq_coarse,
-                             max(theta_seq_coarse) + 2*median(abs(diff(theta_seq_coarse))))
-
+        # Check whether to stop:
+        if(mean((mu_hat - mu_hat0)^2) < tol) break
+        mu_hat0 = mu_hat
       }
 
-      # Update: lengthen prof.logLik and increase n_coarse accordingly
-      temp = prof.logLik;
-      prof.logLik = numeric(length(theta_seq_coarse));
-      prof.logLik[1:n_coarse] = temp
-      n_coarse = length(theta_seq_coarse)
+      prof.logLik[ng] = logLikeRcpp(g_a_j = z_lower,
+                                    g_a_jp1 = z_upper,
+                                    mu = mu_hat,
+                                    sigma = rep(sigma_hat,n))
+
+      # Check at the final iteration:
+      if(ng == n_coarse){
+        # Bad lower endpoint:
+        if(prof.logLik[which.min(theta_seq_coarse)] >= conf_thresh - 5){
+          # Expand theta downward:
+          theta_seq_coarse = c(theta_seq_coarse,
+                               min(theta_seq_coarse) - 2*median(abs(diff(theta_seq_coarse))))
+        }
+        # Bad upper endpoint:
+        if(prof.logLik[which.max(theta_seq_coarse)] >= conf_thresh - 5){
+          # Expand theta upward:
+          theta_seq_coarse = c(theta_seq_coarse,
+                               max(theta_seq_coarse) + 2*median(abs(diff(theta_seq_coarse))))
+
+        }
+
+        # Update: lengthen prof.logLik and increase n_coarse accordingly
+        temp = prof.logLik;
+        prof.logLik = numeric(length(theta_seq_coarse));
+        prof.logLik[1:n_coarse] = temp
+        n_coarse = length(theta_seq_coarse)
+      }
+
+      ng = ng + 1
     }
 
-    ng = ng + 1
+    # Smooth on a finer grid:
+    theta_seq_fine = seq(min(theta_seq_coarse), max(theta_seq_coarse), length.out = 10^3)
+    prof.logLik_hat = splinefun(theta_seq_coarse, prof.logLik)(theta_seq_fine)
+    ci_all = theta_seq_fine[prof.logLik_hat > conf_thresh]
+
+    ci[i,] <- range(ci_all)
   }
-
-  # Smooth on a finer grid:
-  theta_seq_fine = seq(min(theta_seq_coarse), max(theta_seq_coarse), length.out = 10^3)
-  prof.logLik_hat = splinefun(theta_seq_coarse, prof.logLik)(theta_seq_fine)
-  ci_all = theta_seq_fine[prof.logLik_hat > conf_thresh]
-
-  # Summary plot:
-  if(include_plot){
-    plot(theta_seq_coarse, prof.logLik, type='n', xlab = expression(theta[j]), main = paste('Profile Likelihood, j =',j));
-    abline(v = ci_all, lwd=4, col='gray');
-    lines(theta_seq_coarse, prof.logLik, type='p')
-    lines(theta_seq_fine, prof.logLik_hat, lwd=4)
-    abline(h = object$logLik); abline(v = coef(object)[j], lwd=4)
-  }
-
-  # Interval:
-  range(ci_all)
+  return(ci)
 }
 
 #' Compute coefficient p-values for STAR linear regression using likelihood ratio test
@@ -1492,9 +1491,12 @@ gbm_star = function(y, X, X.test = NULL,
 #' transformation = 'np'
 #'
 #' # Example using GAM as underlying estimator (for illustration purposes only)
-#' fit_em = star_EM(y = y,
-#'                  estimator = function(y) gam(y ~ s(X1)+s(X2), data=data.frame(y,X)),
-#'                   transformation = transformation)
+#' if(require("mgcv")){
+#'   fit_em = genEM_star(y = y,
+#'                       estimator = function(y) gam(y ~ s(X1)+s(X2),
+#'                       data=data.frame(y,X)),
+#'                       transformation = transformation)
+#' }
 #'
 #' # Fitted coefficients:
 #' coef(fit_em)
@@ -1506,7 +1508,6 @@ gbm_star = function(y, X, X.test = NULL,
 #' # Log-likelihood at MLEs:
 #' fit_em$logLik
 #'
-#' @importFrom mgcv gam
 #' @export
 genEM_star = function(y,
                    estimator,
