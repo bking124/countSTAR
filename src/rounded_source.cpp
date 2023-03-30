@@ -19,6 +19,7 @@ using namespace Rcpp;
 //'
 //' @useDynLib countSTAR
 //' @import Rcpp
+//' @import RcppArmadillo
 //' @keywords internal
 // [[Rcpp::export]]
 arma::vec expectation_gRcpp(arma::vec g_a_j, arma::vec g_a_jp1,

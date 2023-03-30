@@ -18,6 +18,7 @@
 #'
 #' @useDynLib countSTAR
 #' @import Rcpp
+#' @import RcppArmadillo
 #' @keywords internal
 expectation_gRcpp <- function(g_a_j, g_a_jp1, mu, sigma, Jmax) {
     .Call('_countSTAR_expectation_gRcpp', PACKAGE = 'countSTAR', g_a_j, g_a_jp1, mu, sigma, Jmax)

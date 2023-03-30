@@ -136,7 +136,6 @@ blm_star <- function(y, X, X_test = NULL,
     .args = as.list(match.call())[-1]
     .args[c('prior','use_MCMC', 'nburn', 'nskip')] <- NULL
     result = do.call(blm_star_exact, .args)
-    return(result[!sapply(result,is.null)])
   }
 
   #Getting here must mean use_MCMC==TRUE
@@ -144,7 +143,6 @@ blm_star <- function(y, X, X_test = NULL,
     .args = as.list(match.call())[-1]
     .args[c('transformation','prior','use_MCMC','method_sigma', 'compute_marg')] <- NULL
     result = do.call(blm_star_bnpgibbs, .args)
-    return(result[!sapply(result,is.null)])
   }
 
   #Now we set the appropriate init and sample functions
@@ -173,6 +171,12 @@ blm_star <- function(y, X, X_test = NULL,
     result = do.call(genMCMC_star_ispline, .args)
   } else {
     result = do.call(genMCMC_star, .args)
+  }
+
+  #Return result
+  if(!is.null(colnames(X))){
+    colnames(result$post.beta) <- colnames(X)
+    names(result$coefficients) <- colnames(X)
   }
   result = result[!sapply(result,is.null)]
   return(result)
@@ -1209,7 +1213,6 @@ bart_star = function(y,
 #' @importFrom TruncatedNormal mvrandn pmvnorm
 #' @importFrom FastGP rcpp_rmvnorm
 #' @importFrom spikeSlabGAM sm
-#' @importFrom stats poly
 #' @export
 spline_star = function(y,
                        tau = NULL,

@@ -785,6 +785,6 @@ getEffSize = function(postX) {
 ergMean = function(x) {cumsum(x)/(1:length(x))}
 
 # Just add these for general use:
-#' @importFrom stats optim predict constrOptim cor fitted approxfun median arima coef quantile rexp rgamma rnorm runif sd dnorm lm var qchisq rchisq pnorm splinefun smooth.spline qnorm rnbinom ecdf ppois pnbinom weighted.mean arima.sim kmeans
+#' @import stats
 #' @importFrom graphics lines par plot polygon abline hist arrows legend axis
 NULL

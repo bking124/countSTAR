@@ -704,7 +704,6 @@ blm_star_bnpgibbs = function(y, X, X_test = X,
 #' @importFrom TruncatedNormal mvrandn pmvnorm
 #' @importFrom FastGP rcpp_rmvnorm
 #' @importFrom spikeSlabGAM sm
-#' @importFrom stats poly
 #' @keywords internal
 spline_star_exact = function(y,
                        tau = NULL,
@@ -993,7 +992,7 @@ spline_star_exact = function(y,
 #'}
 #'
 #' @importFrom splines2 iSpline
-#' @import Matrix
+#' @importFrom Matrix Matrix chol
 #' @keywords internal
 bart_star_ispline = function(y,
                                   X,
@@ -1476,7 +1475,7 @@ bart_star_ispline = function(y,
 #'
 #'}
 #' @importFrom splines2 iSpline
-#' @import Matrix
+#' @importFrom Matrix Matrix chol
 #' @keywords internal
 genMCMC_star_ispline = function(y,
                              sample_params,
@@ -1817,6 +1816,9 @@ genMCMC_star_ispline = function(y,
     if(verbose) computeTimeRemaining(nsi, timer0, nstot, nrep = 5000)
   }
   if(verbose) print(paste('Total time: ', round((proc.time()[3] - timer0)), 'seconds'))
+
+  #Compute fitted values if necessary
+  if(save_y_hat) fitted.values = colMeans(post.fitted.values) else fitted.values=NULL
 
   # Compute WAIC:
   lppd = sum(log(colMeans(exp(post.log.like.point))))
@@ -3041,8 +3043,6 @@ uni.slice <- function (x0, g, w=1, m=Inf, lower=-Inf, upper=+Inf, gx0=NULL)
 #'
 #' @examples
 #' truncnorm_mom(-1, 1, 0, 1)
-#'
-#' @importFrom stats dnorm pnorm
 #'
 #' @keywords internal
 truncnorm_mom = function(a, b, mu, sig){

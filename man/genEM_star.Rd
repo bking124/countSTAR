@@ -116,9 +116,12 @@ y = sim_dat$y; X = sim_dat$X
 transformation = 'np'
 
 # Example using GAM as underlying estimator (for illustration purposes only)
-fit_em = star_EM(y = y,
-                 estimator = function(y) gam(y ~ s(X1)+s(X2), data=data.frame(y,X)),
-                  transformation = transformation)
+if(require("mgcv")){
+  fit_em = genEM_star(y = y,
+                      estimator = function(y) gam(y ~ s(X1)+s(X2),
+                      data=data.frame(y,X)),
+                      transformation = transformation)
+}
 
 # Fitted coefficients:
 coef(fit_em)
