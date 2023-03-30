@@ -162,7 +162,7 @@ y_pred = predict(fit_em)
 ```
 
 ## Machine Learning Models
-In addition to the linear model, `countSTAR` also has implementations for STAR models paired with more flexible regression methods, in particular random forests (`randomForest_star()`) and generalized boosted machines (`gbm_star()`). In these functions, the user directly inputs the set of predictors $X$ alongside any test points in $X_test$, as can be seen in the example below
+In addition to the linear model, `countSTAR` also has implementations for STAR models paired with more flexible regression methods, in particular random forests (`randomForest_star()`) and generalized boosted machines (`gbm_star()`). In these functions, the user directly inputs the set of predictors $X$ alongside any test points in $X_{test}$, as can be seen in the example below
 ```{r freq-ml}
 # Select a transformation:
 transformation = 'np' # Estimated transformation using empirical CDF
@@ -193,14 +193,9 @@ For a Bayesian model, STAR requires only an algorithm for *initializing and samp
 As an illustration, consider the Bayesian linear regression model
 \begin{align*}
 z_i^* &= x_i'\beta + \epsilon_i, \quad \epsilon_i \stackrel{iid}{\sim}N(0, \sigma^2) \\
-\beta_j & \stackrel{iid}{\sim}N(0, \sigma_\beta^2), \quad \sigma_\beta \sim \mbox{Uniform}(0, 10^4) \;.
+\sigma^2 &\sim \mbox{Gamma}(\alpha=0.001, \beta=0.001) \;.
 \end{align*}
-Furthermore, we assign the following priors on the variances
-\begin{align*}
-\sigma^2 &\sim mbox{Gamma}(\alpha=0.001, \beta=0.001) \\
-\sigma_\beta &\sim \mbox{Uniform}(0, 10^4) \;.
-\end{align*}
-The model is completed by assigning a prior for $\beta$. The default in `countSTAR` is Zellner's g-prior, which has the most functionality, but other options are available (namely horseshoe and ridge priors). The model is estimated using `blm_star()`. Note that for the Bayesian models in `countSTAR`, the user must supply the design matrix $X$ (and if predictions are desired, a matrix of predictors at the test points). We apply this to the roaches data, now using the default nonparametric transformation.
+The model is completed by assigning a prior structure for $\beta$. The default in `countSTAR` is Zellner's g-prior, which has the most functionality, but other options are available (namely horseshoe and ridge priors). The model is estimated using `blm_star()`. Note that for the Bayesian models in `countSTAR`, the user must supply the design matrix $X$ (and if predictions are desired, a matrix of predictors at the test points). We apply this to the roaches data, now using the default nonparametric transformation.
 ```{r bayes-lm}
 X = model.matrix(y ~ roach1 + treatment + senior + log(exposure2),
                  data = roaches)
@@ -242,7 +237,9 @@ library(bayesplot)
 prop_zero <- function(y) mean(y == 0)
 (ppc_stat(y=roaches$y, yrep=fit_blm$post.pred, stat = "prop_zero"))
 ```
+
 ## BART STAR
+
 One of the most flexible model options is to use Bayesian Additive Regression Trees (BART; @chipman2010bart) as the latent regression model:
 ```{r bart}
 #Get the model matrix of predictors (no intercept necessary)
@@ -251,7 +248,9 @@ X = model.matrix(y ~ -1 + roach1 + treatment + senior + exposure2,
 
 fit_bart = bart_star(y = y, X=X, transformation = 'np')
 ```
+
 Once again, we can perform posterior predictive checks. This time we plot the densities.
+
 ```{r bartppc}
 ppc_dens_overlay(y=roaches$y, yrep=fit_bart$post.pred[1:50,])
 ```
@@ -268,15 +267,15 @@ print(waic)
 # Count Time Series Modeling: warpDLM
 Up to this point, all of the attention has focused on static regression where the data does not depend on time. However, the ideas of simultaneous transformation and rounding were extended to the time series domain in @king2021warped. They proposed linking the time-dependent count data $y_t$ to a powerful time series framework known as Dynamic Linear Models (DLMs). A DLM is defined by two equations: (i) the observation equation, which specifies how the observations are related to the latent state vector and (ii) the state evolution equation, which describes how the states are updated in a Markovian fashion. More concretely, we represent it in the following form:
 \begin{align*}
-    \bm z_t &= \bm F_t \bm \theta_t + \bm v_t, \quad \bm v_t \sim N_n(\bm 0, \bm V_t) \\
-    \bm \theta_t &= \bm G_t \bm \theta_{t-1} + \bm w_t, \quad \bm w_t \sim N_p(\bm 0, \bm W_t)
+    z_t &= F_t \theta_t + v_t, \quad v_t \sim N_n(0, V_t) \\
+    \theta_t &= G_t \theta_{t-1} +  w_t, \quad w_t \sim N_p( 0, W_t)
 \end{align*}
-for $t=1,\ldots, T$, where $\{\bm v_t, \bm w_t\}_{t=1}^T$ are mutually independent and $\bm \theta_0 \sim N_p(\bm a_0, \bm R_0)$.
+for $t=1,\ldots, T$, where $\{ v_t, w_t\}_{t=1}^T$ are mutually independent and $\theta_0 \sim N_p(a_0, R_0)$.
 
 Of course, given the Gaussian assumptions of the model, a DLM alone is not appropriate for count data. Thus, a warping operation (the simultaneous transformation and rounding) is applied to the DLM, resulting in the count time series framework known as a warped DLM (warpDLM). More explicitly, it can be written as:
 \begin{align*}
-        \bm y_t &= h \circ g^{-1}(\bm z_t) \\
-        \{\bm z_t\}_{t=1}^T &\sim \text{DLM} 
+         y_t &= h \circ g^{-1}(z_t) \\
+        \{z_t\}_{t=1}^T &\sim \text{DLM} 
 \end{align*}
 
 The DLM form shown earlier is very general. To keep things simple, `countSTAR` implements only a few options for the DLM, namely the local level model and the local linear trend model. These two common forms have a long history and are also referred to as structural time series models (implemented in base R via `StructTS()`). With `countSTAR`, warpDLM time series modeling is accomplished via the `warpDLM()` function. In the below, we apply the model to a time series dataset included in base R concerning yearly numbers of important discoveries from 1860 to 1959 (`?discoveries` for more information).
