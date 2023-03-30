@@ -283,11 +283,11 @@ are available; see <code><a href="../reference/lm_star.html">?lm_star</a></code>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">ci_all</span><span class="op">)</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'Lower'</span>, <span class="st">'Upper'</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">ci_all</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                 Lower  Upper</span></span>
-<span><span class="co">#&gt; (Intercept)     0.794  1.726</span></span>
+<span><span class="co">#&gt; (Intercept)     0.787  1.704</span></span>
 <span><span class="co">#&gt; roach1          0.012  0.019</span></span>
-<span><span class="co">#&gt; treatment      -1.265 -0.175</span></span>
-<span><span class="co">#&gt; senior         -1.524 -0.312</span></span>
-<span><span class="co">#&gt; log(exposure2) -0.555  1.697</span></span></code></pre></div>
+<span><span class="co">#&gt; treatment      -1.265 -0.173</span></span>
+<span><span class="co">#&gt; senior         -1.527 -0.320</span></span>
+<span><span class="co">#&gt; log(exposure2) -0.554  1.695</span></span></code></pre></div>
 <p>Similarly, <em>p-values</em> are available using likelihood ratio
 tests, which can be applied for individual coefficients,</p>
 <p><span class="math display">\[
@@ -304,9 +304,9 @@ p-value for <em>any</em> effects are computed with the
 <code class="sourceCode R"><span><span class="co"># P-values:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="../reference/pvals.html">pvals</a></span><span class="op">(</span><span class="va">fit_em</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;        (Intercept)             roach1          treatment             senior </span></span>
-<span><span class="co">#&gt;       1.705448e-06       2.980638e-16       1.027888e-02       3.090895e-03 </span></span>
+<span><span class="co">#&gt;       1.705448e-06       2.980647e-16       1.027887e-02       3.090895e-03 </span></span>
 <span><span class="co">#&gt;     log(exposure2) Any linear effects </span></span>
-<span><span class="co">#&gt;       3.263341e-01       1.078663e-17</span></span></code></pre></div>
+<span><span class="co">#&gt;       3.263343e-01       1.078664e-17</span></span></code></pre></div>
 <p>Finally, we can get predictions at new data points (or the training
 data) using <code>predict</code>, which actually outputs samples from
 the . Optionally, prediction intervals can be estimated using the
@@ -326,7 +326,7 @@ models.</p>
 implementations for STAR models paired with more flexible regression
 methods, in particular random forests (<code><a href="../reference/randomForest_star.html">randomForest_star()</a></code>)
 and generalized boosted machines (<code><a href="../reference/gbm_star.html">gbm_star()</a></code>). In these
-functions, the user directly inputs the set of predictors <span class="math inline">\(X\)</span> alongside any test points in <span class="math inline">\(X_test\)</span>, as can be seen in the example
+functions, the user directly inputs the set of predictors <span class="math inline">\(X\)</span> alongside any test points in <span class="math inline">\(X_{test}\)</span>, as can be seen in the example
 below</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Select a transformation:</span></span>
@@ -347,7 +347,7 @@ fit.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#Look at -2*log-likelihood</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="op">-</span><span class="fl">2</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">fit_rf</span><span class="op">$</span><span class="va">logLik</span>, <span class="va">fit_gbm</span><span class="op">$</span><span class="va">logLik</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 1667.426 1594.125</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 1667.253 1594.113</span></span></code></pre></div>
 <p>In this case, it seems the GBM model has better fit to the data,
 although this could be further backed up by performing an out-of-sample
 comparison of the two models.</p>
@@ -370,14 +370,9 @@ Gaussian distribution.</p>
 <span class="math display">\[\begin{align*}
 z_i^* &amp;= x_i'\beta + \epsilon_i, \quad \epsilon_i
 \stackrel{iid}{\sim}N(0, \sigma^2) \\
-\beta_j &amp; \stackrel{iid}{\sim}N(0, \sigma_\beta^2), \quad
-\sigma_\beta \sim \mbox{Uniform}(0, 10^4) \;.
-\end{align*}\]</span> Furthermore, we assign the following priors on the
-variances <span class="math display">\[\begin{align*}
-\sigma^2 &amp;\sim mbox{Gamma}(\alpha=0.001, \beta=0.001) \\
-\sigma_\beta &amp;\sim \mbox{Uniform}(0, 10^4) \;.
-\end{align*}\]</span> The model is completed by assigning a prior for
-<span class="math inline">\(\beta\)</span>. The default in
+\sigma^2 &amp;\sim \mbox{Gamma}(\alpha=0.001, \beta=0.001) \;.
+\end{align*}\]</span> The model is completed by assigning a prior
+structure for <span class="math inline">\(\beta\)</span>. The default in
 <code>countSTAR</code> is Zellner’s g-prior, which has the most
 functionality, but other options are available (namely horseshoe and
 ridge priors). The model is estimated using <code><a href="../reference/blm_star.html">blm_star()</a></code>.
@@ -394,10 +389,10 @@ nonparametric transformation.</p>
 <span><span class="va">n</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span>; <span class="va">p</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">fit_blm</span> <span class="op">=</span> <span class="fu"><a href="../reference/blm_star.html">blm_star</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">y</span>, X<span class="op">=</span><span class="va">X</span>, transformation <span class="op">=</span> <span class="st">'np'</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "2.18 seconds remaining"</span></span>
-<span><span class="co">#&gt; [1] "1.02 seconds remaining"</span></span>
+<span><span class="co">#&gt; [1] "0.99 seconds remaining"</span></span>
+<span><span class="co">#&gt; [1] "0.49 seconds remaining"</span></span>
 <span><span class="co">#&gt; [1] "0 seconds remaining"</span></span>
-<span><span class="co">#&gt; [1] "Total time:  9 seconds"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "Total time:  6 seconds"</span></span></code></pre></div>
 <p>By default, the function uses a Gibbs sampler to draw from the
 posterior, but in some settings exact inference can be performed (see
 <span class="citation">D. Kowal and Wu (<a href="#ref-kowalSTARconjugate" role="doc-biblioref">2022</a>)</span> for
@@ -411,7 +406,7 @@ model are available as follows:</p>
 <code class="sourceCode R"><span><span class="co"># Posterior mean of each coefficient:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit_blm</span><span class="op">)</span>,<span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  beta1  beta2  beta3  beta4  beta5 </span></span>
-<span><span class="co">#&gt;  0.029  0.006 -0.288 -0.322  0.226</span></span>
+<span><span class="co">#&gt;  0.031  0.006 -0.287 -0.325  0.214</span></span>
 <span></span>
 <span><span class="co"># Credible intervals for regression coefficients</span></span>
 <span><span class="va">ci_all_bayes</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">fit_blm</span><span class="op">$</span><span class="va">post.beta</span>,</span>
@@ -421,11 +416,11 @@ model are available as follows:</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">ci_all_bayes</span><span class="op">)</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span>; <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">ci_all_bayes</span><span class="op">)</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'Lower'</span>, <span class="st">'Upper'</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">ci_all_bayes</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                 Lower  Upper</span></span>
-<span><span class="co">#&gt; (Intercept)    -0.152  0.206</span></span>
+<span><span class="co">#&gt; (Intercept)    -0.155  0.213</span></span>
 <span><span class="co">#&gt; roach1          0.005  0.007</span></span>
-<span><span class="co">#&gt; treatment      -0.493 -0.082</span></span>
-<span><span class="co">#&gt; senior         -0.556 -0.094</span></span>
-<span><span class="co">#&gt; log(exposure2) -0.199  0.647</span></span></code></pre></div>
+<span><span class="co">#&gt; treatment      -0.497 -0.085</span></span>
+<span><span class="co">#&gt; senior         -0.554 -0.094</span></span>
+<span><span class="co">#&gt; log(exposure2) -0.211  0.653</span></span></code></pre></div>
 <p>We may further evaluate the model based on posterior diagnostics and
 posterior predictive checks on the simulated versus observed proportion
 of zeros. Posterior predictive checks are easily visualized using the <a href="https://mc-stan.org/bayesplot/index.html" class="external-link">bayesplot</a>
@@ -440,7 +435,7 @@ package.</p>
 <span><span class="co"># (Summary of) effective sample sizes across coefficients:</span></span>
 <span><span class="fu"><a href="../reference/getEffSize.html">getEffSize</a></span><span class="op">(</span><span class="va">fit_blm</span><span class="op">$</span><span class="va">post.beta</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span></span>
-<span><span class="co">#&gt;    3430    3743    3856    3814    4021    4021</span></span>
+<span><span class="co">#&gt;    3379    3562    3635    3655    3677    4024</span></span>
 <span></span>
 <span><span class="co"># Posterior predictive check using bayesplot</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mc-stan.org/bayesplot/" class="external-link">bayesplot</a></span><span class="op">)</span></span>
@@ -452,10 +447,14 @@ package.</p>
 <span><span class="va">prop_zero</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">y</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">y</span> <span class="op">==</span> <span class="fl">0</span><span class="op">)</span></span>
 <span><span class="op">(</span><span class="fu"><a href="https://mc-stan.org/bayesplot/reference/PPC-test-statistics.html" class="external-link">ppc_stat</a></span><span class="op">(</span>y<span class="op">=</span><span class="va">roaches</span><span class="op">$</span><span class="va">y</span>, yrep<span class="op">=</span><span class="va">fit_blm</span><span class="op">$</span><span class="va">post.pred</span>, stat <span class="op">=</span> <span class="st">"prop_zero"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</span></span></code></pre></div>
-<p><img src="countSTAR_files/figure-html/diag-2.png" width="700">
-## BART STAR One of the most flexible model options is to use Bayesian
-Additive Regression Trees (BART; <span class="citation">Chipman, George,
-and McCulloch (<a href="#ref-chipman2010bart" role="doc-biblioref">2012</a>)</span>) as the latent regression
+<p><img src="countSTAR_files/figure-html/diag-2.png" width="700"></p>
+</div>
+<div class="section level3">
+<h3 id="bart-star">BART STAR<a class="anchor" aria-label="anchor" href="#bart-star"></a>
+</h3>
+<p>One of the most flexible model options is to use Bayesian Additive
+Regression Trees (BART; <span class="citation">Chipman, George, and
+McCulloch (<a href="#ref-chipman2010bart" role="doc-biblioref">2012</a>)</span>) as the latent regression
 model:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#Get the model matrix of predictors (no intercept necessary)</span></span>
@@ -463,12 +462,12 @@ model:</p>
 <span>                 data <span class="op">=</span> <span class="va">roaches</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">fit_bart</span> <span class="op">=</span> <span class="fu"><a href="../reference/bart_star.html">bart_star</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">y</span>, X<span class="op">=</span><span class="va">X</span>, transformation <span class="op">=</span> <span class="st">'np'</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "28.06 seconds remaining"</span></span>
-<span><span class="co">#&gt; [1] "20.06 seconds remaining"</span></span>
-<span><span class="co">#&gt; [1] "15.94 seconds remaining"</span></span>
-<span><span class="co">#&gt; [1] "8.45 seconds remaining"</span></span>
+<span><span class="co">#&gt; [1] "18.11 seconds remaining"</span></span>
+<span><span class="co">#&gt; [1] "12.49 seconds remaining"</span></span>
+<span><span class="co">#&gt; [1] "10.04 seconds remaining"</span></span>
+<span><span class="co">#&gt; [1] "5.34 seconds remaining"</span></span>
 <span><span class="co">#&gt; [1] "0 seconds remaining"</span></span>
-<span><span class="co">#&gt; [1] "Total time:  34 seconds"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "Total time:  22 seconds"</span></span></code></pre></div>
 <p>Once again, we can perform posterior predictive checks. This time we
 plot the densities.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
@@ -482,7 +481,7 @@ BART STAR model seems to have a better fit than the linear model.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">waic</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"STAR w/ Linear Model"</span>, <span class="st">"STAR w/ BART"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">waic</span><span class="op">)</span></span>
 <span><span class="co">#&gt; STAR w/ Linear Model         STAR w/ BART </span></span>
-<span><span class="co">#&gt;             1687.647             1638.721</span></span></code></pre></div>
+<span><span class="co">#&gt;             1687.653             1638.907</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="other-models">Other Models<a class="anchor" aria-label="anchor" href="#other-models"></a>
@@ -511,21 +510,18 @@ observations are related to the latent state vector and (ii) the state
 evolution equation, which describes how the states are updated in a
 Markovian fashion. More concretely, we represent it in the following
 form: <span class="math display">\[\begin{align*}
-    \bm z_t &amp;= \bm F_t \bm \theta_t + \bm v_t, \quad \bm v_t \sim
-N_n(\bm 0, \bm V_t) \\
-    \bm \theta_t &amp;= \bm G_t \bm \theta_{t-1} + \bm w_t, \quad \bm
-w_t \sim N_p(\bm 0, \bm W_t)
+    z_t &amp;= F_t \theta_t + v_t, \quad v_t \sim N_n(0, V_t) \\
+    \theta_t &amp;= G_t \theta_{t-1} +  w_t, \quad w_t \sim N_p( 0, W_t)
 \end{align*}\]</span> for <span class="math inline">\(t=1,\ldots,
-T\)</span>, where <span class="math inline">\(\{\bm v_t, \bm
-w_t\}_{t=1}^T\)</span> are mutually independent and <span class="math inline">\(\bm \theta_0 \sim N_p(\bm a_0, \bm
-R_0)\)</span>.</p>
+T\)</span>, where <span class="math inline">\(\{ v_t,
+w_t\}_{t=1}^T\)</span> are mutually independent and <span class="math inline">\(\theta_0 \sim N_p(a_0, R_0)\)</span>.</p>
 <p>Of course, given the Gaussian assumptions of the model, a DLM alone
 is not appropriate for count data. Thus, a warping operation (the
 simultaneous transformation and rounding) is applied to the DLM,
 resulting in the count time series framework known as a warped DLM
 (warpDLM). More explicitly, it can be written as: <span class="math display">\[\begin{align*}
-        \bm y_t &amp;= h \circ g^{-1}(\bm z_t) \\
-        \{\bm z_t\}_{t=1}^T &amp;\sim \text{DLM}
+         y_t &amp;= h \circ g^{-1}(z_t) \\
+        \{z_t\}_{t=1}^T &amp;\sim \text{DLM}
 \end{align*}\]</span></p>
 <p>The DLM form shown earlier is very general. To keep things simple,
 <code>countSTAR</code> implements only a few options for the DLM, namely
@@ -545,7 +541,7 @@ more information).</p>
 <code class="sourceCode R"><span></span>
 <span><span class="co">#Fit the model</span></span>
 <span><span class="va">warpfit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/warpDLM.html">warpDLM</a></span><span class="op">(</span>y<span class="op">=</span><span class="va">discoveries</span>, type<span class="op">=</span><span class="st">"trend"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "Time taken:  150.483  seconds"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "Time taken:  89.089  seconds"</span></span></code></pre></div>
 <p>Once again, we can check fit using posterior predictive checks. The
 median of the posterior predictive draws can act as a sort of
 count-valued smoother of the time series.</p>
