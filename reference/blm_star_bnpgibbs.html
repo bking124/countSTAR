@@ -161,7 +161,7 @@ about the transformation into posterior and predictive inference.</p>
 <span class="r-in"><span><span class="va">y</span> <span class="op">=</span> <span class="va">sim_dat</span><span class="op">$</span><span class="va">y</span>; <span class="va">X</span> <span class="op">=</span> <span class="va">sim_dat</span><span class="op">$</span><span class="va">X</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Fit a linear model:</span></span></span>
-<span class="r-in"><span><span class="va">fit</span> <span class="op">=</span> <span class="fu">blm_star_bnpgibbs</span><span class="op">(</span><span class="va">y</span>, <span class="va">X</span>, nsave <span class="op">=</span> <span class="fl">1000</span>, nburn <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">=</span> <span class="fu">countSTAR</span><span class="fu">:::</span><span class="fu">blm_star_bnpgibbs</span><span class="op">(</span><span class="va">y</span>, <span class="va">X</span>, nsave <span class="op">=</span> <span class="fl">1000</span>, nburn <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Check the efficiency of the MCMC samples:</span></span></span>
