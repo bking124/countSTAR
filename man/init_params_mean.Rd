@@ -25,9 +25,4 @@ with a flat prior on mu0.
 The only parameter in \code{coefficients} is \code{mu0}.
 Although redundant here, this parametrization is useful in other functions.
 }
-\examples{
-# Example:
-params = init_params_mean(y = 1:10)
-
-}
 \keyword{internal}

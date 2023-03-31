@@ -115,7 +115,7 @@ sim_dat = simulate_nb_lm(n = 100, p = 5)
 y = sim_dat$y; X = sim_dat$X
 
 # STAR: unknown I-spline transformation
-fit = genMCMC_star_ispline(y = y,
+fit = countSTAR:::genMCMC_star_ispline(y = y,
                          sample_params = function(y, params) rSTAR:::sample_lm_gprior(y, X, params),
                          init_params = function(y) rSTAR:::init_lm_gprior(y, X))
 

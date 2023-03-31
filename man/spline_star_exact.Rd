@@ -93,13 +93,14 @@ from the posterior predictive distribution of the spline regression model
 at the observed tau points.
 }
 \examples{
+\dontrun{
 # Simulate some data:
 n = 100
 tau = seq(0,1, length.out = n)
 y = round_floor(exp(1 + rnorm(n)/4 + poly(tau, 4)\%*\%rnorm(n=4, sd = 4:1)))
 
 # Sample from the predictive distribution of a STAR spline model:
-fit_star = STAR_spline(y = y, tau = tau)
+fit_star = countSTAR:::spline_star_exact(y = y, tau = tau)
 post_ytilde = fit_star$post_ytilde
 
 # Compute 90\% prediction intervals:
@@ -111,6 +112,7 @@ polygon(c(tau, rev(tau)),c(pi_y[,2], rev(pi_y[,1])),col='gray', border=NA)
 lines(tau, apply(post_ytilde, 2, median), lwd=5, col ='black')
 lines(tau, smooth.spline(tau, apply(post_ytilde, 2, mean))$y, lwd=5, col='blue')
 lines(tau, y, type='p')
+}
 
 }
 \keyword{internal}

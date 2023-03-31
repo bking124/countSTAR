@@ -35,14 +35,16 @@ components of \code{beta}
 }
 }
 \examples{
+\dontrun{
 # Simulate data for illustration:
 sim_dat = simulate_nb_lm(n = 100, p = 5)
 y = sim_dat$y; X = sim_dat$X
 
 # Initialize:
-params = init_params_lm_gprior(y = y, X = X)
+params = countSTAR:::init_lm_gprior(y = y, X = X)
 names(params)
 names(params$coefficients)
+}
 
 }
 \keyword{internal}

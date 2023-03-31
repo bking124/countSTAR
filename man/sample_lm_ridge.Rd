@@ -2,7 +2,7 @@
 % Please edit documentation in R/internal_functions.R
 \name{sample_lm_ridge}
 \alias{sample_lm_ridge}
-\title{Sample linear regressionparameters assuming a ridge prior}
+\title{Sample linear regression parameters assuming a ridge prior}
 \usage{
 sample_lm_ridge(y, X, params, A = 10^4, XtX = NULL, X_test = NULL)
 }
@@ -43,17 +43,19 @@ components of \code{beta}
 }
 }
 \examples{
+\dontrun{
 # Simulate data for illustration:
 sim_dat = simulate_nb_lm(n = 100, p = 5)
 y = sim_dat$y; X = sim_dat$X
 
 # Initialize:
-params = init_params_lm(y = y, X = X)
+params = countSTAR:::init_lm_ridge(y = y, X = X)
 
 # Sample:
-params = sample_params_lm(y = y, X = X, params = params)
+params = countSTAR:::sample_lm_ridge(y = y, X = X, params = params)
 names(params)
 names(params$coefficients)
+}
 
 }
 \keyword{internal}

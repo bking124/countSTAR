@@ -40,6 +40,7 @@ The parameters in \code{coefficients} are:
 }
 }
 \examples{
+\dontrun{
 # Simulate data for illustration:
 sim_dat = simulate_nb_friedman(n = 100, p = 5)
 y = sim_dat$y; X = sim_dat$X
@@ -49,11 +50,11 @@ X_lin = as.matrix(X[,-(1:3)])
 X_nonlin = as.matrix(X[,(1:3)])
 
 # Initialize:
-params = init_params_additive(y = y,
-                              X_lin = X_lin,
-                              X_nonlin = X_nonlin)
+params = countSTAR:::init_bam_orthog(y = y,
+                         X_lin = X_lin,
+                         X_nonlin = X_nonlin)
 names(params)
 names(params$coefficients)
-
+}
 }
 \keyword{internal}

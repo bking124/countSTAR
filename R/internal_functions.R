@@ -77,16 +77,18 @@
 #' improvements are likely available.
 #'
 #' @examples
+#' \dontrun{
 #' # Simulate some data:
 #' sim_dat = simulate_nb_lm(n = 100, p = 10)
 #' y = sim_dat$y; X = sim_dat$X
 #'
 #' # Fit a linear model:
-#' fit = blm_star_exact(y, X)
+#' fit = countSTAR:::blm_star_exact(y, X)
 #' names(fit)
 #'
 #' # Check the efficiency of the Monte Carlo samples:
 #' getEffSize(fit$post_beta)
+#' }
 #'
 #' @importFrom TruncatedNormal mvrandn pmvnorm
 #' @importFrom FastGP rcpp_rmvnorm
@@ -442,7 +444,7 @@ blm_star_exact = function(y, X, X_test = X,
 #' y = sim_dat$y; X = sim_dat$X
 #'
 #' # Fit a linear model:
-#' fit = blm_star_bnpgibbs(y, X, nsave = 1000, nburn = 1000)
+#' fit = countSTAR:::blm_star_bnpgibbs(y, X, nsave = 1000, nburn = 1000)
 #' names(fit)
 #'
 #' # Check the efficiency of the MCMC samples:
@@ -682,13 +684,14 @@ blm_star_bnpgibbs = function(y, X, X_test = X,
 #' at the observed tau points.
 #'
 #' @examples
+#' \dontrun{
 #' # Simulate some data:
 #' n = 100
 #' tau = seq(0,1, length.out = n)
 #' y = round_floor(exp(1 + rnorm(n)/4 + poly(tau, 4)%*%rnorm(n=4, sd = 4:1)))
 #'
 #' # Sample from the predictive distribution of a STAR spline model:
-#' fit_star = STAR_spline(y = y, tau = tau)
+#' fit_star = countSTAR:::spline_star_exact(y = y, tau = tau)
 #' post_ytilde = fit_star$post_ytilde
 #'
 #' # Compute 90% prediction intervals:
@@ -700,6 +703,7 @@ blm_star_bnpgibbs = function(y, X, X_test = X,
 #' lines(tau, apply(post_ytilde, 2, median), lwd=5, col ='black')
 #' lines(tau, smooth.spline(tau, apply(post_ytilde, 2, mean))$y, lwd=5, col='blue')
 #' lines(tau, y, type='p')
+#' }
 #'
 #' @importFrom TruncatedNormal mvrandn pmvnorm
 #' @importFrom FastGP rcpp_rmvnorm
@@ -972,7 +976,7 @@ spline_star_exact = function(y,
 #' y = sim_dat$y; X = sim_dat$X
 #'
 #' # BART-STAR with unknown I-spline transformation
-#' fit = bart_star_ispline(y = y, X = X)
+#' fit = countSTAR:::bart_star_ispline(y = y, X = X)
 #'
 #' # Fitted values
 #' plot_fitted(y = sim_dat$Ey,
@@ -995,20 +999,20 @@ spline_star_exact = function(y,
 #' @importFrom Matrix Matrix chol
 #' @keywords internal
 bart_star_ispline = function(y,
-                                  X,
-                                  X_test = NULL, y_test = NULL,
-                                  lambda_prior = 1/2,
-                                  y_max = Inf,
-                                  n.trees = 200,
-                                  sigest = NULL, sigdf = 3, sigquant = 0.90, k = 2.0, power = 2.0, base = 0.95,
-                                  nsave = 5000,
-                                  nburn = 5000,
-                                  nskip = 2,
-                                  save_y_hat = FALSE,
-                                  target_acc_rate = 0.3,
-                                  adapt_rate = 0.75,
-                                  stop_adapt_perc = 0.5,
-                                  verbose = TRUE){
+                            X,
+                            X_test = NULL, y_test = NULL,
+                            lambda_prior = 1/2,
+                            y_max = Inf,
+                            n.trees = 200,
+                            sigest = NULL, sigdf = 3, sigquant = 0.90, k = 2.0, power = 2.0, base = 0.95,
+                            nsave = 5000,
+                            nburn = 5000,
+                            nskip = 2,
+                            save_y_hat = FALSE,
+                            target_acc_rate = 0.3,
+                            adapt_rate = 0.75,
+                            stop_adapt_perc = 0.5,
+                            verbose = TRUE){
 
   # Check: currently implemented for nonnegative integers
   if(any(y < 0) || any(y != floor(y)))
@@ -1455,7 +1459,7 @@ bart_star_ispline = function(y,
 #' y = sim_dat$y; X = sim_dat$X
 #'
 #' # STAR: unknown I-spline transformation
-#' fit = genMCMC_star_ispline(y = y,
+#' fit = countSTAR:::genMCMC_star_ispline(y = y,
 #'                          sample_params = function(y, params) rSTAR:::sample_lm_gprior(y, X, params),
 #'                          init_params = function(y) rSTAR:::init_lm_gprior(y, X))
 #'
@@ -1884,6 +1888,7 @@ genMCMC_star_ispline = function(y,
 #' }
 #'
 #' @examples
+#' \dontrun{
 #' # Simulate data for illustration:
 #' sim_dat = simulate_nb_friedman(n = 100, p = 5)
 #' y = sim_dat$y; X = sim_dat$X
@@ -1893,12 +1898,12 @@ genMCMC_star_ispline = function(y,
 #' X_nonlin = as.matrix(X[,(1:3)])
 #'
 #' # Initialize:
-#' params = init_params_additive(y = y,
-#'                               X_lin = X_lin,
-#'                               X_nonlin = X_nonlin)
+#' params = countSTAR:::init_bam_orthog(y = y,
+#'                          X_lin = X_lin,
+#'                          X_nonlin = X_nonlin)
 #' names(params)
 #' names(params$coefficients)
-#'
+#' }
 #' @importFrom spikeSlabGAM sm
 #' @keywords internal
 init_bam_orthog = function(y,
@@ -2019,6 +2024,7 @@ init_bam_orthog = function(y,
 #' }
 #'
 #' @examples
+#' \dontrun{
 #' # Simulate data for illustration:
 #' sim_dat = simulate_nb_friedman(n = 100, p = 5)
 #' y = sim_dat$y; X = sim_dat$X
@@ -2028,10 +2034,10 @@ init_bam_orthog = function(y,
 #' X_nonlin = as.matrix(X[,(1:3)])
 #'
 #' # Initialize:
-#' params = init_params_additive(y = y, X_lin = X_lin, X_nonlin = X_nonlin)
+#' params = countSTAR:::init_bam_orthog(y = y, X_lin = X_lin, X_nonlin = X_nonlin)
 #'
 #' # Sample:
-#' params = sample_params_additive(y = y,
+#' params = countSTAR:::sample_bam_orthog(y = y,
 #'                                 X_lin = X_lin,
 #'                                 X_nonlin = X_nonlin,
 #'                                 params = params)
@@ -2040,6 +2046,7 @@ init_bam_orthog = function(y,
 #'
 #' # And plot an example:
 #' plot(X_nonlin[,1], params$coefficients$f_j[,1])
+#' }
 #'
 #' @keywords internal
 sample_bam_orthog = function(y,
@@ -2200,6 +2207,7 @@ sample_bam_orthog = function(y,
 #' }
 #'
 #' @examples
+#' \dontrun{
 #' # Simulate data for illustration:
 #' sim_dat = simulate_nb_friedman(n = 100, p = 5)
 #' y = sim_dat$y; X = sim_dat$X
@@ -2209,11 +2217,12 @@ sample_bam_orthog = function(y,
 #' X_nonlin = as.matrix(X[,(1:3)])
 #'
 #' # Initialize:
-#' params = init_params_additive0(y = y,
+#' params = countSTAR:::init_bam_thin(y = y,
 #'                               X_lin = X_lin,
 #'                               X_nonlin = X_nonlin)
 #' names(params)
 #' names(params$coefficients)
+#' }
 #'
 #' @keywords internal
 init_bam_thin = function(y,
@@ -2334,6 +2343,7 @@ init_bam_thin = function(y,
 #' }
 #'
 #' @examples
+#' \dontrun{
 #' # Simulate data for illustration:
 #' sim_dat = simulate_nb_friedman(n = 100, p = 5)
 #' y = sim_dat$y; X = sim_dat$X
@@ -2343,10 +2353,10 @@ init_bam_thin = function(y,
 #' X_nonlin = as.matrix(X[,(1:3)])
 #'
 #' # Initialize:
-#' params = init_params_additive0(y = y, X_lin = X_lin, X_nonlin = X_nonlin)
+#' params = countSTAR:::init_bam_thin(y = y, X_lin = X_lin, X_nonlin = X_nonlin)
 #'
 #' # Sample:
-#' params = sample_params_additive0(y = y,
+#' params = countSTAR:::sample_bam_thin(y = y,
 #'                                 X_lin = X_lin,
 #'                                 X_nonlin = X_nonlin,
 #'                                 params = params)
@@ -2355,6 +2365,7 @@ init_bam_thin = function(y,
 #'
 #' # And plot an example:
 #' plot(X_nonlin[,1], params$coefficients$f_j[,1])
+#' }
 #'
 #' @keywords internal
 sample_bam_thin = function(y,
@@ -2506,10 +2517,6 @@ sample_bam_thin = function(y,
 #' @note The only parameter in \code{coefficients} is \code{mu0}.
 #' Although redundant here, this parametrization is useful in other functions.
 #'
-#' @examples
-#' # Example:
-#' params = init_params_mean(y = 1:10)
-#'
 #' @keywords internal
 init_params_mean = function(y){
 
@@ -2550,11 +2557,13 @@ init_params_mean = function(y){
 #' Although redundant here, this parametrization is useful in other functions.
 #'
 #' @examples
+#' \dontrun{
 #' # Example:
 #' y = 1:10
-#' params0 = init_params_mean(y)
-#' params = sample_params_mean(y = y, params = params0)
+#' params0 = countSTAR:::init_params_mean(y)
+#' params = countSTAR:::sample_params_mean(y = y, params = params0)
 #' names(params)
+#' }
 #'
 #' @keywords internal
 sample_params_mean = function(y, params){
@@ -2737,8 +2746,10 @@ computeTimeRemaining = function(nsi, timer0, nsims, nrep=1000){
 #' @param x scalar or vector in (0,1) for which to compute the (componentwise) log-odds
 #' @return A scalar or vector of log-odds
 #' @examples
+#' \dontrun{
 #' x = seq(0, 1, length.out = 10^3)
-#' plot(x, logit(x))
+#' plot(x, countSTAR:::logit(x))
+#' }
 #'
 #' @keywords internal
 logit = function(x) {
@@ -2750,9 +2761,12 @@ logit = function(x) {
 #' Compute the inverse log-odds
 #' @param x scalar or vector for which to compute the (componentwise) inverse log-odds
 #' @return A scalar or vector of values in (0,1)
+#'
 #' @examples
+#' \dontrun{
 #' x = seq(-5, 5, length.out = 10^3)
-#' plot(x, invlogit(x))
+#' plot(x, countSTAR:::invlogit(x))
+#' }
 #'
 #' @keywords internal
 invlogit = function(x) exp(x - log(1+exp(x))) # exp(x)/(1+exp(x))
@@ -3041,9 +3055,6 @@ uni.slice <- function (x0, g, w=1, m=Inf, lower=-Inf, upper=+Inf, gx0=NULL)
 #'
 #' @return a list containing the first moment \code{m1} and the second moment \code{m2}
 #'
-#' @examples
-#' truncnorm_mom(-1, 1, 0, 1)
-#'
 #' @keywords internal
 truncnorm_mom = function(a, b, mu, sig){
   # Standardize the bounds:
@@ -3095,14 +3106,16 @@ truncnorm_mom = function(a, b, mu, sig){
 #' }
 #'
 #' @examples
+#' \dontrun{
 #' # Simulate data for illustration:
 #' sim_dat = simulate_nb_lm(n = 100, p = 5)
 #' y = sim_dat$y; X = sim_dat$X
 #'
 #' # Initialize:
-#' params = init_params_lm(y = y, X = X)
+#' params = countSTAR:::init_lm_ridge(y = y, X = X)
 #' names(params)
 #' names(params$coefficients)
+#' }
 #'
 #' @keywords internal
 init_lm_ridge = function(y, X, X_test=NULL){
@@ -3138,7 +3151,7 @@ init_lm_ridge = function(y, X, X_test=NULL){
   }
   return(result)
 }
-#' Sample linear regressionparameters assuming a ridge prior
+#' Sample linear regression parameters assuming a ridge prior
 #'
 #' Sample the parameters for a linear regression model assuming a
 #' ridge prior for the (non-intercept) coefficients. The number of predictors
@@ -3168,17 +3181,19 @@ init_lm_ridge = function(y, X, X_test=NULL){
 #' }
 #'
 #' @examples
+#' \dontrun{
 #' # Simulate data for illustration:
 #' sim_dat = simulate_nb_lm(n = 100, p = 5)
 #' y = sim_dat$y; X = sim_dat$X
 #'
 #' # Initialize:
-#' params = init_params_lm(y = y, X = X)
+#' params = countSTAR:::init_lm_ridge(y = y, X = X)
 #'
 #' # Sample:
-#' params = sample_params_lm(y = y, X = X, params = params)
+#' params = countSTAR:::sample_lm_ridge(y = y, X = X, params = params)
 #' names(params)
 #' names(params$coefficients)
+#' }
 #'
 #' @keywords internal
 #' @import truncdist
@@ -3274,14 +3289,16 @@ sample_lm_ridge = function(y, X, params, A = 10^4, XtX = NULL, X_test=NULL){
 #' }
 #'
 #' @examples
+#' \dontrun{
 #' # Simulate data for illustration:
 #' sim_dat = simulate_nb_lm(n = 100, p = 5)
 #' y = sim_dat$y; X = sim_dat$X
 #'
 #' # Initialize:
-#' params = init_params_lm_hs(y = y, X = X)
+#' params = countSTAR:::init_lm_hs(y = y, X = X)
 #' names(params)
 #' names(params$coefficients)
+#' }
 #'
 #' @keywords internal
 init_lm_hs = function(y, X, X_test=NULL){
@@ -3360,17 +3377,19 @@ init_lm_hs = function(y, X, X_test=NULL){
 #' }
 #'
 #' @examples
+#' \dontrun{
 #' # Simulate data for illustration:
 #' sim_dat = simulate_nb_lm(n = 100, p = 5)
 #' y = sim_dat$y; X = sim_dat$X
 #'
 #' # Initialize:
-#' params = init_params_lm_hs(y = y, X = X)
+#' params = countSTAR:::init_lm_hs(y = y, X = X)
 #'
 #' # Sample:
-#' params = sample_params_lm_hs(y = y, X = X, params = params)
+#' params = countSTAR:::sample_lm_hs(y = y, X = X, params = params)
 #' names(params)
 #' names(params$coefficients)
+#' }
 #'
 #' @keywords internal
 sample_lm_hs = function(y, X, params, XtX = NULL, X_test=NULL){
@@ -3474,14 +3493,16 @@ sample_lm_hs = function(y, X, params, XtX = NULL, X_test=NULL){
 #' }
 #'
 #' @examples
+#' \dontrun{
 #' # Simulate data for illustration:
 #' sim_dat = simulate_nb_lm(n = 100, p = 5)
 #' y = sim_dat$y; X = sim_dat$X
 #'
 #' # Initialize:
-#' params = init_params_lm_gprior(y = y, X = X)
+#' params = countSTAR:::init_lm_gprior(y = y, X = X)
 #' names(params)
 #' names(params$coefficients)
+#' }
 #'
 #' @keywords internal
 init_lm_gprior = function(y, X, X_test=NULL){
@@ -3540,17 +3561,19 @@ init_lm_gprior = function(y, X, X_test=NULL){
 #' }
 #'
 #' @examples
+#' \dontrun{
 #' # Simulate data for illustration:
 #' sim_dat = simulate_nb_lm(n = 100, p = 5)
 #' y = sim_dat$y; X = sim_dat$X
 #'
 #' # Initialize:
-#' params = init_params_lm_gprior(y = y, X = X)
+#' params = countSTAR:::init_lm_gprior(y = y, X = X)
 #'
 #' # Sample:
-#' params = sample_params_lm_gprior(y = y, X = X, params = params)
+#' params = countSTAR:::sample_lm_gprior(y = y, X = X, params = params)
 #' names(params)
 #' names(params$coefficients)
+#' }
 #'
 #' @keywords internal
 #' @import truncdist

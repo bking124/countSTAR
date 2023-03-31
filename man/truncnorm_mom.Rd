@@ -24,8 +24,4 @@ of a (non-truncated) normal distribution, compute the first and second
 moment of the truncated normal distribution. All inputs may be scalars
 or vectors.
 }
-\examples{
-truncnorm_mom(-1, 1, 0, 1)
-
-}
 \keyword{internal}

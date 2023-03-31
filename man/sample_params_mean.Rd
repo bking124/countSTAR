@@ -29,11 +29,13 @@ The only parameter in \code{coefficients} is \code{mu0}.
 Although redundant here, this parametrization is useful in other functions.
 }
 \examples{
+\dontrun{
 # Example:
 y = 1:10
-params0 = init_params_mean(y)
-params = sample_params_mean(y = y, params = params0)
+params0 = countSTAR:::init_params_mean(y)
+params = countSTAR:::sample_params_mean(y = y, params = params0)
 names(params)
+}
 
 }
 \keyword{internal}

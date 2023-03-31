@@ -89,7 +89,7 @@ sim_dat = simulate_nb_lm(n = 500, p = 10)
 y = sim_dat$y; X = sim_dat$X
 
 # Fit a linear model:
-fit = blm_star_bnpgibbs(y, X, nsave = 1000, nburn = 1000)
+fit = countSTAR:::blm_star_bnpgibbs(y, X, nsave = 1000, nburn = 1000)
 names(fit)
 
 # Check the efficiency of the MCMC samples:
