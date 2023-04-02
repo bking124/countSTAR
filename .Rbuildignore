@@ -9,3 +9,4 @@
 ^doc$
 ^Meta$
 ^README\.Rmd$
+^vignettes/countSTAR_cache$

@@ -55,13 +55,13 @@ y = rpois(n = length(x), lambda = exp(1.5 + 5*(x -.5)^2))
 fit = lm_star(y~x+I(x^2), transformation = 'sqrt')
 
 #Compute the predictive draws for the test points (same as observed points here)
-y_pred = predict(fit)
+#Also compute intervals using plug-in predictive distribution
+y_pred = predict(fit, interval=TRUE)
 
-# Using these draws, compute prediction intervals for STAR:
-PI_y = t(apply(y_pred, 2, quantile, c(0.05, 1 - 0.05)))
+# Plot the results
+plot(x, y, ylim = range(y, y_pred), main = 'STAR: Predictions and 95\% PI')
+lines(x,y_pred[,"fit"], col='black', type='s', lwd=4)
+lines(x, y_pred[,"lwr"], col='darkgray', type='s', lwd=4)
+lines(x, y_pred[,"upr"], col='darkgray', type='s', lwd=4)
 
-# Plot the results: PIs
-plot(x, y, ylim = range(y, PI_y), main = 'STAR: 90\% Prediction Intervals')
-lines(x, PI_y[,1], col='darkgray', type='s', lwd=4);
-lines(x, PI_y[,2], col='darkgray', type='s', lwd=4)
 }

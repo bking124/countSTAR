@@ -1,3 +1,8 @@
+# Suppress CRAN note deriving from non-standard evaluation of dbarts priors
+#' @importFrom utils suppressForeignCheck globalVariables
+if(getRversion() >= "2.15.1") utils::globalVariables(c("cgm", "normal", "chisq"))
+if(getRversion() >= "3.1.0") utils::suppressForeignCheck(c("cgm", "normal", "chisq"))
+
 #' STAR Bayesian Linear Regression
 #'
 #' Posterior inference for STAR linear model
@@ -1198,16 +1203,16 @@ bart_star = function(y,
 #' y = round_floor(exp(1 + rnorm(n)/4 + poly(tau, 4)%*%rnorm(n=4, sd = 4:1)))
 #'
 #' # Sample from the predictive distribution of a STAR spline model:
-#' post_ytilde = STAR_spline_gibbs(y = y, tau = tau)
+#' fit = spline_star(y = y, tau = tau)
 #'
 #' # Compute 90% prediction intervals:
-#' pi_y = t(apply(post_ytilde, 2, quantile, c(0.05, .95)))
+#' pi_y = t(apply(fit$post_ytilde, 2, quantile, c(0.05, .95)))
 #'
 #'# Plot the results: intervals, median, and smoothed mean
 #' plot(tau, y, ylim = range(pi_y, y))
 #' polygon(c(tau, rev(tau)),c(pi_y[,2], rev(pi_y[,1])),col='gray', border=NA)
-#' lines(tau, apply(post_ytilde, 2, median), lwd=5, col ='black')
-#' lines(tau, smooth.spline(tau, apply(post_ytilde, 2, mean))$y, lwd=5, col='blue')
+#' lines(tau, apply(fit$post_ytilde, 2, median), lwd=5, col ='black')
+#' lines(tau, smooth.spline(tau, apply(fit$post_ytilde, 2, mean))$y, lwd=5, col='blue')
 #' lines(tau, y, type='p')
 #'
 #' @importFrom TruncatedNormal mvrandn pmvnorm
@@ -1426,5 +1431,5 @@ spline_star = function(y,
   }
   if(verbose) print(paste('Total time: ', round((proc.time()[3] - timer0)), 'seconds'))
 
-  return(list(post_ytilde))
+  return(list(post_ytilde=post_ytilde))
 }
