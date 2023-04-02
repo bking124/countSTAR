@@ -53,6 +53,7 @@ The rounding operator and its inverse are implemented in `countSTAR` with the fu
 
 ## The Transformation Function
 There are a variety of options for the transformation function $g$, ranging from fixed functions to a-priori data-driven transformations to transformations learned along with the rest of the model. All models in `countSTAR` support three common fixed transformations: log, square root ('sqrt'), and the identity transformation (essentially a rounding-only model). Furthermore, all functions support a set of transformations which are learned by matching marginal moments of the data $y$ to the latent $z$:
+
 * `transformation='pois'` uses a moment-matched marginal Poisson CDF
 * `transformation='neg-bin'` uses a moment-matched marginal Negative Binomial CDF
 * `transformation='np'` is a nonparametric transformation estimated from the empirical CDF of $y$. 
@@ -60,6 +61,7 @@ There are a variety of options for the transformation function $g$, ranging from
 Details on the estimation of these transformations can be found in @kowal2021semiparametric.  In particular the "np" transformation has proven very effective, especially for heaped data, and is the default across all functions.
 
 Some STAR methods also support ways of learning the transformation alongside the model:
+
 * `transformation='box-cox'`: the transformation is assumed to belong to the Box-Cox family; the sampler samples the $\lambda$ parameter
 * `transformation='ispline'`: the transformation is modeled as an unknown, monotone function using I-splines. The Robust Adaptive Metropolis (RAM) sampler is used for drawing the parameter of the transformation function. 
 * `transformation='bnp'`: the transformation is modeled using the Bayesian bootstrap, a Bayesian nonparametric model that incorporates the uncertainty about the transformation into posterior and predictive inference. 
@@ -246,7 +248,9 @@ Once again, we can perform posterior predictive checks. This time we plot the de
 ```{r bartppc}
 ppc_dens_overlay(y=roaches$y, yrep=fit_bart$post.pred[1:50,])
 ```
+
 With all Bayesian models, pointwise log-likelihoods and WAIC values are outputted for model comparison. Using this information, we can see the BART STAR model seems to have a better fit than the linear model.
+
 ```{r waic}
 waic <- c(fit_blm$WAIC, fit_bart$WAIC)
 names(waic) <- c("STAR w/ Linear Model", "STAR w/ BART")
