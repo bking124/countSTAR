@@ -1,6 +1,6 @@
 Package: countSTAR
 Type: Package
-Title: Modeling Integer-Valued Data  via Simultaneous Transformation and Rounding (STAR)
+Title: Flexible Modeling of Count-Valued Data 
 Version: 1.0.0
 Authors@R: c(
     person(given="Brian", family="King", email = "brianking387@gmail.com", role = c("aut", "cre")),
