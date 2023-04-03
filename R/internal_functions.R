@@ -608,7 +608,18 @@ blm_star_bnpgibbs = function(y, X, X_test = X,
         skipcount = 0
       }
     }
-    if(verbose) computeTimeRemaining(nsi, timer0, nstot, nrep = 5000)
+    if(verbose){
+      if(nsi==1){
+        print("Burn-In Period")
+      } else if (nsi < nburn){
+        computeTimeRemaining(nsi, timer0, nstot, nrep = 4000)
+      } else if (nsi==nburn){
+        print("Starting sampling")
+        timer1 = proc.time()[3]
+      } else {
+        computeTimeRemaining(nsi-nburn, timer1, nstot-nburn, nrep = 4000)
+      }
+    }
   }
   if(verbose) print(paste('Total time: ', round((proc.time()[3] - timer0)), 'seconds'))
 
@@ -1355,7 +1366,18 @@ bart_star_ispline = function(y,
         skipcount = 0
       }
     }
-    if(verbose) computeTimeRemaining(nsi, timer0, nstot, nrep = 5000)
+    if(verbose){
+      if(nsi==1){
+        print("Burn-In Period")
+      } else if (nsi < nburn){
+        computeTimeRemaining(nsi, timer0, nstot, nrep = 4000)
+      } else if (nsi==nburn){
+        print("Starting sampling")
+        timer1 = proc.time()[3]
+      } else {
+        computeTimeRemaining(nsi-nburn, timer1, nstot-nburn, nrep = 4000)
+      }
+    }
   }
   if(verbose) print(paste('Total time: ', round((proc.time()[3] - timer0)), 'seconds'))
 
@@ -1817,7 +1839,18 @@ genMCMC_star_ispline = function(y,
         skipcount = 0
       }
     }
-    if(verbose) computeTimeRemaining(nsi, timer0, nstot, nrep = 5000)
+    if(verbose){
+      if(nsi==1){
+        print("Burn-In Period")
+      } else if (nsi < nburn){
+        computeTimeRemaining(nsi, timer0, nstot, nrep = 4000)
+      } else if (nsi==nburn){
+        print("Starting sampling")
+        timer1 = proc.time()[3]
+      } else {
+        computeTimeRemaining(nsi-nburn, timer1, nstot-nburn, nrep = 4000)
+      }
+    }
   }
   if(verbose) print(paste('Total time: ', round((proc.time()[3] - timer0)), 'seconds'))
 
@@ -2718,9 +2751,8 @@ splineBasis = function(tau, sumToZero = TRUE, rescale01 = TRUE){
 #'
 #' @keywords internal
 computeTimeRemaining = function(nsi, timer0, nsims, nrep=1000){
-
   # Only print occasionally:
-  if(nsi%%nrep == 0 || nsi==100) {
+  if(nsi%%nrep == 0 || nsi==1000) {
     # Current time:
     timer = proc.time()[3]
 

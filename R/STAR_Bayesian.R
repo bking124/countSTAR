@@ -172,7 +172,7 @@ blm_star <- function(y, X, X_test = NULL,
   .args$init_params = init_params
 
   if(transformation=="ispline"){
-    .args[['X', 'X_test','transformation']] <- NULL
+    .args[c('X', 'X_test','transformation')] <- NULL
     result = do.call(genMCMC_star_ispline, .args)
   } else {
     result = do.call(genMCMC_star, .args)
@@ -529,7 +529,18 @@ genMCMC_star = function(y,
         skipcount = 0
       }
     }
-    if(verbose) computeTimeRemaining(nsi, timer0, nstot, nrep = 5000)
+    if(verbose){
+      if(nsi==1){
+        print("Burn-In Period")
+      } else if (nsi < nburn){
+        computeTimeRemaining(nsi, timer0, nstot, nrep = 4000)
+      } else if (nsi==nburn){
+        print("Starting sampling")
+        timer1 = proc.time()[3]
+      } else {
+        computeTimeRemaining(nsi-nburn, timer1, nstot-nburn, nrep = 4000)
+      }
+    }
   }
   if(verbose) print(paste('Total time: ', round((proc.time()[3] - timer0)), 'seconds'))
 
@@ -808,7 +819,7 @@ bam_star = function(y, X_lin, X_nonlin, splinetype="orthogonal",
 #' y = sim_dat$y; X = sim_dat$X
 #'
 #' # BART-STAR with log-transformation:
-#' fit_log = bart_star_MCMC(y = y, X = X,
+#' fit_log = bart_star(y = y, X = X,
 #'                          transformation = 'log', save_y_hat = TRUE)
 #'
 #' # Fitted values
@@ -1101,7 +1112,18 @@ bart_star = function(y,
       }
 
     }
-    if(verbose) computeTimeRemaining(nsi, timer0, nstot, nrep = 5000)
+    if(verbose){
+      if(nsi==1){
+        print("Burn-In Period")
+      } else if (nsi < nburn){
+        computeTimeRemaining(nsi, timer0, nstot, nrep = 4000)
+      } else if (nsi==nburn){
+        print("Starting sampling")
+        timer1 = proc.time()[3]
+      } else {
+        computeTimeRemaining(nsi-nburn, timer1, nstot-nburn, nrep = 4000)
+      }
+    }
   }
   if(verbose) print(paste('Total time: ', round((proc.time()[3] - timer0)), 'seconds'))
 
@@ -1427,7 +1449,19 @@ spline_star = function(y,
         skipcount = 0
       }
     }
-    if(verbose) computeTimeRemaining(nsi, timer0, nstot, nrep = 5000)
+
+    if(verbose){
+      if(nsi==1){
+        print("Burn-In Period")
+      } else if (nsi < nburn){
+         computeTimeRemaining(nsi, timer0, nstot, nrep = 4000)
+      } else if (nsi==nburn){
+        print("Starting sampling")
+        timer1 = proc.time()[3]
+      } else {
+        computeTimeRemaining(nsi-nburn, timer1, nstot-nburn, nrep = 4000)
+      }
+    }
   }
   if(verbose) print(paste('Total time: ', round((proc.time()[3] - timer0)), 'seconds'))
 

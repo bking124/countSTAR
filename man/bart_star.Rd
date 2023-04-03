@@ -148,7 +148,7 @@ sim_dat = simulate_nb_friedman(n = 100, p = 10)
 y = sim_dat$y; X = sim_dat$X
 
 # BART-STAR with log-transformation:
-fit_log = bart_star_MCMC(y = y, X = X,
+fit_log = bart_star(y = y, X = X,
                          transformation = 'log', save_y_hat = TRUE)
 
 # Fitted values

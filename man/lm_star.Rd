@@ -64,11 +64,12 @@ an object of \code{class} "lmstar", which is a list with the following elements:
 \description{
 Compute the MLEs and log-likelihood for the STAR linear model.
 The regression coefficients are estimated using least squares within
-an EM algorithm. The transformation can be known (e.g., log or sqrt) or unknown
-(Box-Cox or estimated nonparametrically) for greater flexibility.
-In the latter case, the empirical CDF is used to determine the transformation.
+an EM algorithm.
+}
+\details{
 Standard function calls including
-\code{\link{coefficients}}, \code{\link{fitted}}, and \code{\link{residuals}} apply.
+\code{\link{coefficients}}, \code{\link{fitted}}, and \code{\link{residuals}} apply. Fitted values are the expectation
+at the MLEs, and as such are not necessarily count-valued.
 }
 \note{
 Infinite latent data values may occur when the transformed

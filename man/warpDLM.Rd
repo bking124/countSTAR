@@ -21,7 +21,8 @@ warpDLM(
 
 \item{type}{the type of latent DLM (must be either level or trend)}
 
-\item{transformation}{transformation to use for the latent process; must be one of
+\item{transformation}{transformation to use for the latent process (default is np);
+must be one of
 \itemize{
 \item "identity" (identity transformation)
 \item "log" (log transformation)
