@@ -1,17 +1,17 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# countSTAR: Modeling Integer-Valued Data via Simultaneous Transformation and Rounding
+# countSTAR: Flexible Modeling for Count Data
 
 ### Overview
 
 Integer-valued or count data are common in many fields. Frequently,
-integer-valued data are observed jointly with predictors, over time
-intervals, or across spatial locations. Integer-valued data also exhibit
+count-valued data are observed jointly with predictors, over time
+intervals, or across spatial locations. Furthermore, they often exhibit
 a variety of complex distributional features, including zero-inflation,
 skewness, over- and underdispersion, and in some cases may be bounded or
-censored. Flexible and interpretable models for *integer-valued
-processes* are therefore highly useful in practice.
+censored. Flexible and interpretable models for *count-valued processes*
+are therefore highly useful in practice.
 
 `countSTAR` implements a variety of methods for modeling such processes,
 based on the idea of Simultaneous Transformation and Rounding (STAR).
@@ -25,10 +25,22 @@ specifying a (conditionally) Gaussian model for continuous *latent* data
 and (2) connecting the latent data to the observed data via a
 *transformation and rounding* operation.
 
-Importantly, STAR models are highly flexible integer-valued processes,
-and provide the capability to model (i) discrete data, (ii)
-zero-inflation, (iii) over- or under-dispersion, (iv) heaping, and (v)
-bounded or censored data.
+Importantly, STAR models are highly flexible count-valued processes, and
+provide the capability to model (i) discrete data, (ii) zero-inflation,
+(iii) over- or under-dispersion, (iv) heaping, and (v) bounded or
+censored data. The modularity of the STAR framework allows for the
+ability to utilize a wide variety of different latent data models, which
+can range from simple forms like linear regression to more advanced
+machine learning methods such as random forests or gradient boosting
+machines.
+
+`countSTAR` can be installed and loaded as follows:
+
+``` r
+#Development version
+remotes::install_github("bking124/countSTAR")
+library("countSTAR")
+```
 
 Detailed information on the different options for STAR models and how
 they are implemented in `countSTAR` can be found in the vignette,

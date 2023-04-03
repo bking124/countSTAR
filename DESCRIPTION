@@ -1,18 +1,18 @@
 Package: countSTAR
 Type: Package
-Title: Flexible Modeling of Count-Valued Data 
+Title: Flexible Modeling of Count Data 
 Version: 1.0.0
 Authors@R: c(
     person(given="Brian", family="King", email = "brianking387@gmail.com", role = c("aut", "cre")),
     person(given=c("Daniel", "R."), family = "Kowal", email = "daniel.kowal@rice.edu", role = "aut"))
-Description: For Bayesian and classical inference and prediction with integer-valued data,
+Description: For Bayesian and classical inference and prediction with count-valued data,
     Simultaneous Transformation and Rounding (STAR) Models provide a flexible, interpretable,
     and easy-to-use approach. STAR models the observed count data using a rounded 
     continuous data model and incorporates a transformation for greater flexibility.
     Implicitly, STAR formalizes the commonly-applied yet incoherent procedure of 
     (i) transforming integer-valued data and subsequently 
     (ii) modeling the transformed data using Gaussian models. 
-    STAR is well-defined for integer-valued data, 
+    STAR is well-defined for count-valued data, 
     which is reflected in predictive accuracy, and is designed to account for 
     zero-inflation, bounded or censored data, and over- or underdispersion. 
     Importantly, STAR is easy to combine with existing MCMC or point estimation
