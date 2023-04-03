@@ -282,12 +282,12 @@ are available; see <code><a href="../reference/lm_star.html">?lm_star</a></code>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Confidence interval for all coefficients</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">fit_em</span><span class="op">)</span></span>
-<span><span class="co">#&gt;                      2.5 %       97.5 %</span></span>
-<span><span class="co">#&gt; (Intercept)    -0.13934822  0.200523271</span></span>
-<span><span class="co">#&gt; roach1          0.00492432  0.007441365</span></span>
-<span><span class="co">#&gt; treatment      -0.48873199 -0.085548510</span></span>
-<span><span class="co">#&gt; senior         -0.54861464 -0.098382145</span></span>
-<span><span class="co">#&gt; log(exposure2) -0.19653572  0.635678379</span></span></code></pre></div>
+<span><span class="co">#&gt;                       2.5 %       97.5 %</span></span>
+<span><span class="co">#&gt; (Intercept)    -0.140644078  0.201312624</span></span>
+<span><span class="co">#&gt; roach1          0.004899342  0.007467489</span></span>
+<span><span class="co">#&gt; treatment      -0.488786900 -0.086084801</span></span>
+<span><span class="co">#&gt; senior         -0.546122580 -0.099810790</span></span>
+<span><span class="co">#&gt; log(exposure2) -0.197662769  0.637848611</span></span></code></pre></div>
 <p>Similarly, <em>p-values</em> are available using likelihood ratio
 tests, which can be applied for individual coefficients,</p>
 <p><span class="math display">\[
@@ -304,9 +304,9 @@ p-value for <em>any</em> effects are computed with the
 <code class="sourceCode R"><span><span class="co"># P-values:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="../reference/pvals.html">pvals</a></span><span class="op">(</span><span class="va">fit_em</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;        (Intercept)             roach1          treatment             senior </span></span>
-<span><span class="co">#&gt;       6.973344e-01       1.887411e-18       5.600908e-03       4.862508e-03 </span></span>
+<span><span class="co">#&gt;       6.973311e-01       1.887409e-18       5.600908e-03       4.862511e-03 </span></span>
 <span><span class="co">#&gt;     log(exposure2) Any linear effects </span></span>
-<span><span class="co">#&gt;       3.072371e-01       9.271128e-20</span></span></code></pre></div>
+<span><span class="co">#&gt;       3.072372e-01       9.271140e-20</span></span></code></pre></div>
 <p>Finally, we can get predictions at new data points (or the training
 data) using <code>predict</code>, which actually outputs samples from
 the . Optionally, prediction intervals can be estimated using the
@@ -347,7 +347,7 @@ fit.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#Look at -2*log-likelihood</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="op">-</span><span class="fl">2</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">fit_rf</span><span class="op">$</span><span class="va">logLik</span>, <span class="va">fit_gbm</span><span class="op">$</span><span class="va">logLik</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 1664.752 1594.125</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 1668.721 1594.125</span></span></code></pre></div>
 <p>In this case, it seems the GBM model has better fit to the data,
 although this could be further backed up by performing an out-of-sample
 comparison of the two models.</p>
@@ -401,7 +401,7 @@ model are available as follows:</p>
 <code class="sourceCode R"><span><span class="co"># Posterior mean of each coefficient:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit_blm</span><span class="op">)</span>,<span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    (Intercept)         roach1      treatment         senior log(exposure2) </span></span>
-<span><span class="co">#&gt;          0.029          0.006         -0.285         -0.324          0.222</span></span>
+<span><span class="co">#&gt;          0.031          0.006         -0.287         -0.323          0.223</span></span>
 <span></span>
 <span><span class="co"># Credible intervals for regression coefficients</span></span>
 <span><span class="va">ci_all_bayes</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">fit_blm</span><span class="op">$</span><span class="va">post.beta</span>,</span>
@@ -411,11 +411,11 @@ model are available as follows:</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">ci_all_bayes</span><span class="op">)</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'Lower'</span>, <span class="st">'Upper'</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">ci_all_bayes</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                 Lower  Upper</span></span>
-<span><span class="co">#&gt; (Intercept)    -0.162  0.207</span></span>
+<span><span class="co">#&gt; (Intercept)    -0.151  0.212</span></span>
 <span><span class="co">#&gt; roach1          0.005  0.007</span></span>
-<span><span class="co">#&gt; treatment      -0.492 -0.086</span></span>
+<span><span class="co">#&gt; treatment      -0.496 -0.081</span></span>
 <span><span class="co">#&gt; senior         -0.554 -0.093</span></span>
-<span><span class="co">#&gt; log(exposure2) -0.199  0.651</span></span></code></pre></div>
+<span><span class="co">#&gt; log(exposure2) -0.191  0.637</span></span></code></pre></div>
 <p>We may further evaluate the model based on posterior diagnostics and
 posterior predictive checks on the simulated versus observed proportion
 of zeros. Posterior predictive checks are easily visualized using the <a href="https://mc-stan.org/bayesplot/index.html" class="external-link">bayesplot</a>
@@ -429,7 +429,7 @@ package.</p>
 <span><span class="co"># (Summary of) effective sample sizes across coefficients:</span></span>
 <span><span class="fu"><a href="../reference/getEffSize.html">getEffSize</a></span><span class="op">(</span><span class="va">fit_blm</span><span class="op">$</span><span class="va">post.beta</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span></span>
-<span><span class="co">#&gt;    3380    3492    3988    3860    4009    4429</span></span>
+<span><span class="co">#&gt;    3356    3682    3792    3872    4174    4355</span></span>
 <span></span>
 <span><span class="co"># Posterior predictive check using bayesplot</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressMessages</a></span><span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mc-stan.org/bayesplot/" class="external-link">bayesplot</a></span><span class="op">)</span><span class="op">)</span></span>
@@ -450,12 +450,12 @@ model:</p>
 <span>                 data <span class="op">=</span> <span class="va">roaches</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">fit_bart</span> <span class="op">=</span> <span class="fu"><a href="../reference/bart_star.html">bart_star</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">y</span>, X<span class="op">=</span><span class="va">X</span>, transformation <span class="op">=</span> <span class="st">'np'</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "23.48 seconds remaining"</span></span>
-<span><span class="co">#&gt; [1] "16.44 seconds remaining"</span></span>
-<span><span class="co">#&gt; [1] "13.06 seconds remaining"</span></span>
-<span><span class="co">#&gt; [1] "6.87 seconds remaining"</span></span>
+<span><span class="co">#&gt; [1] "18.31 seconds remaining"</span></span>
+<span><span class="co">#&gt; [1] "13.2 seconds remaining"</span></span>
+<span><span class="co">#&gt; [1] "10.49 seconds remaining"</span></span>
+<span><span class="co">#&gt; [1] "5.53 seconds remaining"</span></span>
 <span><span class="co">#&gt; [1] "0 seconds remaining"</span></span>
-<span><span class="co">#&gt; [1] "Total time:  28 seconds"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "Total time:  22 seconds"</span></span></code></pre></div>
 <p>Once again, we can perform posterior predictive checks. This time we
 plot the densities.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
@@ -470,7 +470,7 @@ model.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">waic</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"STAR w/ Linear Model"</span>, <span class="st">"STAR w/ BART"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">waic</span><span class="op">)</span></span>
 <span><span class="co">#&gt; STAR w/ Linear Model         STAR w/ BART </span></span>
-<span><span class="co">#&gt;             1687.929             1638.667</span></span></code></pre></div>
+<span><span class="co">#&gt;             1687.631             1638.898</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="other-models">Other Models<a class="anchor" aria-label="anchor" href="#other-models"></a>
@@ -556,7 +556,7 @@ base R concerning yearly numbers of important discoveries from 1860 to
 <code class="sourceCode R"><span></span>
 <span><span class="co">#Fit the model</span></span>
 <span><span class="va">warpfit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/warpDLM.html">warpDLM</a></span><span class="op">(</span>y<span class="op">=</span><span class="va">discoveries</span>, type<span class="op">=</span><span class="st">"trend"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "Time taken:  100.339  seconds"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "Time taken:  66.352  seconds"</span></span></code></pre></div>
 <p>Once again, we can check fit using posterior predictive checks. The
 median of the posterior predictive draws can act as a sort of
 count-valued smoother of the time series.</p>
