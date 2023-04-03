@@ -12,7 +12,7 @@ warpDLM(
   R0 = 10,
   nsave = 5000,
   nburn = 5000,
-  nskip = 2,
+  nskip = 1,
   n.ahead = 1
 )
 }
