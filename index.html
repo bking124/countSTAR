@@ -10,7 +10,7 @@
     and easy-to-use approach. STAR models the observed count data using a rounded 
     continuous data model and incorporates a transformation for greater flexibility.
     Implicitly, STAR formalizes the commonly-applied yet incoherent procedure of 
-    (i) transforming integer-valued data and subsequently 
+    (i) transforming count-valued data and subsequently 
     (ii) modeling the transformed data using Gaussian models. 
     STAR is well-defined for count-valued data, 
     which is reflected in predictive accuracy, and is designed to account for 
@@ -18,8 +18,8 @@
     Importantly, STAR is easy to combine with existing MCMC or point estimation
     methods for continuous data, which allows seamless adaptation of continuous data
     models (such as linear regressions, additive models, BART, random forests,
-    and gradient boosting machines) for integer-valued data. The package also includes several
-    methods for modeling count-valued time series data, namely via warped Dynamic Linear Models.">
+    and gradient boosting machines) for count-valued data. The package also includes several
+    methods for modeling count time series data, namely via warped Dynamic Linear Models.">
 <title>Flexible Modeling of Count Data  • countSTAR</title>
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.2.2/bootstrap.min.css" rel="stylesheet">
@@ -31,7 +31,7 @@
     and easy-to-use approach. STAR models the observed count data using a rounded 
     continuous data model and incorporates a transformation for greater flexibility.
     Implicitly, STAR formalizes the commonly-applied yet incoherent procedure of 
-    (i) transforming integer-valued data and subsequently 
+    (i) transforming count-valued data and subsequently 
     (ii) modeling the transformed data using Gaussian models. 
     STAR is well-defined for count-valued data, 
     which is reflected in predictive accuracy, and is designed to account for 
@@ -39,8 +39,8 @@
     Importantly, STAR is easy to combine with existing MCMC or point estimation
     methods for continuous data, which allows seamless adaptation of continuous data
     models (such as linear regressions, additive models, BART, random forests,
-    and gradient boosting machines) for integer-valued data. The package also includes several
-    methods for modeling count-valued time series data, namely via warped Dynamic Linear Models.">
+    and gradient boosting machines) for count-valued data. The package also includes several
+    methods for modeling count time series data, namely via warped Dynamic Linear Models.">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
@@ -94,9 +94,9 @@
 <div class="section level3">
 <h3 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h3>
-<p>Integer-valued or count data are common in many fields. Frequently, count-valued data are observed jointly with predictors, over time intervals, or across spatial locations. Furthermore, they often exhibit a variety of complex distributional features, including zero-inflation, skewness, over- and underdispersion, and in some cases may be bounded or censored. Flexible and interpretable models for <em>count-valued processes</em> are therefore highly useful in practice.</p>
+<p>Count-valued data are common in many fields. Frequently, count data are observed jointly with predictors, over time intervals, or across spatial locations. Furthermore, they often exhibit a variety of complex distributional features, including zero-inflation, skewness, over- and underdispersion, and in some cases may be bounded or censored. Flexible and interpretable models for <em>count-valued processes</em> are therefore highly useful in practice.</p>
 <p><code>countSTAR</code> implements a variety of methods for modeling such processes, based on the idea of Simultaneous Transformation and Rounding (STAR). Estimation, inference, and prediction for STAR are available for both <em>Bayesian</em> and <em>frequentist</em> models. The bulk of methods serve for static regression problems, but the package also supports time series analysis via the warped Dynamic Linear Model (DLM) framework.</p>
-<p>Broadly, STAR defines an integer-valued probability model by (1) specifying a (conditionally) Gaussian model for continuous <em>latent</em> data and (2) connecting the latent data to the observed data via a <em>transformation and rounding</em> operation.</p>
+<p>Broadly, STAR defines an count-valued probability model by (1) specifying a (conditionally) Gaussian model for continuous <em>latent</em> data and (2) connecting the latent data to the observed data via a <em>transformation and rounding</em> operation.</p>
 <p>Importantly, STAR models are highly flexible count-valued processes, and provide the capability to model (i) discrete data, (ii) zero-inflation, (iii) over- or under-dispersion, (iv) heaping, and (v) bounded or censored data. The modularity of the STAR framework allows for the ability to utilize a wide variety of different latent data models, which can range from simple forms like linear regression to more advanced machine learning methods such as random forests or gradient boosting machines.</p>
 <p><code>countSTAR</code> can be installed and loaded as follows:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
@@ -166,13 +166,14 @@
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
 <li><a href="https://github.com/bking124/countSTAR/" class="external-link">Browse source code</a></li>
+<li><a href="https://github.com/bking124/countSTAR/issues" class="external-link">Report a bug</a></li>
 </ul>
 </div>
 
 <div class="license">
 <h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">
-<li><a href="https://www.r-project.org/Licenses/GPL-2" class="external-link">GPL-2</a></li>
+<li>GPL (&gt;=2)</li>
 </ul>
 </div>
 
