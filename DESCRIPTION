@@ -10,7 +10,7 @@ Description: For Bayesian and classical inference and prediction with count-valu
     and easy-to-use approach. STAR models the observed count data using a rounded 
     continuous data model and incorporates a transformation for greater flexibility.
     Implicitly, STAR formalizes the commonly-applied yet incoherent procedure of 
-    (i) transforming integer-valued data and subsequently 
+    (i) transforming count-valued data and subsequently 
     (ii) modeling the transformed data using Gaussian models. 
     STAR is well-defined for count-valued data, 
     which is reflected in predictive accuracy, and is designed to account for 
@@ -18,11 +18,10 @@ Description: For Bayesian and classical inference and prediction with count-valu
     Importantly, STAR is easy to combine with existing MCMC or point estimation
     methods for continuous data, which allows seamless adaptation of continuous data
     models (such as linear regressions, additive models, BART, random forests,
-    and gradient boosting machines) for integer-valued data. The package also includes several
-    methods for modeling count-valued time series data, namely via warped Dynamic Linear Models.
-License: GPL-2
+    and gradient boosting machines) for count-valued data. The package also includes several
+    methods for modeling count time series data, namely via warped Dynamic Linear Models.
+License: GPL (>=2)
 Encoding: UTF-8
-LazyData: true
 LinkingTo: Rcpp, RcppArmadillo
 Imports: stats, utils, coda, dbarts, FastGP, gbm, graphics, Matrix, spikeSlabGAM, splines2, randomForest, Rcpp, RcppArmadillo, TruncatedNormal, truncdist, KFAS
 RoxygenNote: 7.2.3
@@ -30,3 +29,4 @@ Suggests: knitr, rmarkdown, rstanarm, bayesplot, mgcv
 VignetteBuilder: knitr
 URL: https://bking124.github.io/countSTAR/
      https://github.com/bking124/countSTAR
+BugReports: https://github.com/bking124/countSTAR/issues

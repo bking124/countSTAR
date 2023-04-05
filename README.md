@@ -5,13 +5,13 @@
 
 ### Overview
 
-Integer-valued or count data are common in many fields. Frequently,
-count-valued data are observed jointly with predictors, over time
-intervals, or across spatial locations. Furthermore, they often exhibit
-a variety of complex distributional features, including zero-inflation,
-skewness, over- and underdispersion, and in some cases may be bounded or
-censored. Flexible and interpretable models for *count-valued processes*
-are therefore highly useful in practice.
+Count-valued data are common in many fields. Frequently, count data are
+observed jointly with predictors, over time intervals, or across spatial
+locations. Furthermore, they often exhibit a variety of complex
+distributional features, including zero-inflation, skewness, over- and
+underdispersion, and in some cases may be bounded or censored. Flexible
+and interpretable models for *count-valued processes* are therefore
+highly useful in practice.
 
 `countSTAR` implements a variety of methods for modeling such processes,
 based on the idea of Simultaneous Transformation and Rounding (STAR).
@@ -20,7 +20,7 @@ Estimation, inference, and prediction for STAR are available for both
 static regression problems, but the package also supports time series
 analysis via the warped Dynamic Linear Model (DLM) framework.
 
-Broadly, STAR defines an integer-valued probability model by (1)
+Broadly, STAR defines an count-valued probability model by (1)
 specifying a (conditionally) Gaussian model for continuous *latent* data
 and (2) connecting the latent data to the observed data via a
 *transformation and rounding* operation.

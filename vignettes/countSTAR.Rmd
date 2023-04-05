@@ -38,7 +38,7 @@ y &= h(y^*) \quad \mbox{(rounding)}\\
 z^* &= g(y^*) \quad \mbox{(transformation)}\\
 z^* & \sim \Pi_\theta \quad \mbox{(model)}\\
 \end{align*}
-Importantly, STAR models are highly flexible integer-valued processes, and provide the capability to model (i) discrete data, (ii) zero-inflation, (iii) over- or under-dispersion, and (iv) bounded or censored data. 
+Importantly, STAR models are highly flexible count-valued processes, and provide the capability to model (i) discrete data, (ii) zero-inflation, (iii) over- or under-dispersion, and (iv) bounded or censored data. 
 
 We focus on conditionally Gaussian models of the form
 $$
