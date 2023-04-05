@@ -77,7 +77,7 @@ the prior standard deviation of the transformation g() coefficients
 \item \code{post.fitted.values}: posterior draws of the conditional mean of the counts \code{y}
 (\code{NULL} if \code{save_y_hat=FALSE})
 }
-along with other elements depending on the nature of the initiliazation and sampling functions. See details for more info.
+along with other elements depending on the nature of the initialization and sampling functions. See details for more info.
 }
 \description{
 Run the MCMC algorithm for STAR given

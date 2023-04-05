@@ -743,7 +743,7 @@ bam_star = function(y, X_lin, X_nonlin, splinetype="orthogonal",
 #' @param sigest positive numeric estimate of the residual standard deviation (see ?bart)
 #' @param sigdf  degrees of freedom for error variance prior (see ?bart)
 #' @param sigquant quantile of the error variance prior that the rough estimate (sigest)
-#' is placed at. The closer the quantile is to 1, the more aggresive the fit will be (see ?bart)
+#' is placed at. The closer the quantile is to 1, the more aggressive the fit will be (see ?bart)
 #' @param k the number of prior standard deviations E(Y|x) = f(x) is away from +/- 0.5.
 #' The response is internally scaled to range from -0.5 to 0.5.
 #' The bigger k is, the more conservative the fitting will be (see ?bart)

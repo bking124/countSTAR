@@ -57,7 +57,7 @@ using I-splines)
 \item{sigdf}{degrees of freedom for error variance prior (see ?bart)}
 
 \item{sigquant}{quantile of the error variance prior that the rough estimate (sigest)
-is placed at. The closer the quantile is to 1, the more aggresive the fit will be (see ?bart)}
+is placed at. The closer the quantile is to 1, the more aggressive the fit will be (see ?bart)}
 
 \item{k}{the number of prior standard deviations E(Y|x) = f(x) is away from +/- 0.5.
 The response is internally scaled to range from -0.5 to 0.5.

@@ -174,7 +174,7 @@ pminRcpp <- function(v1, v2) {
 #' Estimate the conditional expectation for a STAR process
 #' under the identity link function.
 #'
-#' @param a \code{Jmaxmax}-dimensonal vector of STAR integers a_j
+#' @param a \code{Jmaxmax}-dimensional vector of STAR integers a_j
 #' @param Jmax \code{T x m} matrix of maximum integer values to consider
 #' @param Mu \code{T x m} matrix of latent means
 #' @param sigma_t \code{T}-dimensional vector of time-dependent latent error sd's
@@ -195,7 +195,7 @@ expectation_identity <- function(a, Jmax, Mu, sigma_t, Offset) {
 #' Estimate the conditional expectation for a STAR process
 #' under the log link function.
 #'
-#' @param a \code{Jmaxmax}-dimensonal vector of STAR integers a_j
+#' @param a \code{Jmaxmax}-dimensional vector of STAR integers a_j
 #' @param Jmax \code{T x m} matrix of maximum integer values to consider
 #' @param Mu \code{T x m} matrix of latent means
 #' @param sigma_t \code{T}-dimensional vector of time-dependent latent error sd's
@@ -216,7 +216,7 @@ expectation_log <- function(a, Jmax, Mu, sigma_t, Offset) {
 #' Estimate the conditional expectation for a STAR process
 #' under the square root link function.
 #'
-#' @param a \code{Jmaxmax}-dimensonal vector of STAR integers a_j
+#' @param a \code{Jmaxmax}-dimensional vector of STAR integers a_j
 #' @param Jmax \code{T x m} matrix of maximum integer values to consider
 #' @param Mu \code{T x m} matrix of latent means
 #' @param sigma_t \code{T}-dimensional vector of time-dependent latent error sd's

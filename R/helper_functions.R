@@ -67,7 +67,7 @@ g_inv_bc = function(s, lambda) {
 #'
 #' Compute a CDF-based transformation using the observed count data.
 #' The CDF can be estimated nonparametrically or parametrically based on the
-#' Poisson or Negative-Binimial distributions. In the parametric case,
+#' Poisson or Negative Binomial distributions. In the parametric case,
 #' the parameters are determined based on the moments of \code{y}.
 #' Note that this is a fixed quantity and does not come with uncertainty quantification.
 #'

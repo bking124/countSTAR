@@ -7,7 +7,7 @@
 expectation_sqrt(a, Jmax, Mu, sigma_t, Offset)
 }
 \arguments{
-\item{a}{\code{Jmaxmax}-dimensonal vector of STAR integers a_j}
+\item{a}{\code{Jmaxmax}-dimensional vector of STAR integers a_j}
 
 \item{Jmax}{\code{T x m} matrix of maximum integer values to consider}
 
