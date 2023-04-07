@@ -204,14 +204,14 @@ Semiparametric count data regression for self‐reported mental health.
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Fitted coefficients:</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit_em</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   (Intercept)       s(X1).1       s(X1).2       s(X1).3       s(X1).4 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> -1.227683e-02  8.021709e-02 -2.067481e-01 -1.587534e-01  1.827946e-01 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       s(X1).5       s(X1).6       s(X1).7       s(X1).8       s(X1).9 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  3.764267e-02  1.588836e-01  6.128010e-02  9.327335e-01  3.099249e-01 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       s(X2).1       s(X2).2       s(X2).3       s(X2).4       s(X2).5 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> -7.109985e-12 -1.468226e-11  3.417706e-12 -1.021613e-11  2.323378e-12 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       s(X2).6       s(X2).7       s(X2).8       s(X2).9 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  1.040093e-11  2.960455e-12  4.736510e-11  4.000638e-01 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  (Intercept)      s(X1).1      s(X1).2      s(X1).3      s(X1).4      s(X1).5 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  0.004941307 -0.061311054 -0.084977251  0.022288176 -0.070377607  0.012609573 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      s(X1).6      s(X1).7      s(X1).8      s(X1).9      s(X2).1      s(X2).2 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> -0.077528275  0.002835588  0.367358587  0.491118984 -0.148141493 -0.075652195 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      s(X2).3      s(X2).4      s(X2).5      s(X2).6      s(X2).7      s(X2).8 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  0.037949138 -0.121474978 -0.051263390  0.113213714  0.009177997  0.669139818 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      s(X2).9 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  0.476874170 </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Fitted values:</span></span></span>
 <span class="r-in"><span><span class="va">y_hat</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/fitted.values.html" class="external-link">fitted</a></span><span class="op">(</span><span class="va">fit_em</span><span class="op">)</span></span></span>
@@ -220,7 +220,7 @@ Semiparametric count data regression for self‐reported mental health.
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Log-likelihood at MLEs:</span></span></span>
 <span class="r-in"><span><span class="va">fit_em</span><span class="op">$</span><span class="va">logLik</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -208.1321</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -192.4452</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

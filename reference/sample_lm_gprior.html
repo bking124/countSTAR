@@ -43,7 +43,7 @@ g-prior for the  coefficients."><!-- mathjax --><script src="https://cdnjs.cloud
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="" class="logo" alt=""><h1>Sample the linear regression parameters assuming a g-prior</h1>
-      <small class="dont-index">Source: <a href="https://github.com/bking124/countSTAR/blob/HEAD/R/internal_functions.R" class="external-link"><code>R/internal_functions.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/bking124/countSTAR/blob/HEAD/R/STAR_Bayesian.R" class="external-link"><code>R/STAR_Bayesian.R</code></a></small>
       <div class="d-none name"><code>sample_lm_gprior.Rd</code></div>
     </div>
 
@@ -100,6 +100,22 @@ of <code>sigma</code> and <code>coefficients</code> (along with updated <code>mu
 components of <code>beta</code></p></li>
 </ul></div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Simulate data for illustration:</span></span></span>
+<span class="r-in"><span><span class="va">sim_dat</span> <span class="op">=</span> <span class="fu"><a href="simulate_nb_lm.html">simulate_nb_lm</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">100</span>, p <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">y</span> <span class="op">=</span> <span class="va">sim_dat</span><span class="op">$</span><span class="va">y</span>; <span class="va">X</span> <span class="op">=</span> <span class="va">sim_dat</span><span class="op">$</span><span class="va">X</span></span></span>
+<span class="r-in"><span><span class="co"># Initialize:</span></span></span>
+<span class="r-in"><span><span class="va">params</span> <span class="op">=</span> <span class="fu"><a href="init_lm_gprior.html">init_lm_gprior</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">y</span>, X <span class="op">=</span> <span class="va">X</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Sample:</span></span></span>
+<span class="r-in"><span><span class="va">params</span> <span class="op">=</span> <span class="fu">sample_lm_gprior</span><span class="op">(</span>y <span class="op">=</span> <span class="va">y</span>, X <span class="op">=</span> <span class="va">X</span>, params <span class="op">=</span> <span class="va">params</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">params</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "mu"           "sigma"        "coefficients"</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">params</span><span class="op">$</span><span class="va">coefficients</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "beta"</span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside></div>
 

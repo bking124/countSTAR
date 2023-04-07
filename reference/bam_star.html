@@ -185,35 +185,165 @@ of the transformation function.</p>
 <span class="r-in"><span><span class="va">X_nonlin</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">X</span><span class="op">[</span>,<span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># STAR: nonparametric transformation</span></span></span>
-<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu">bam_star</span><span class="op">(</span><span class="va">y</span>,<span class="va">X_lin</span>, <span class="va">X_nonlin</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu">bam_star</span><span class="op">(</span><span class="va">y</span>,<span class="va">X_lin</span>, <span class="va">X_nonlin</span>, nburn<span class="op">=</span><span class="fl">1000</span>, nskip<span class="op">=</span><span class="fl">0</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Burn-In Period"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "4.82 minutes remaining"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "3.99 minutes remaining"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Starting sampling"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "3.64 minutes remaining"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "2.73 minutes remaining"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "1.72 minutes remaining"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "44.36 seconds remaining"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Total time:  297 seconds"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "59.7 seconds remaining"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "14.59 seconds remaining"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Total time:  88 seconds"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Posterior mean of each coefficient:</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       beta1       beta2       beta3       beta4       beta5 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  0.48934516 -0.09819498  0.21129272  0.34047861 -0.05568553 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      beta_lin1      beta_lin2      beta_lin3      beta_lin4      beta_lin5 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   4.863783e-01  -9.469091e-02   2.098109e-01   3.393968e-01  -5.654927e-02 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           f_j1           f_j2           f_j3           f_j4           f_j5 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   5.991062e-03   5.744686e-02   1.887610e-01   1.380337e-01  -2.591181e-01 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           f_j6           f_j7           f_j8           f_j9          f_j10 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   3.107222e-01   1.531865e-01   2.201049e-01   1.044820e-01  -7.058353e-02 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          f_j11          f_j12          f_j13          f_j14          f_j15 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   9.515945e-02  -1.204925e-01   6.764814e-02   1.651348e-01  -1.638956e-01 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          f_j16          f_j17          f_j18          f_j19          f_j20 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   1.502614e-01   1.825060e-01  -4.781368e-02   7.367655e-02   2.661183e-01 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          f_j21          f_j22          f_j23          f_j24          f_j25 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   1.100802e-01   2.515643e-01  -2.137928e-02  -2.715447e-01   4.915286e-02 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          f_j26          f_j27          f_j28          f_j29          f_j30 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   3.352787e-01  -1.990188e-02   1.254478e-02   2.563482e-02   6.743776e-02 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          f_j31          f_j32          f_j33          f_j34          f_j35 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  -6.542908e-02   1.997859e-01   2.690146e-01   2.025732e-01  -3.302314e-02 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          f_j36          f_j37          f_j38          f_j39          f_j40 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   1.623737e-01   1.408995e-02  -2.624772e-01   1.814002e-01   3.394205e-01 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          f_j41          f_j42          f_j43          f_j44          f_j45 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  -7.171775e-02   1.567817e-01  -2.712926e-01   2.294564e-02   2.009326e-01 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          f_j46          f_j47          f_j48          f_j49          f_j50 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  -1.990728e-01   8.485245e-02   3.175173e-01   1.637522e-01  -3.512794e-01 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          f_j51          f_j52          f_j53          f_j54          f_j55 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   1.903564e-01   3.069081e-01   1.214540e-01  -9.909976e-02  -4.006676e-01 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          f_j56          f_j57          f_j58          f_j59          f_j60 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  -4.226169e-01   2.087489e-01   2.332707e-01   1.096949e-01   3.111745e-01 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          f_j61          f_j62          f_j63          f_j64          f_j65 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   1.789106e-01  -2.774650e-01   1.341334e-01  -2.226241e-01  -2.102479e-01 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          f_j66          f_j67          f_j68          f_j69          f_j70 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   3.500218e-01   2.156110e-01  -2.991825e-01   2.953006e-01  -5.412197e-02 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          f_j71          f_j72          f_j73          f_j74          f_j75 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   2.090901e-01  -1.734767e-01  -2.596340e-02  -3.907548e-01  -2.973623e-01 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          f_j76          f_j77          f_j78          f_j79          f_j80 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  -1.977323e-01   1.483768e-01  -2.943143e-01  -7.598812e-02  -7.507810e-02 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          f_j81          f_j82          f_j83          f_j84          f_j85 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   2.105093e-02   2.552425e-02   2.160670e-02  -4.150096e-01  -2.368345e-01 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          f_j86          f_j87          f_j88          f_j89          f_j90 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   2.129142e-02  -2.639158e-02   2.266416e-01  -2.250053e-01   2.267524e-01 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          f_j91          f_j92          f_j93          f_j94          f_j95 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  -3.606116e-01  -1.229297e-01  -2.847951e-01  -1.145225e-01  -1.614634e-01 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          f_j96          f_j97          f_j98          f_j99         f_j100 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  -3.531190e-01  -1.686400e-01  -6.239175e-02  -3.042693e-01  -3.205849e-01 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j101         f_j102         f_j103         f_j104         f_j105 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   2.629666e-01   4.817151e-01  -9.248825e-03  -4.802112e-01  -1.312864e-01 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j106         f_j107         f_j108         f_j109         f_j110 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   4.192188e-01   5.488234e-02   3.589579e-01  -4.400828e-01   3.521373e-01 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j111         f_j112         f_j113         f_j114         f_j115 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  -2.320288e-01  -3.537534e-01   4.069920e-01  -3.172776e-01  -6.234561e-03 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j116         f_j117         f_j118         f_j119         f_j120 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   5.687634e-01   4.390281e-01  -2.379628e-01  -1.807653e-01  -5.526056e-02 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j121         f_j122         f_j123         f_j124         f_j125 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  -3.255923e-01   5.543044e-01  -4.941132e-01   1.945997e-01  -5.724374e-02 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j126         f_j127         f_j128         f_j129         f_j130 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  -2.620631e-01   1.918092e-01  -6.887159e-02   1.482614e-01  -4.089306e-01 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j131         f_j132         f_j133         f_j134         f_j135 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  -2.982718e-01   1.482553e-01  -2.491559e-01   8.674588e-02   2.766837e-01 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j136         f_j137         f_j138         f_j139         f_j140 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   2.116962e-01   2.701575e-01   4.715655e-02   6.726810e-02  -3.784650e-01 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j141         f_j142         f_j143         f_j144         f_j145 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  -3.548840e-01  -4.509124e-01   2.381562e-01   5.741475e-01   2.528595e-01 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j146         f_j147         f_j148         f_j149         f_j150 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   5.862040e-01  -1.489939e-01   8.446269e-02  -2.807307e-01  -3.635310e-01 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j151         f_j152         f_j153         f_j154         f_j155 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  -8.289906e-02  -3.459476e-01   5.430649e-01  -2.262573e-01  -5.125130e-01 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j156         f_j157         f_j158         f_j159         f_j160 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   6.147585e-01   2.467061e-01  -1.716016e-01  -1.044547e-01  -4.804583e-01 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j161         f_j162         f_j163         f_j164         f_j165 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   5.384450e-01   3.228761e-01  -3.763646e-01   5.934307e-01  -3.734840e-01 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j166         f_j167         f_j168         f_j169         f_j170 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   3.368835e-01  -4.842582e-01   2.170156e-01   2.136405e-01   1.476574e-01 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j171         f_j172         f_j173         f_j174         f_j175 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   4.906662e-01  -3.416511e-01   4.532447e-01  -4.216348e-01   1.684861e-01 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j176         f_j177         f_j178         f_j179         f_j180 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  -3.356143e-04   4.231517e-01   2.115073e-01  -2.385252e-01  -3.529888e-01 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j181         f_j182         f_j183         f_j184         f_j185 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  -1.533145e-01  -4.821925e-01   1.415908e-01  -4.620200e-01   5.305246e-01 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j186         f_j187         f_j188         f_j189         f_j190 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  -3.373219e-01   5.353448e-01  -1.391422e-01   3.485929e-01   1.884536e-01 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j191         f_j192         f_j193         f_j194         f_j195 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   2.020288e-01   5.400150e-02  -2.413522e-01  -3.046155e-01  -1.480326e-01 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j196         f_j197         f_j198         f_j199         f_j200 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  -3.434268e-01  -2.157651e-01  -4.408853e-01   8.099565e-02  -5.131819e-01 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j201         f_j202         f_j203         f_j204         f_j205 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   4.482009e-02   1.259183e-02  -4.078581e-02   5.098501e-02   2.128323e-02 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j206         f_j207         f_j208         f_j209         f_j210 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   5.861068e-02   2.607156e-02   1.836641e-03  -6.513486e-03   5.959247e-02 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j211         f_j212         f_j213         f_j214         f_j215 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   4.348796e-02   1.271898e-02  -3.018035e-03  -4.863728e-02  -3.625873e-02 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j216         f_j217         f_j218         f_j219         f_j220 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   4.094845e-02  -4.154710e-03  -3.529741e-03  -1.887126e-02  -3.404239e-02 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j221         f_j222         f_j223         f_j224         f_j225 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   4.717239e-02  -1.395929e-02   5.489925e-02  -5.690507e-02  -1.311665e-01 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j226         f_j227         f_j228         f_j229         f_j230 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   4.245812e-02   5.514536e-02   6.587882e-02   3.344867e-03   6.401754e-02 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j231         f_j232         f_j233         f_j234         f_j235 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   6.502047e-02   6.329604e-02  -1.265880e-01   6.264816e-02   3.695450e-02 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j236         f_j237         f_j238         f_j239         f_j240 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  -1.841303e-02   5.399326e-02  -2.351598e-02  -3.626862e-04   5.626860e-02 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j241         f_j242         f_j243         f_j244         f_j245 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   3.056396e-02   5.773342e-02  -1.293965e-01   4.364691e-02   3.297214e-02 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j246         f_j247         f_j248         f_j249         f_j250 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   3.976940e-02  -6.316101e-02   6.589493e-02  -5.779691e-02   4.483920e-02 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j251         f_j252         f_j253         f_j254         f_j255 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  -1.222665e-01  -7.040021e-02  -1.285821e-01   7.719284e-03   4.634866e-02 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j256         f_j257         f_j258         f_j259         f_j260 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   4.888279e-02  -9.868732e-02  -1.060249e-01  -7.331499e-02   5.557298e-02 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j261         f_j262         f_j263         f_j264         f_j265 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  -3.499942e-02  -8.470483e-02  -1.160022e-01  -7.136720e-02   4.409230e-02 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j266         f_j267         f_j268         f_j269         f_j270 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   4.329563e-02   5.782265e-02   5.436520e-02   5.205589e-02  -8.894737e-02 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j271         f_j272         f_j273         f_j274         f_j275 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   5.230484e-02   1.567703e-02  -8.846737e-03  -8.476568e-02   1.841297e-02 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j276         f_j277         f_j278         f_j279         f_j280 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   4.770302e-02   4.641907e-02  -6.849821e-02   5.472893e-02  -5.595103e-02 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j281         f_j282         f_j283         f_j284         f_j285 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  -3.721541e-02   2.439035e-02  -8.051175e-03   5.570965e-02  -6.470724e-02 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j286         f_j287         f_j288         f_j289         f_j290 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  -2.002240e-02   2.534501e-02  -6.265693e-02   6.456167e-03   1.704932e-02 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j291         f_j292         f_j293         f_j294         f_j295 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   6.219173e-02   1.629746e-02   6.584992e-02  -2.748999e-02  -1.296239e-01 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         f_j296         f_j297         f_j298         f_j299         f_j300 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  -8.668873e-03   5.104376e-02   4.657791e-02   6.441412e-02  -5.131980e-02 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       theta_j1       theta_j2       theta_j3       theta_j4       theta_j5 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  -2.069930e-03  -2.239654e-02   9.154013e-03   3.502881e-02  -7.935997e-03 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       theta_j6       theta_j7       theta_j8       theta_j9      theta_j10 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  -8.565075e-03  -4.346914e-02  -1.695732e-02   3.743567e-03   2.266203e-02 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      theta_j11      theta_j12      theta_j13      theta_j14      theta_j15 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   2.844046e-02   2.250892e-02  -1.824699e-02   1.082199e-02  -5.272637e-03 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      theta_j16      theta_j17      theta_j18      theta_j19      theta_j20 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   5.077057e-03   7.545169e-03  -2.860228e-03   3.591084e-03   2.993144e-02 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      theta_j21      theta_j22      theta_j23      theta_j24    sigma_beta1 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   2.694934e-02  -2.204486e-03  -2.721097e-02  -6.397063e-03   1.000000e+03 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    sigma_beta2    sigma_beta3    sigma_beta4    sigma_beta5 sigma_theta_j1 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   3.716397e-01   3.716397e-01   3.716397e-01   3.716397e-01   1.107403e+00 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> sigma_theta_j2 sigma_theta_j3 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   9.827262e-01   9.258084e-01 </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># WAIC:</span></span></span>
 <span class="r-in"><span><span class="va">fit</span><span class="op">$</span><span class="va">WAIC</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 377.9771</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 378.1587</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># MCMC diagnostics:</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/ts.html" class="external-link">as.ts</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">post.coefficients</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in ts(x):</span> 'ts' object must have one or more observations</span>
+<span class="r-plt img"><img src="bam_star-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Posterior predictive check:</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html" class="external-link">hist</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">post.pred</span>, <span class="fl">1</span>,</span></span>
 <span class="r-in"><span>           <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">x</span><span class="op">==</span><span class="fl">0</span><span class="op">)</span><span class="op">)</span>, main <span class="op">=</span> <span class="st">'Proportion of Zeros'</span>, xlab<span class="op">=</span><span class="st">''</span><span class="op">)</span>;</span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>v <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">y</span><span class="op">==</span><span class="fl">0</span><span class="op">)</span>, lwd<span class="op">=</span><span class="fl">4</span>, col <span class="op">=</span><span class="st">'blue'</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="bam_star-1.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="bam_star-2.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
