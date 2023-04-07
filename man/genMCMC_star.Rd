@@ -120,7 +120,7 @@ distributions. For the parametric distributions, the parameters of the distribut
 are estimated using moments (means and variances) of \code{y}.
 }
 \examples{
-\dontrun{
+\donttest{
 # Simulate data with count-valued response y:
 sim_dat = simulate_nb_lm(n = 100, p = 5)
 y = sim_dat$y; X = sim_dat$X

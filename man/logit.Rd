@@ -15,11 +15,4 @@ A scalar or vector of log-odds
 \description{
 Compute the log-odds
 }
-\examples{
-\dontrun{
-x = seq(0, 1, length.out = 10^3)
-plot(x, countSTAR:::logit(x))
-}
-
-}
 \keyword{internal}

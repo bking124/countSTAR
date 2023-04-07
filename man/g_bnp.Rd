@@ -36,16 +36,15 @@ implied by (separate) Bayesian bootstrap models for the CDFs
 of \code{y} and \code{X}.
 }
 \examples{
-\dontrun{
 # Sample some data:
 y = rpois(n = 200, lambda = 5)
 # Compute 200 draws of g on a grid:
 t = seq(0, max(y), length.out = 100) # grid
-g_post = t(sapply(1:500, function(s) g_bnp(y)(t)))
+g_post = t(sapply(1:500, function(s) g_bnp(y, approx_Fz = TRUE)(t)))
 # Plot together:
 plot(t, t, ylim = range(g_post), type='n', ylab = 'g(t)',  main = 'Bayesian bootstrap posterior: g')
 apply(g_post, 1, function(g) lines(t, g, col='gray'))
 # And the posterior mean of g:
 lines(t, colMeans(g_post), lwd=3)
-}
+
 }

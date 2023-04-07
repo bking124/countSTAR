@@ -82,19 +82,4 @@ Lastly, the transformation can be modeled using the Bayesian bootstrap ('bnp'),
 which is a Bayesian nonparametric model and incorporates the uncertainty
 about the transformation into posterior and predictive inference.
 }
-\examples{
-\dontrun{
-# Simulate some data:
-sim_dat = simulate_nb_lm(n = 500, p = 10)
-y = sim_dat$y; X = sim_dat$X
-
-# Fit a linear model:
-fit = countSTAR:::blm_star_bnpgibbs(y, X, nsave = 1000, nburn = 1000)
-names(fit)
-
-# Check the efficiency of the MCMC samples:
-getEffSize(fit$post_beta)
-}
-
-}
 \keyword{internal}

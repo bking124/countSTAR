@@ -21,8 +21,12 @@ Importantly, STAR models are highly flexible count-valued processes, and provide
 
 `countSTAR` can be installed and loaded as follows:
 ```{r, eval = FALSE}
+#CRAN version
+install.packages("countSTAR")
+
 #Development version
 remotes::install_github("bking124/countSTAR")
+
 library("countSTAR")
 ```
 

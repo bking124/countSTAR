@@ -107,32 +107,4 @@ If no \code{beta} exists in the parameter coefficients, then the output list jus
 Additionally, if \code{init_params} and \code{sample_params} have output \code{mu_test}, then the sampler will output
 \code{post.predtest}, which contains draws from the posterior predictive distribution at test points.
 }
-\examples{
-
-\dontrun{
-# Simulate data with count-valued response y:
-sim_dat = simulate_nb_lm(n = 100, p = 5)
-y = sim_dat$y; X = sim_dat$X
-
-# STAR: unknown I-spline transformation
-fit = countSTAR:::genMCMC_star_ispline(y = y,
-                         sample_params = function(y, params) rSTAR:::sample_lm_gprior(y, X, params),
-                         init_params = function(y) rSTAR:::init_lm_gprior(y, X))
-
-# Posterior mean of each coefficient:
-coef(fit)
-
-# WAIC for STAR-np:
-fit$WAIC
-
-# MCMC diagnostics:
-plot(as.ts(fit$post.coefficients[,1:3]))
-
-# Posterior predictive check:
-hist(apply(fit$post.pred, 1,
-           function(x) mean(x==0)), main = 'Proportion of Zeros', xlab='');
-abline(v = mean(y==0), lwd=4, col ='blue')
-
-}
-}
 \keyword{internal}

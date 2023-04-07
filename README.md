@@ -37,8 +37,12 @@ machines.
 `countSTAR` can be installed and loaded as follows:
 
 ``` r
+#CRAN version
+install.packages("countSTAR")
+
 #Development version
 remotes::install_github("bking124/countSTAR")
+
 library("countSTAR")
 ```
 

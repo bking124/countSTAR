@@ -12,14 +12,18 @@ Description: For Bayesian and classical inference and prediction with count-valu
     Implicitly, STAR formalizes the commonly-applied yet incoherent procedure of 
     (i) transforming count-valued data and subsequently 
     (ii) modeling the transformed data using Gaussian models. 
-    STAR is well-defined for count-valued data, 
-    which is reflected in predictive accuracy, and is designed to account for 
-    zero-inflation, bounded or censored data, and over- or underdispersion. 
+    STAR is well-defined for count-valued data, which is reflected in predictive accuracy, 
+    and is designed to account for zero-inflation, bounded or censored data, and over- or underdispersion. 
     Importantly, STAR is easy to combine with existing MCMC or point estimation
     methods for continuous data, which allows seamless adaptation of continuous data
     models (such as linear regressions, additive models, BART, random forests,
     and gradient boosting machines) for count-valued data. The package also includes several
-    methods for modeling count time series data, namely via warped Dynamic Linear Models.
+    methods for modeling count time series data, namely via warped Dynamic Linear Models. 
+    For more details and background on these methodologies, see the works of 
+    Kowal and Canale (2020) <doi:10.1214/20-EJS1707>, 
+    Kowal and Wu (2022) <doi:10.1111/biom.13617>, 
+    King and Kowal (2022) <arXiv:2110.14790>, and 
+    Kowal and Wu (2023) <arXiv:2110.12316>.
 License: GPL (>=2)
 Encoding: UTF-8
 LinkingTo: Rcpp, RcppArmadillo

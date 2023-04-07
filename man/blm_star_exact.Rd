@@ -110,19 +110,4 @@ the \code{TruncatedNormal} sampler must be updated as the lower and upper
 limits change (due to the sampling of \code{g}). Thus, computational
 improvements are likely available.
 }
-\examples{
-\dontrun{
-# Simulate some data:
-sim_dat = simulate_nb_lm(n = 100, p = 10)
-y = sim_dat$y; X = sim_dat$X
-
-# Fit a linear model:
-fit = countSTAR:::blm_star_exact(y, X)
-names(fit)
-
-# Check the efficiency of the Monte Carlo samples:
-getEffSize(fit$post_beta)
-}
-
-}
 \keyword{internal}

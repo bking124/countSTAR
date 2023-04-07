@@ -280,7 +280,7 @@ blm_star <- function(y, X, X_test = NULL,
 #' are estimated using moments (means and variances) of \code{y}.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Simulate data with count-valued response y:
 #' sim_dat = simulate_nb_lm(n = 100, p = 5)
 #' y = sim_dat$y; X = sim_dat$X
@@ -659,7 +659,7 @@ genMCMC_star = function(y,
 #' of the transformation function.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Simulate data with count-valued response y:
 #' sim_dat = simulate_nb_friedman(n = 100, p = 5, seed=32)
 #' y = sim_dat$y; X = sim_dat$X
@@ -813,7 +813,7 @@ bam_star = function(y, X_lin, X_nonlin, splinetype="orthogonal",
 #' of the transformation function.
 
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Simulate data with count-valued response y:
 #' sim_dat = simulate_nb_friedman(n = 100, p = 10)
 #' y = sim_dat$y; X = sim_dat$X

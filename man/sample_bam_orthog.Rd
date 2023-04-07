@@ -61,30 +61,4 @@ The parameters in \code{coefficients} are:
 \item \code{sigma_theta_j}: \code{pNL x 1} vector of nonlinear coefficient standard deviations
 }
 }
-\examples{
-\dontrun{
-# Simulate data for illustration:
-sim_dat = simulate_nb_friedman(n = 100, p = 5)
-y = sim_dat$y; X = sim_dat$X
-
-# Linear and nonlinear components:
-X_lin = as.matrix(X[,-(1:3)])
-X_nonlin = as.matrix(X[,(1:3)])
-
-# Initialize:
-params = countSTAR:::init_bam_orthog(y = y, X_lin = X_lin, X_nonlin = X_nonlin)
-
-# Sample:
-params = countSTAR:::sample_bam_orthog(y = y,
-                                X_lin = X_lin,
-                                X_nonlin = X_nonlin,
-                                params = params)
-names(params)
-names(params$coefficients)
-
-# And plot an example:
-plot(X_nonlin[,1], params$coefficients$f_j[,1])
-}
-
-}
 \keyword{internal}

@@ -142,7 +142,7 @@ Robust Adaptive Metropolis (RAM) sampler is used for drawing the parameter
 of the transformation function.
 }
 \examples{
-\dontrun{
+\donttest{
 # Simulate data with count-valued response y:
 sim_dat = simulate_nb_friedman(n = 100, p = 10)
 y = sim_dat$y; X = sim_dat$X

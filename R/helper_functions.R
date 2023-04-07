@@ -170,20 +170,18 @@ g_cdf = function(y, distribution = "np") {
 #' at each posterior draw.
 #'
 #' @examples
-#' \dontrun{
 #' # Sample some data:
 #' y = rpois(n = 200, lambda = 5)
 #' # Compute 200 draws of g on a grid:
 #' t = seq(0, max(y), length.out = 100) # grid
-#' g_post = t(sapply(1:500, function(s) g_bnp(y)(t)))
+#' g_post = t(sapply(1:500, function(s) g_bnp(y, approx_Fz = TRUE)(t)))
 #' # Plot together:
 #' plot(t, t, ylim = range(g_post), type='n', ylab = 'g(t)',  main = 'Bayesian bootstrap posterior: g')
 #' apply(g_post, 1, function(g) lines(t, g, col='gray'))
 #' # And the posterior mean of g:
 #' lines(t, colMeans(g_post), lwd=3)
-#' }
+#'
 #' @export
-# Function to simulate g:
 g_bnp = function(y,
                  xtSigmax = rep(0, length(y)),
                  zgrid = NULL,
@@ -550,6 +548,9 @@ simulate_nb_friedman = function(n = 100,
 #' @param y_hat \code{n x 1} vector of fitted values; if NULL, use the pointwise sample mean \code{colMeans(post_y)}
 #' @param alpha confidence level for the credible intervals
 #' @param ... other arguments for plotting
+#'
+#' @return A plot with the fitted values and the credible intervals against the data
+#'
 #' @import coda
 #' @export
 plot_fitted = function(y, post_y, y_hat = NULL, alpha = 0.05, ...){
@@ -582,6 +583,10 @@ plot_fitted = function(y, post_y, y_hat = NULL, alpha = 0.05, ...){
 #' @param post.pred \code{nsave} draws from the posterior predictive distribution of \code{y}
 #' @param error.bars logical; if TRUE, include errors bars on the model-based PMF
 #' @param alpha confidence level for the credible intervals
+#'
+#' @return A plot of the empirical PMF of y along with a PMF estimate from the model posterior
+#' predictive distribution
+#'
 #' @export
 plot_pmf = function(y, post.pred, error.bars = FALSE, alpha = 0.05){
 
@@ -626,6 +631,8 @@ plot_pmf = function(y, post.pred, error.bars = FALSE, alpha = 0.05){
 #' distribution of the \code{p} coefficients from another model
 #' @param alpha confidence level for the credible intervals
 #' @param labels \code{p} dimensional string of labels for the coefficient names
+#'
+#' @return A plot of regression coefficients and credible intervals for 1-2 models
 #' @export
 plot_coef = function(post_coefficients_1,
                      post_coefficients_2 = NULL,

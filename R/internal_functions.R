@@ -76,20 +76,6 @@
 #' limits change (due to the sampling of \code{g}). Thus, computational
 #' improvements are likely available.
 #'
-#' @examples
-#' \dontrun{
-#' # Simulate some data:
-#' sim_dat = simulate_nb_lm(n = 100, p = 10)
-#' y = sim_dat$y; X = sim_dat$X
-#'
-#' # Fit a linear model:
-#' fit = countSTAR:::blm_star_exact(y, X)
-#' names(fit)
-#'
-#' # Check the efficiency of the Monte Carlo samples:
-#' getEffSize(fit$post_beta)
-#' }
-#'
 #' @importFrom TruncatedNormal mvrandn pmvnorm
 #' @importFrom FastGP rcpp_rmvnorm
 #' @keywords internal
@@ -437,20 +423,6 @@ blm_star_exact = function(y, X, X_test = X,
 #' which is a Bayesian nonparametric model and incorporates the uncertainty
 #' about the transformation into posterior and predictive inference.
 #'
-#' @examples
-#' \dontrun{
-#' # Simulate some data:
-#' sim_dat = simulate_nb_lm(n = 500, p = 10)
-#' y = sim_dat$y; X = sim_dat$X
-#'
-#' # Fit a linear model:
-#' fit = countSTAR:::blm_star_bnpgibbs(y, X, nsave = 1000, nburn = 1000)
-#' names(fit)
-#'
-#' # Check the efficiency of the MCMC samples:
-#' getEffSize(fit$post_beta)
-#' }
-#'
 #' @keywords internal
 blm_star_bnpgibbs = function(y, X, X_test = X,
                              y_max = Inf,
@@ -693,28 +665,6 @@ blm_star_bnpgibbs = function(y, X, X_test = X,
 #' The Monte Carlo sampler produces direct, discrete, and joint draws
 #' from the posterior predictive distribution of the spline regression model
 #' at the observed tau points.
-#'
-#' @examples
-#' \dontrun{
-#' # Simulate some data:
-#' n = 100
-#' tau = seq(0,1, length.out = n)
-#' y = round_floor(exp(1 + rnorm(n)/4 + poly(tau, 4)%*%rnorm(n=4, sd = 4:1)))
-#'
-#' # Sample from the predictive distribution of a STAR spline model:
-#' fit_star = countSTAR:::spline_star_exact(y = y, tau = tau)
-#' post_ytilde = fit_star$post_ytilde
-#'
-#' # Compute 90% prediction intervals:
-#' pi_y = t(apply(post_ytilde, 2, quantile, c(0.05, .95)))
-#'
-#'# Plot the results: intervals, median, and smoothed mean
-#' plot(tau, y, ylim = range(pi_y, y))
-#' polygon(c(tau, rev(tau)),c(pi_y[,2], rev(pi_y[,1])),col='gray', border=NA)
-#' lines(tau, apply(post_ytilde, 2, median), lwd=5, col ='black')
-#' lines(tau, smooth.spline(tau, apply(post_ytilde, 2, mean))$y, lwd=5, col='blue')
-#' lines(tau, y, type='p')
-#' }
 #'
 #' @importFrom TruncatedNormal mvrandn pmvnorm
 #' @importFrom FastGP rcpp_rmvnorm
@@ -980,31 +930,6 @@ spline_star_exact = function(y,
 #' \item \code{post.sigma.gamma}: draws from the posterior distribution of \code{sigma.gamma},
 #' the prior standard deviation of the transformation \code{g} coefficients
 #' }
-#' @examples
-#' \dontrun{
-#' # Simulate data with count-valued response y:
-#' sim_dat = simulate_nb_friedman(n = 100, p = 10)
-#' y = sim_dat$y; X = sim_dat$X
-#'
-#' # BART-STAR with unknown I-spline transformation
-#' fit = countSTAR:::bart_star_ispline(y = y, X = X)
-#'
-#' # Fitted values
-#' plot_fitted(y = sim_dat$Ey,
-#'             post_y = fit$post.fitted.values,
-#'             main = 'Fitted Values: BART-STAR-np')
-#'
-#' # WAIC for BART-STAR-np:
-#' fit$WAIC
-#'
-#' # MCMC diagnostics:
-#' plot(as.ts(fit$post.fitted.values[,1:10]))
-#'
-#' # Posterior predictive check:
-#' hist(apply(fit$post.pred, 1,
-#'            function(x) mean(x==0)), main = 'Proportion of Zeros', xlab='');
-#' abline(v = mean(y==0), lwd=4, col ='blue')
-#'}
 #'
 #' @importFrom splines2 iSpline
 #' @importFrom Matrix Matrix chol
@@ -1472,34 +1397,6 @@ bart_star_ispline = function(y,
 #' Additionally, if \code{init_params} and \code{sample_params} have output \code{mu_test}, then the sampler will output
 #' \code{post.predtest}, which contains draws from the posterior predictive distribution at test points.
 #'
-#'
-#' @examples
-#'
-#' \dontrun{
-#' # Simulate data with count-valued response y:
-#' sim_dat = simulate_nb_lm(n = 100, p = 5)
-#' y = sim_dat$y; X = sim_dat$X
-#'
-#' # STAR: unknown I-spline transformation
-#' fit = countSTAR:::genMCMC_star_ispline(y = y,
-#'                          sample_params = function(y, params) rSTAR:::sample_lm_gprior(y, X, params),
-#'                          init_params = function(y) rSTAR:::init_lm_gprior(y, X))
-#'
-#' # Posterior mean of each coefficient:
-#' coef(fit)
-#'
-#' # WAIC for STAR-np:
-#' fit$WAIC
-#'
-#' # MCMC diagnostics:
-#' plot(as.ts(fit$post.coefficients[,1:3]))
-#'
-#' # Posterior predictive check:
-#' hist(apply(fit$post.pred, 1,
-#'            function(x) mean(x==0)), main = 'Proportion of Zeros', xlab='');
-#' abline(v = mean(y==0), lwd=4, col ='blue')
-#'
-#'}
 #' @importFrom splines2 iSpline
 #' @importFrom Matrix Matrix chol
 #' @keywords internal
@@ -1920,23 +1817,6 @@ genMCMC_star_ispline = function(y,
 #' \item \code{sigma_theta_j}: \code{pNL x 1} vector of nonlinear coefficient standard deviations
 #' }
 #'
-#' @examples
-#' \dontrun{
-#' # Simulate data for illustration:
-#' sim_dat = simulate_nb_friedman(n = 100, p = 5)
-#' y = sim_dat$y; X = sim_dat$X
-#'
-#' # Linear and nonlinear components:
-#' X_lin = as.matrix(X[,-(1:3)])
-#' X_nonlin = as.matrix(X[,(1:3)])
-#'
-#' # Initialize:
-#' params = countSTAR:::init_bam_orthog(y = y,
-#'                          X_lin = X_lin,
-#'                          X_nonlin = X_nonlin)
-#' names(params)
-#' names(params$coefficients)
-#' }
 #' @importFrom spikeSlabGAM sm
 #' @keywords internal
 init_bam_orthog = function(y,
@@ -2054,31 +1934,6 @@ init_bam_orthog = function(y,
 #' \item \code{theta_j}: the \code{pNL}-dimensional of nonlinear basis coefficients
 #' \item \code{sigma_beta}: \code{p x 1} vector of linear regression coefficient standard deviations
 #' \item \code{sigma_theta_j}: \code{pNL x 1} vector of nonlinear coefficient standard deviations
-#' }
-#'
-#' @examples
-#' \dontrun{
-#' # Simulate data for illustration:
-#' sim_dat = simulate_nb_friedman(n = 100, p = 5)
-#' y = sim_dat$y; X = sim_dat$X
-#'
-#' # Linear and nonlinear components:
-#' X_lin = as.matrix(X[,-(1:3)])
-#' X_nonlin = as.matrix(X[,(1:3)])
-#'
-#' # Initialize:
-#' params = countSTAR:::init_bam_orthog(y = y, X_lin = X_lin, X_nonlin = X_nonlin)
-#'
-#' # Sample:
-#' params = countSTAR:::sample_bam_orthog(y = y,
-#'                                 X_lin = X_lin,
-#'                                 X_nonlin = X_nonlin,
-#'                                 params = params)
-#' names(params)
-#' names(params$coefficients)
-#'
-#' # And plot an example:
-#' plot(X_nonlin[,1], params$coefficients$f_j[,1])
 #' }
 #'
 #' @keywords internal
@@ -2239,24 +2094,6 @@ sample_bam_orthog = function(y,
 #' \item \code{sigma_theta_j}: \code{pNL x 1} vector of nonlinear coefficient standard deviations
 #' }
 #'
-#' @examples
-#' \dontrun{
-#' # Simulate data for illustration:
-#' sim_dat = simulate_nb_friedman(n = 100, p = 5)
-#' y = sim_dat$y; X = sim_dat$X
-#'
-#' # Linear and nonlinear components:
-#' X_lin = as.matrix(X[,-(1:3)])
-#' X_nonlin = as.matrix(X[,(1:3)])
-#'
-#' # Initialize:
-#' params = countSTAR:::init_bam_thin(y = y,
-#'                               X_lin = X_lin,
-#'                               X_nonlin = X_nonlin)
-#' names(params)
-#' names(params$coefficients)
-#' }
-#'
 #' @keywords internal
 init_bam_thin = function(y,
                          X_lin,
@@ -2373,31 +2210,6 @@ init_bam_thin = function(y,
 #' \item \code{theta_j}: the \code{pNL}-dimensional of nonlinear basis coefficients
 #' \item \code{sigma_beta}: \code{p x 1} vector of linear regression coefficient standard deviations
 #' \item \code{sigma_theta_j}: \code{pNL x 1} vector of nonlinear coefficient standard deviations
-#' }
-#'
-#' @examples
-#' \dontrun{
-#' # Simulate data for illustration:
-#' sim_dat = simulate_nb_friedman(n = 100, p = 5)
-#' y = sim_dat$y; X = sim_dat$X
-#'
-#' # Linear and nonlinear components:
-#' X_lin = as.matrix(X[,-(1:3)])
-#' X_nonlin = as.matrix(X[,(1:3)])
-#'
-#' # Initialize:
-#' params = countSTAR:::init_bam_thin(y = y, X_lin = X_lin, X_nonlin = X_nonlin)
-#'
-#' # Sample:
-#' params = countSTAR:::sample_bam_thin(y = y,
-#'                                 X_lin = X_lin,
-#'                                 X_nonlin = X_nonlin,
-#'                                 params = params)
-#' names(params)
-#' names(params$coefficients)
-#'
-#' # And plot an example:
-#' plot(X_nonlin[,1], params$coefficients$f_j[,1])
 #' }
 #'
 #' @keywords internal
@@ -2589,15 +2401,6 @@ init_params_mean = function(y){
 #' @note The only parameter in \code{coefficients} is \code{mu0}.
 #' Although redundant here, this parametrization is useful in other functions.
 #'
-#' @examples
-#' \dontrun{
-#' # Example:
-#' y = 1:10
-#' params0 = countSTAR:::init_params_mean(y)
-#' params = countSTAR:::sample_params_mean(y = y, params = params0)
-#' names(params)
-#' }
-#'
 #' @keywords internal
 sample_params_mean = function(y, params){
 
@@ -2777,11 +2580,6 @@ computeTimeRemaining = function(nsi, timer0, nsims, nrep=1000){
 #' Compute the log-odds
 #' @param x scalar or vector in (0,1) for which to compute the (componentwise) log-odds
 #' @return A scalar or vector of log-odds
-#' @examples
-#' \dontrun{
-#' x = seq(0, 1, length.out = 10^3)
-#' plot(x, countSTAR:::logit(x))
-#' }
 #'
 #' @keywords internal
 logit = function(x) {
@@ -2793,12 +2591,6 @@ logit = function(x) {
 #' Compute the inverse log-odds
 #' @param x scalar or vector for which to compute the (componentwise) inverse log-odds
 #' @return A scalar or vector of values in (0,1)
-#'
-#' @examples
-#' \dontrun{
-#' x = seq(-5, 5, length.out = 10^3)
-#' plot(x, countSTAR:::invlogit(x))
-#' }
 #'
 #' @keywords internal
 invlogit = function(x) exp(x - log(1+exp(x))) # exp(x)/(1+exp(x))
@@ -3137,18 +2929,6 @@ truncnorm_mom = function(a, b, mu, sig){
 #' components of \code{beta}
 #' }
 #'
-#' @examples
-#' \dontrun{
-#' # Simulate data for illustration:
-#' sim_dat = simulate_nb_lm(n = 100, p = 5)
-#' y = sim_dat$y; X = sim_dat$X
-#'
-#' # Initialize:
-#' params = countSTAR:::init_lm_ridge(y = y, X = X)
-#' names(params)
-#' names(params$coefficients)
-#' }
-#'
 #' @keywords internal
 init_lm_ridge = function(y, X, X_test=NULL){
 
@@ -3210,21 +2990,6 @@ init_lm_ridge = function(y, X, X_test=NULL){
 #' \item \code{beta}: the \code{p x 1} vector of regression coefficients
 #' \item \code{sigma_beta}: the prior standard deviation for the (non-intercept)
 #' components of \code{beta}
-#' }
-#'
-#' @examples
-#' \dontrun{
-#' # Simulate data for illustration:
-#' sim_dat = simulate_nb_lm(n = 100, p = 5)
-#' y = sim_dat$y; X = sim_dat$X
-#'
-#' # Initialize:
-#' params = countSTAR:::init_lm_ridge(y = y, X = X)
-#'
-#' # Sample:
-#' params = countSTAR:::sample_lm_ridge(y = y, X = X, params = params)
-#' names(params)
-#' names(params$coefficients)
 #' }
 #'
 #' @keywords internal
@@ -3320,18 +3085,6 @@ sample_lm_ridge = function(y, X, params, A = 10^4, XtX = NULL, X_test=NULL){
 #' components of \code{beta}
 #' }
 #'
-#' @examples
-#' \dontrun{
-#' # Simulate data for illustration:
-#' sim_dat = simulate_nb_lm(n = 100, p = 5)
-#' y = sim_dat$y; X = sim_dat$X
-#'
-#' # Initialize:
-#' params = countSTAR:::init_lm_hs(y = y, X = X)
-#' names(params)
-#' names(params$coefficients)
-#' }
-#'
 #' @keywords internal
 init_lm_hs = function(y, X, X_test=NULL){
 
@@ -3406,21 +3159,6 @@ init_lm_hs = function(y, X, X_test=NULL){
 #' \item \code{lambda_beta} the global scale parameter
 #' \item \code{xi_lambda_beta} parameter-expansion variable for \code{lambda_beta}
 #' components of \code{beta}
-#' }
-#'
-#' @examples
-#' \dontrun{
-#' # Simulate data for illustration:
-#' sim_dat = simulate_nb_lm(n = 100, p = 5)
-#' y = sim_dat$y; X = sim_dat$X
-#'
-#' # Initialize:
-#' params = countSTAR:::init_lm_hs(y = y, X = X)
-#'
-#' # Sample:
-#' params = countSTAR:::sample_lm_hs(y = y, X = X, params = params)
-#' names(params)
-#' names(params$coefficients)
 #' }
 #'
 #' @keywords internal
@@ -3524,18 +3262,6 @@ sample_lm_hs = function(y, X, params, XtX = NULL, X_test=NULL){
 #' components of \code{beta}
 #' }
 #'
-#' @examples
-#' \dontrun{
-#' # Simulate data for illustration:
-#' sim_dat = simulate_nb_lm(n = 100, p = 5)
-#' y = sim_dat$y; X = sim_dat$X
-#'
-#' # Initialize:
-#' params = countSTAR:::init_lm_gprior(y = y, X = X)
-#' names(params)
-#' names(params$coefficients)
-#' }
-#'
 #' @keywords internal
 init_lm_gprior = function(y, X, X_test=NULL){
 
@@ -3590,21 +3316,6 @@ init_lm_gprior = function(y, X, X_test=NULL){
 #' \itemize{
 #' \item \code{beta}: the \code{p x 1} vector of regression coefficients
 #' components of \code{beta}
-#' }
-#'
-#' @examples
-#' \dontrun{
-#' # Simulate data for illustration:
-#' sim_dat = simulate_nb_lm(n = 100, p = 5)
-#' y = sim_dat$y; X = sim_dat$X
-#'
-#' # Initialize:
-#' params = countSTAR:::init_lm_gprior(y = y, X = X)
-#'
-#' # Sample:
-#' params = countSTAR:::sample_lm_gprior(y = y, X = X, params = params)
-#' names(params)
-#' names(params$coefficients)
 #' }
 #'
 #' @keywords internal

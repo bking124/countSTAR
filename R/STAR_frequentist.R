@@ -769,7 +769,7 @@ pvals <- function(object){
 #' \emph{Biometrics}. \doi{10.1111/biom.13617}
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Simulate data with count-valued response y:
 #' sim_dat = simulate_nb_friedman(n = 100, p = 10)
 #' y = sim_dat$y; X = sim_dat$X

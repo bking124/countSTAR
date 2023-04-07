@@ -15,6 +15,10 @@ plot_pmf(y, post.pred, error.bars = FALSE, alpha = 0.05)
 
 \item{alpha}{confidence level for the credible intervals}
 }
+\value{
+A plot of the empirical PMF of y along with a PMF estimate from the model posterior
+predictive distribution
+}
 \description{
 Plot the empirical probability mass function, i.e., the proportion of
 data values \code{y} that equal \code{j} for each \code{j=0,1,...},

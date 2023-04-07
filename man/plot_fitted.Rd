@@ -18,6 +18,9 @@ number of simulations}
 
 \item{...}{other arguments for plotting}
 }
+\value{
+A plot with the fitted values and the credible intervals against the data
+}
 \description{
 Plot the fitted values, plus pointwise credible intervals, against the
 data. For simulations, one may use the true values in place of the data.

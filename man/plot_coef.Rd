@@ -22,6 +22,9 @@ distribution of the \code{p} coefficients from another model}
 
 \item{labels}{\code{p} dimensional string of labels for the coefficient names}
 }
+\value{
+A plot of regression coefficients and credible intervals for 1-2 models
+}
 \description{
 Plot the estimated regression coefficients and credible intervals
 for the linear effects in up to two models.

@@ -108,7 +108,7 @@ that (i) it is appropriate to treat these observations as outliers and
 (ii) the model is adequate for the remaining data points.
 }
 \examples{
-\dontrun{
+\donttest{
 # Simulate data with count-valued response y:
 sim_dat = simulate_nb_friedman(n = 100, p = 10)
 y = sim_dat$y; X = sim_dat$X

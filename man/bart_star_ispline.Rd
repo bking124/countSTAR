@@ -104,31 +104,4 @@ The transformation is modeled as an unknown, monotone function
 using I-splines. The Robust Adaptive Metropolis (RAM) sampler
 is used for drawing the parameter of the transformation function.
 }
-\examples{
-\dontrun{
-# Simulate data with count-valued response y:
-sim_dat = simulate_nb_friedman(n = 100, p = 10)
-y = sim_dat$y; X = sim_dat$X
-
-# BART-STAR with unknown I-spline transformation
-fit = countSTAR:::bart_star_ispline(y = y, X = X)
-
-# Fitted values
-plot_fitted(y = sim_dat$Ey,
-            post_y = fit$post.fitted.values,
-            main = 'Fitted Values: BART-STAR-np')
-
-# WAIC for BART-STAR-np:
-fit$WAIC
-
-# MCMC diagnostics:
-plot(as.ts(fit$post.fitted.values[,1:10]))
-
-# Posterior predictive check:
-hist(apply(fit$post.pred, 1,
-           function(x) mean(x==0)), main = 'Proportion of Zeros', xlab='');
-abline(v = mean(y==0), lwd=4, col ='blue')
-}
-
-}
 \keyword{internal}
