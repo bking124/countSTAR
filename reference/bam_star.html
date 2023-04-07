@@ -175,7 +175,7 @@ of the transformation function.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="co"># Simulate data with count-valued response y:</span></span></span>
 <span class="r-in"><span><span class="va">sim_dat</span> <span class="op">=</span> <span class="fu"><a href="simulate_nb_friedman.html">simulate_nb_friedman</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">100</span>, p <span class="op">=</span> <span class="fl">5</span>, seed<span class="op">=</span><span class="fl">32</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">y</span> <span class="op">=</span> <span class="va">sim_dat</span><span class="op">$</span><span class="va">y</span>; <span class="va">X</span> <span class="op">=</span> <span class="va">sim_dat</span><span class="op">$</span><span class="va">X</span></span></span>
@@ -186,22 +186,36 @@ of the transformation function.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># STAR: nonparametric transformation</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu">bam_star</span><span class="op">(</span><span class="va">y</span>,<span class="va">X_lin</span>, <span class="va">X_nonlin</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Burn-In Period"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "4.82 minutes remaining"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "3.99 minutes remaining"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Starting sampling"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "3.64 minutes remaining"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "2.73 minutes remaining"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "1.72 minutes remaining"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "44.36 seconds remaining"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Total time:  297 seconds"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Posterior mean of each coefficient:</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       beta1       beta2       beta3       beta4       beta5 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  0.48934516 -0.09819498  0.21129272  0.34047861 -0.05568553 </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># WAIC:</span></span></span>
 <span class="r-in"><span><span class="va">fit</span><span class="op">$</span><span class="va">WAIC</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 377.9771</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># MCMC diagnostics:</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/ts.html" class="external-link">as.ts</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">post.coefficients</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in ts(x):</span> 'ts' object must have one or more observations</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Posterior predictive check:</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html" class="external-link">hist</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">post.pred</span>, <span class="fl">1</span>,</span></span>
 <span class="r-in"><span>           <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">x</span><span class="op">==</span><span class="fl">0</span><span class="op">)</span><span class="op">)</span>, main <span class="op">=</span> <span class="st">'Proportion of Zeros'</span>, xlab<span class="op">=</span><span class="st">''</span><span class="op">)</span>;</span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>v <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">y</span><span class="op">==</span><span class="fl">0</span><span class="op">)</span>, lwd<span class="op">=</span><span class="fl">4</span>, col <span class="op">=</span><span class="st">'blue'</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="bam_star-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
