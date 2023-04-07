@@ -54,7 +54,7 @@ Bayesian backfitting (i.e., conditional on all other nonlinear and linear terms)
 \note{
 The parameters in \code{coefficients} are:
 \itemize{
-\item \code{beta}: the \code{p x 1} linear coefficients, including the linear terms from \code{X_nonlin}
+\item \code{beta_lin}: the \code{p x 1} linear coefficients, including the linear terms from \code{X_nonlin}
 \item \code{f_j}: the \code{n x pNL} matrix of fitted values for each nonlinear function
 \item \code{theta_j}: the \code{pNL}-dimensional of nonlinear basis coefficients
 \item \code{sigma_beta}: \code{p x 1} vector of linear regression coefficient standard deviations

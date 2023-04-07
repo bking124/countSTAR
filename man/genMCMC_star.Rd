@@ -120,15 +120,14 @@ distributions. For the parametric distributions, the parameters of the distribut
 are estimated using moments (means and variances) of \code{y}.
 }
 \examples{
-\donttest{
 # Simulate data with count-valued response y:
 sim_dat = simulate_nb_lm(n = 100, p = 5)
 y = sim_dat$y; X = sim_dat$X
 
 # STAR: log-transformation:
 fit_log = genMCMC_star(y = y,
-                         sample_params = function(y, params) rSTAR:::sample_lm_gprior(y, X, params),
-                         init_params = function(y) rSTAR:::init_lm_gprior(y, X),
+                         sample_params = function(y, params) sample_lm_gprior(y, X, params),
+                         init_params = function(y) init_lm_gprior(y, X),
                          transformation = 'log')
 # Posterior mean of each coefficient:
 coef(fit_log)
@@ -137,12 +136,11 @@ coef(fit_log)
 fit_log$WAIC
 
 # MCMC diagnostics:
-plot(as.ts(fit_log$post.coefficients[,1:3]))
+plot(as.ts(fit_log$post.beta[,1:3]))
 
 # Posterior predictive check:
 hist(apply(fit_log$post.pred, 1,
            function(x) mean(x==0)), main = 'Proportion of Zeros', xlab='');
 abline(v = mean(y==0), lwd=4, col ='blue')
 
-}
 }

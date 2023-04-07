@@ -1471,7 +1471,7 @@ genMCMC_star_ispline = function(y,
     stop("The sample_params() function must return 'mu', 'sigma', and 'coefficients'")
 
   # Does the sampler return beta? If so, we want to store separately
-  beta_sampled = !is.null(params$coefficients$beta)
+  beta_sampled = !is.null(params$coefficients[["beta"]])
 
   #Does the sampler return mu_test
   testpoints = !is.null(params$mu_test)
@@ -1810,7 +1810,7 @@ genMCMC_star_ispline = function(y,
 #'
 #' @note The parameters in \code{coefficients} are:
 #' \itemize{
-#' \item \code{beta}: the \code{p x 1} linear coefficients, including the linear terms from \code{X_nonlin}
+#' \item \code{beta_lin}: the \code{p x 1} linear coefficients, including the linear terms from \code{X_nonlin}
 #' \item \code{f_j}: the \code{n x pNL} matrix of fitted values for each nonlinear function
 #' \item \code{theta_j}: the \code{pNL}-dimensional of nonlinear basis coefficients
 #' \item \code{sigma_beta}: \code{p x 1} vector of linear regression coefficient standard deviations
@@ -1890,7 +1890,7 @@ init_bam_orthog = function(y,
 
   # And store all coefficients
   coefficients = list(
-    beta = beta, # p x 1
+    beta_lin = beta, # p x 1
     f_j = f_j, # n x pNL
     theta_j = theta_j, # pNL-dimensional list
     sigma_beta = sigma_beta, # p x 1
@@ -1929,7 +1929,7 @@ init_bam_orthog = function(y,
 #'
 #' @note The parameters in \code{coefficients} are:
 #' \itemize{
-#' \item \code{beta}: the \code{p x 1} linear coefficients, including the linear terms from \code{X_nonlin}
+#' \item \code{beta_lin}: the \code{p x 1} linear coefficients, including the linear terms from \code{X_nonlin}
 #' \item \code{f_j}: the \code{n x pNL} matrix of fitted values for each nonlinear function
 #' \item \code{theta_j}: the \code{pNL}-dimensional of nonlinear basis coefficients
 #' \item \code{sigma_beta}: \code{p x 1} vector of linear regression coefficient standard deviations
@@ -1982,7 +1982,7 @@ sample_bam_orthog = function(y,
   sigma = params$sigma  # Observation SD
   coefficients = params$coefficients # Coefficients to access below:
 
-  beta = coefficients$beta;              # Regression coefficients (including intercept)
+  beta = coefficients$beta_lin;              # Regression coefficients (including intercept)
   sigma_beta = coefficients$sigma_beta   # prior SD of regression coefficients (including intercept)
 
   theta_j = coefficients$theta_j         # Nonlinear coefficients
@@ -2058,7 +2058,7 @@ sample_bam_orthog = function(y,
                      p - 1))
 
   # Update the coefficients:
-  coefficients$beta = beta
+  coefficients$beta_lin = beta
   coefficients$sigma_beta = sigma_beta
   coefficients$theta_j = theta_j
   coefficients$sigma_theta_j = sigma_theta_j
@@ -2087,7 +2087,7 @@ sample_bam_orthog = function(y,
 #'
 #' @note The parameters in \code{coefficients} are:
 #' \itemize{
-#' \item \code{beta}: the \code{p x 1} linear coefficients, including the linear terms from \code{X_nonlin}
+#' \item \code{beta_lin}: the \code{p x 1} linear coefficients, including the linear terms from \code{X_nonlin}
 #' \item \code{f_j}: the \code{n x pNL} matrix of fitted values for each nonlinear function
 #' \item \code{theta_j}: the \code{pNL}-dimensional of nonlinear basis coefficients
 #' \item \code{sigma_beta}: \code{p x 1} vector of linear regression coefficient standard deviations
@@ -2166,7 +2166,7 @@ init_bam_thin = function(y,
 
   # And store all coefficients
   coefficients = list(
-    beta = beta, # p x 1
+    beta_lin = beta, # p x 1
     f_j = f_j, # n x pNL
     theta_j = theta_j, # pNL-dimensional list
     sigma_beta = sigma_beta, # p x 1
@@ -2205,7 +2205,7 @@ init_bam_thin = function(y,
 #'
 #' @note The parameters in \code{coefficients} are:
 #' \itemize{
-#' \item \code{beta}: the \code{p x 1} linear coefficients, including the linear terms from \code{X_nonlin}
+#' \item \code{beta_lin}: the \code{p x 1} linear coefficients, including the linear terms from \code{X_nonlin}
 #' \item \code{f_j}: the \code{n x pNL} matrix of fitted values for each nonlinear function
 #' \item \code{theta_j}: the \code{pNL}-dimensional of nonlinear basis coefficients
 #' \item \code{sigma_beta}: \code{p x 1} vector of linear regression coefficient standard deviations
@@ -2258,7 +2258,7 @@ sample_bam_thin = function(y,
   sigma = params$sigma  # Observation SD
   coefficients = params$coefficients # Coefficients to access below:
 
-  beta = coefficients$beta;              # Regression coefficients (including intercept)
+  beta = coefficients$beta_lin;          # Regression coefficients (including intercept)
   sigma_beta = coefficients$sigma_beta   # prior SD of regression coefficients (including intercept)
 
   theta_j = coefficients$theta_j         # Nonlinear coefficients
@@ -2337,7 +2337,7 @@ sample_bam_thin = function(y,
                      p - 1))
 
   # Update the coefficients:
-  coefficients$beta = beta
+  coefficients$beta_lin = beta
   coefficients$sigma_beta = sigma_beta
   coefficients$theta_j = theta_j
   coefficients$sigma_theta_j = sigma_theta_j
@@ -3230,133 +3230,6 @@ sample_lm_hs = function(y, X, params, XtX = NULL, X_test=NULL){
   coefficients$beta = beta
   coefficients$sigma_beta = sigma_beta
 
-
-  result = list(mu = mu, sigma = sigma, coefficients = coefficients)
-  if(!is.null(X_test)){
-    result = c(result, list(mu_test = mu_test))
-  }
-  return(result)
-}
-
-#' Initialize linear regression parameters assuming a g-prior
-#'
-#' Initialize the parameters for a linear regression model assuming a
-#' g-prior for the coefficients.
-#'
-#' @param y \code{n x 1} vector of data
-#' @param X \code{n x p} matrix of predictors
-#' @param X_test \code{n0 x p} matrix of predictors at test points (default is NULL)
-#'
-#' @return a named list \code{params} containing at least
-#' \enumerate{
-#' \item \code{mu}: vector of conditional means (fitted values)
-#' \item \code{sigma}: the conditional standard deviation
-#' \item \code{coefficients}: a named list of parameters that determine \code{mu}
-#' }
-#' Additionally, if X_test is not NULL, then the list includes an element
-#' \code{mu_test}, the vector of conditional means at the test points
-#'
-#' @note The parameters in \code{coefficients} are:
-#' \itemize{
-#' \item \code{beta}: the \code{p x 1} vector of regression coefficients
-#' components of \code{beta}
-#' }
-#'
-#' @keywords internal
-init_lm_gprior = function(y, X, X_test=NULL){
-
-  # Initialize the linear model:
-  n = nrow(X); p = ncol(X)
-
-  # Regression coefficients: depending on p >= n or p < n
-  if(p >= n){
-    beta = sampleFastGaussian(Phi = X, Ddiag = rep(1, p), alpha = y)
-  } else beta = lm(y ~ X - 1)$coef
-
-  # Fitted values:
-  mu = X%*%beta
-
-  #Mean at the test points (if passed in)
-  if(!is.null(X_test)) mu_test = X_test%*%beta
-
-  # Observation SD:
-  sigma = sd(y - mu)
-
-  # Named list of coefficients:
-  coefficients = list(beta = beta)
-
-  result = list(mu = mu, sigma = sigma, coefficients = coefficients)
-  if(!is.null(X_test)){
-    result = c(result, list(mu_test = mu_test))
-  }
-  return(result)
-}
-#' Sample the linear regression parameters assuming a g-prior
-#'
-#' Sample the parameters for a linear regression model assuming a
-#' g-prior for the  coefficients.
-#'
-#' @param y \code{n x 1} vector of data
-#' @param X \code{n x p} matrix of predictors
-#' @param params the named list of parameters containing
-#' \enumerate{
-#' \item \code{mu}: vector of conditional means (fitted values)
-#' \item \code{sigma}: the conditional standard deviation
-#' \item \code{coefficients}: a named list of parameters that determine \code{mu}
-#' }
-#' @param psi the prior variance for the g-prior
-#' @param XtX the \code{p x p} matrix of \code{crossprod(X)} (one-time cost);
-#' if NULL, compute within the function
-#' @param X_test matrix of predictors at test points (default is NULL)
-#'
-#' @return The updated named list \code{params} with draws from the full conditional distributions
-#' of \code{sigma} and \code{coefficients} (along with updated \code{mu} and \code{mu_test} if applicable).
-#'
-#' @note The parameters in \code{coefficients} are:
-#' \itemize{
-#' \item \code{beta}: the \code{p x 1} vector of regression coefficients
-#' components of \code{beta}
-#' }
-#'
-#' @keywords internal
-#' @import truncdist
-sample_lm_gprior = function(y, X, params, psi = NULL, XtX = NULL, X_test=NULL){
-
-  # Dimensions:
-  n = nrow(X); p = ncol(X)
-
-  if(is.null(psi)) psi = n # default
-
-  # For faster computations:
-  if(is.null(XtX)) XtX = crossprod(X)
-
-  # Access elements of the named list:
-  sigma = params$sigma  # Observation SD
-  coefficients = params$coefficients # Coefficients to access below:
-
-  beta = coefficients$beta;              # Regression coefficients (including intercept)
-
-  # Sample the regression coefficients:
-  Q_beta = 1/sigma^2*(1+psi)/(psi)*XtX
-  ell_beta = 1/sigma^2*crossprod(X, y)
-  ch_Q = chol(Q_beta)
-  beta = backsolve(ch_Q,
-                   forwardsolve(t(ch_Q), ell_beta) +
-                     rnorm(p))
-
-  # Conditional mean:
-  mu = X%*%beta
-
-  #Mean at the test points (if passed in)
-  if(!is.null(X_test)) mu_test = X_test%*%beta
-
-  # Observation SD:
-  sigma =  1/sqrt(rgamma(n = 1,
-                         shape = .001 + n/2,
-                         rate = .001 + sum((y - mu)^2)/2))
-
-  # Update the coefficients:
-  coefficients$beta = beta
 
   result = list(mu = mu, sigma = sigma, coefficients = coefficients)
   if(!is.null(X_test)){

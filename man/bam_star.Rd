@@ -117,7 +117,7 @@ X_lin = as.matrix(X[,-(1:3)])
 X_nonlin = as.matrix(X[,(1:3)])
 
 # STAR: nonparametric transformation
-fit <- bam_star(y,X_lin, X_nonlin)
+fit <- bam_star(y,X_lin, X_nonlin, nburn=1000, nskip=0)
 
 # Posterior mean of each coefficient:
 coef(fit)
