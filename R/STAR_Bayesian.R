@@ -141,41 +141,40 @@ blm_star <- function(y, X, X_test = NULL,
     .args = as.list(match.call())[-1]
     .args[c('prior','use_MCMC', 'nburn', 'nskip')] <- NULL
     result = do.call(blm_star_exact, .args)
-  }
+  } else { #Non-exact sampler
+    if(transformation=="bnp"){
+      .args = as.list(match.call())[-1]
+      .args[c('transformation','prior','use_MCMC','method_sigma', 'compute_marg')] <- NULL
+      result = do.call(blm_star_bnpgibbs, .args)
+    } else {
+      #Now we set the appropriate init and sample functions
+      if(prior=="gprior"){
+        init_params = function(y){init_lm_gprior(y, X, X_test=X_test)}
+        sample_params = function(y, params){sample_lm_gprior(y=y, X=X, params=params, X_test=X_test)}
+      }
+      else if (prior == "ridge"){
+        init_params = function(y){init_lm_ridge(y, X, X_test=X_test)}
+        sample_params = function(y, params){sample_lm_ridge(y=y, X=X, params=params, X_test=X_test)}
+      }
+      else{
+        init_params = function(y){init_lm_hs(y, X, X_test=X_test)}
+        sample_params = function(y, params){sample_lm_hs(y=y, X=X, params=params, X_test=X_test)}
+      }
 
-  #Getting here must mean use_MCMC==TRUE
-  if(transformation=="bnp"){
-    .args = as.list(match.call())[-1]
-    .args[c('transformation','prior','use_MCMC','method_sigma', 'compute_marg')] <- NULL
-    result = do.call(blm_star_bnpgibbs, .args)
-  }
+      #Invoke the appropriate generic MCMC sampler
+      .args = as.list(match.call())[-1]
+      .args[c('X', 'X_test', 'transformation','prior','use_MCMC','method_sigma', 'compute_marg',
+              'approx_Fz','approx_Fy', 'psi')] <- NULL
+      .args$sample_params = sample_params
+      .args$init_params = init_params
 
-  #Now we set the appropriate init and sample functions
-  if(prior=="gprior"){
-    init_params = function(y){init_lm_gprior(y, X, X_test=X_test)}
-    sample_params = function(y, params){sample_lm_gprior(y=y, X=X, params=params, X_test=X_test)}
-  }
-  else if (prior == "ridge"){
-    init_params = function(y){init_lm_ridge(y, X, X_test=X_test)}
-    sample_params = function(y, params){sample_lm_ridge(y=y, X=X, params=params, X_test=X_test)}
-  }
-  else{
-    init_params = function(y){init_lm_hs(y, X, X_test=X_test)}
-    sample_params = function(y, params){sample_lm_hs(y=y, X=X, params=params, X_test=X_test)}
-  }
-
-  #Invoke the appropriate generic MCMC sampler
-  .args = as.list(match.call())[-1]
-  .args[c('X', 'X_test', 'transformation','prior','use_MCMC','method_sigma', 'compute_marg',
-          'approx_Fz','approx_Fy', 'psi')] <- NULL
-  .args$sample_params = sample_params
-  .args$init_params = init_params
-
-  if(transformation=="ispline"){
-    .args[c('X', 'X_test','transformation')] <- NULL
-    result = do.call(genMCMC_star_ispline, .args)
-  } else {
-    result = do.call(genMCMC_star, .args)
+      if(transformation=="ispline"){
+        .args[c('X', 'X_test','transformation')] <- NULL
+        result = do.call(genMCMC_star_ispline, .args)
+      } else {
+        result = do.call(genMCMC_star, .args)
+      }
+    }
   }
 
   #Return result
@@ -493,7 +492,7 @@ genMCMC_star = function(y,
 
         #Posterior predictive at test points
         if(testpoints){
-          post.predtest[isave,] = round_floor(g_inv(rnorm(n = n, mean = params$mu_test, sd = params$sigma)), y_max=y_max)
+          post.predtest[isave,] = round_floor(g_inv(rnorm(n = n0, mean = params$mu_test, sd = params$sigma)), y_max=y_max)
         }
 
         # Conditional expectation:
@@ -1087,7 +1086,7 @@ bart_star = function(y,
             post.log.pred.test[isave,] = logLikePointRcpp(g_a_j = g(a_j(y_test)),
                                                           g_a_jp1 = g(a_j(y_test + 1)),
                                                           mu = samp$test,
-                                                          sigma = rep(params$sigma, n))
+                                                          sigma = rep(params$sigma, n0))
         }
 
         # Nonlinear parameter of Box-Cox transformation:

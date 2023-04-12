@@ -1265,7 +1265,7 @@ bart_star_ispline = function(y,
             post.log.pred.test[isave,] = logLikePointRcpp(g_a_j = g_test_a_y,
                                                           g_a_jp1 = g_test_ayp1,
                                                           mu = samp$test,
-                                                          sigma = rep(params$sigma, n))
+                                                          sigma = rep(params$sigma, n0))
           }
         }
 
