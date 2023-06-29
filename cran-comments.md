@@ -5,5 +5,6 @@ I thought the issue would resolve itself (the rstanarm developers released a fix
 
 ## R CMD check results
 
-0 errors | 0 warnings | 0 notes 
+0 errors | 0 warnings | 1 note
 
+* The note seems to regard a URL (to a paper) which I have checked to be valid on all browsers and systems to which I have access. 
