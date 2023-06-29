@@ -4,7 +4,7 @@ Title: Flexible Modeling of Count Data
 Version: 1.0.1.9000
 Authors@R: c(
     person(given="Brian", family="King", email = "brianking387@gmail.com", role = c("aut", "cre")),
-    person(given=c("Daniel", "R."), family = "Kowal", email = "daniel.kowal@rice.edu", role = "aut"))
+    person(given="Dan", family = "Kowal", email = "daniel.r.kowal@gmail.com", role = "aut"))
 Description: For Bayesian and classical inference and prediction with count-valued data,
     Simultaneous Transformation and Rounding (STAR) Models provide a flexible, interpretable,
     and easy-to-use approach. STAR models the observed count data using a rounded 
