@@ -74,9 +74,7 @@ As an example of complex count-valued data, consider the `roaches` data from @Ge
 The response variable, $y_i$, is the number of roaches caught in traps in apartment $i$, with $i=1,\ldots, n = 262$. 
 
 ```{r roaches}
-# Source: http://mc-stan.org/rstanarm/articles/count.html
-#install.packages("rstanarm")
-data(roaches, package="rstanarm") 
+data(roaches, package="countSTAR") 
 
 # Roaches:
 y = roaches$y

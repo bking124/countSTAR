@@ -29,7 +29,7 @@ Encoding: UTF-8
 LinkingTo: Rcpp, RcppArmadillo
 Imports: stats, utils, coda, dbarts, FastGP, gbm, graphics, Matrix, spikeSlabGAM, splines2, randomForest, Rcpp, TruncatedNormal, truncdist, KFAS
 RoxygenNote: 7.2.3
-Suggests: knitr, rmarkdown, rstanarm, bayesplot, mgcv
+Suggests: knitr, rmarkdown, bayesplot, mgcv
 VignetteBuilder: knitr
 URL: https://bking124.github.io/countSTAR/
      https://github.com/bking124/countSTAR
