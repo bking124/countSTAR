@@ -1,7 +1,7 @@
 Package: countSTAR
 Type: Package
 Title: Flexible Modeling of Count Data 
-Version: 1.0.1.9000
+Version: 1.0.2
 Authors@R: c(
     person(given="Brian", family="King", email = "brianking387@gmail.com", role = c("aut", "cre")),
     person(given="Dan", family = "Kowal", email = "daniel.r.kowal@gmail.com", role = "aut"))
