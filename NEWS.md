@@ -1,3 +1,5 @@
+# countSTAR (development version)
+
 # countSTAR 1.0.2
 
 * Added roaches dataset to package
