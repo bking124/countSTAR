@@ -1,7 +1,7 @@
 Package: countSTAR
 Type: Package
 Title: Flexible Modeling of Count Data 
-Version: 1.0.1.9000
+Version: 1.0.2.9000
 Authors@R: c(
     person(given="Brian", family="King", email = "brianking387@gmail.com", role = c("aut", "cre")),
     person(given="Dan", family = "Kowal", email = "daniel.r.kowal@gmail.com", role = "aut"))
@@ -22,7 +22,7 @@ Description: For Bayesian and classical inference and prediction with count-valu
     For more details and background on these methodologies, see the works of 
     Kowal and Canale (2020) <doi:10.1214/20-EJS1707>, 
     Kowal and Wu (2022) <doi:10.1111/biom.13617>, 
-    King and Kowal (2022) <arXiv:2110.14790>, and 
+    King and Kowal (2023) <doi:10.1214/23-BA1394>, and 
     Kowal and Wu (2023) <arXiv:2110.12316>.
 License: GPL (>=2)
 Encoding: UTF-8
