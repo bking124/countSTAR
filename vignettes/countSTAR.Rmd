@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 )
 ```
 # Introduction
-The `countSTAR` package implements a variety of methods to analyze diverse count-valued data, all based on the idea of Simultaneous Transformation and Rounding (STAR) models. The package functionality is broadly split into three categories: Bayesian estimation of STAR models (@Kowal2020a, @kowalSTARconjugate), frequentist/classical estimation (@kowal2021semiparametric), and time series analysis using warped Dynamic Linear Models (@king2021warped).
+The `countSTAR` package implements a variety of methods to analyze diverse count-valued data, all based on the idea of Simultaneous Transformation and Rounding (STAR) models. The package functionality is broadly split into three categories: Bayesian estimation of STAR models (@Kowal2020a, @kowalSTARconjugate), frequentist/classical estimation (@kowal2021semiparametric), and time series analysis using warped Dynamic Linear Models (@king2023warped).
 
 We give a brief description of the STAR framework, before diving into specific examples that show the `countSTAR` functionality.
 
@@ -277,7 +277,7 @@ print(waic)
 `countSTAR` also implements Bayesian additive models. With the function `bam_star()`, we can specify covariates to be modeled linearly and others to be modeled non-linearly using spline bases. As a word of warning, the additive models can take much longer to fit. For exploring the relationship between one predictor and count outcome $y$, one can also use spline regression as implemented in `spline_star()`. See the appropriate help pages for examples on how to run the models.
 
 # Count Time Series Modeling: warpDLM
-Up to this point, all of the attention has focused on static regression where the data does not depend on time. However, the ideas of simultaneous transformation and rounding were extended to the time series domain in @king2021warped. In that work, we proposed linking time-dependent count data $y_t$ to a powerful time series framework known as Dynamic Linear Models (DLMs). A DLM is defined by two equations: (i) the observation equation, which specifies how the observations are related to the latent state vector and (ii) the state evolution equation, which describes how the states are updated in a Markovian fashion. More concretely, we represent it in the following form:
+Up to this point, all of the attention has focused on static regression where the data does not depend on time. However, the ideas of simultaneous transformation and rounding were extended to the time series domain in @king2023warped. In that work, we proposed linking time-dependent count data $y_t$ to a powerful time series framework known as Dynamic Linear Models (DLMs). A DLM is defined by two equations: (i) the observation equation, which specifies how the observations are related to the latent state vector and (ii) the state evolution equation, which describes how the states are updated in a Markovian fashion. More concretely, we represent it in the following form:
 \begin{align*}
     z_t &= F_t \theta_t + v_t, \quad v_t \sim N_n(0, V_t) \\
     \theta_t &= G_t \theta_{t-1} +  w_t, \quad w_t \sim N_p( 0, W_t)
