@@ -100,19 +100,19 @@ These will be labelled as (1-level)/2 and 1 - (1-level)/2 in <!-- % (by default 
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co">#Simulate data with count-valued response y:</span></span></span>
 <span class="r-in"><span><span class="va">sim_dat</span> <span class="op">=</span> <span class="fu"><a href="simulate_nb_lm.html">simulate_nb_lm</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">100</span>, p <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">y</span> <span class="op">=</span> <span class="va">sim_dat</span><span class="op">$</span><span class="va">y</span>; <span class="va">X</span> <span class="op">=</span> <span class="va">sim_dat</span><span class="op">$</span><span class="va">X</span></span></span>
+<span class="r-in"><span><span class="va">y</span> <span class="op">=</span> <span class="va">sim_dat</span><span class="op">$</span><span class="va">y</span>; <span class="va">X</span> <span class="op">=</span> <span class="va">sim_dat</span><span class="op">$</span><span class="va">X</span><span class="op">[</span>,<span class="op">-</span><span class="fl">1</span><span class="op">]</span> <span class="co"># remove intercept</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">#Select a transformation:</span></span></span>
+<span class="r-in"><span><span class="co"># Select a transformation:</span></span></span>
 <span class="r-in"><span><span class="va">transformation</span> <span class="op">=</span> <span class="st">'np'</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Estimate model</span></span></span>
-<span class="r-in"><span><span class="va">fit</span> <span class="op">=</span> <span class="fu"><a href="lm_star.html">lm_star</a></span><span class="op">(</span><span class="va">y</span><span class="op">~</span><span class="va">X</span>, transformation<span class="op">=</span><span class="va">transformation</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">=</span> <span class="fu"><a href="lm_star.html">lm_star</a></span><span class="op">(</span><span class="va">y</span><span class="op">~</span><span class="va">X</span>, transformation <span class="op">=</span> <span class="va">transformation</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Confidence interval for all parameters</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                  2.5 %    97.5 %</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> (Intercept) -0.1857700 0.1593311</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> X            0.3017325 0.6626907</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> (Intercept) -0.1651785 0.1805371</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> X            0.3098616 0.6679353</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

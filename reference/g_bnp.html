@@ -60,13 +60,7 @@ of <code>y</code> and <code>X</code>.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">g_bnp</span><span class="op">(</span></span>
-<span>  <span class="va">y</span>,</span>
-<span>  xtSigmax <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  zgrid <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  sigma_epsilon <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  approx_Fz <span class="op">=</span> <span class="cn">FALSE</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">g_bnp</span><span class="op">(</span><span class="va">y</span>, xt_Sigma_x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span><span class="op">)</span>, z_grid <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -75,23 +69,14 @@ of <code>y</code> and <code>X</code>.</p>
 <dd><p><code>n x 1</code> vector of observed counts</p></dd>
 
 
-<dt>xtSigmax</dt>
+<dt>xt_Sigma_x</dt>
 <dd><p><code>n x 1</code> vector of <code>t(X_i) Sigma_theta X_i</code>,
 where <code>Sigma_theta</code> is the prior variance</p></dd>
 
 
-<dt>zgrid</dt>
+<dt>z_grid</dt>
 <dd><p>optional vector of grid points for evaluating the CDF
 of z (<code>Fz</code>)</p></dd>
-
-
-<dt>sigma_epsilon</dt>
-<dd><p>latent standard deviation</p></dd>
-
-
-<dt>approx_Fz</dt>
-<dd><p>logical; if TRUE, use a normal approximation for <code>Fz</code>,
-the marginal CDF of the latent z, which is faster and more stable</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -104,19 +89,19 @@ at each posterior draw.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Sample some data:</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="co"># Sample some data:</span></span></span>
 <span class="r-in"><span><span class="va">y</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Poisson.html" class="external-link">rpois</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">200</span>, lambda <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="co"># Compute 200 draws of g on a grid:</span></span></span>
-<span class="r-in"><span><span class="va">t</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span>, length.out <span class="op">=</span> <span class="fl">100</span><span class="op">)</span> <span class="co"># grid</span></span></span>
-<span class="r-in"><span><span class="va">g_post</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">500</span>, <span class="kw">function</span><span class="op">(</span><span class="va">s</span><span class="op">)</span> <span class="fu">g_bnp</span><span class="op">(</span><span class="va">y</span>, approx_Fz <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">(</span><span class="va">t</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Compute 100 draws of g on a grid:</span></span></span>
+<span class="r-in"><span><span class="va">t</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span>, length.out <span class="op">=</span> <span class="fl">50</span><span class="op">)</span> <span class="co"># grid</span></span></span>
+<span class="r-in"><span><span class="va">g_post</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">100</span>, <span class="kw">function</span><span class="op">(</span><span class="va">s</span><span class="op">)</span> <span class="fu">g_bnp</span><span class="op">(</span><span class="va">y</span><span class="op">)</span><span class="op">(</span><span class="va">t</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># Plot together:</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">t</span>, <span class="va">t</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">g_post</span><span class="op">)</span>, type<span class="op">=</span><span class="st">'n'</span>, ylab <span class="op">=</span> <span class="st">'g(t)'</span>,  main <span class="op">=</span> <span class="st">'Bayesian bootstrap posterior: g'</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">g_post</span>, <span class="fl">1</span>, <span class="kw">function</span><span class="op">(</span><span class="va">g</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">t</span>, <span class="va">g</span>, col<span class="op">=</span><span class="st">'gray'</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
+<span class="r-in"><span><span class="va">temp</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">g_post</span>, <span class="fl">1</span>, <span class="kw">function</span><span class="op">(</span><span class="va">g</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">t</span>, <span class="va">g</span>, col<span class="op">=</span><span class="st">'gray'</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># And the posterior mean of g:</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">t</span>, <span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colMeans</a></span><span class="op">(</span><span class="va">g_post</span><span class="op">)</span>, lwd<span class="op">=</span><span class="fl">3</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="g_bnp-1.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>

@@ -71,8 +71,8 @@ The transformation can be known (e.g., log or sqrt) or unknown
 <span>  <span class="va">init_params</span>,</span>
 <span>  transformation <span class="op">=</span> <span class="st">"np"</span>,</span>
 <span>  y_max <span class="op">=</span> <span class="cn">Inf</span>,</span>
-<span>  nsave <span class="op">=</span> <span class="fl">5000</span>,</span>
-<span>  nburn <span class="op">=</span> <span class="fl">5000</span>,</span>
+<span>  nsave <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>  nburn <span class="op">=</span> <span class="fl">1000</span>,</span>
 <span>  nskip <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  save_y_hat <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
@@ -192,20 +192,25 @@ are estimated using moments (means and variances) of <code>y</code>.</p>
 <span class="r-in"><span>                         init_params <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">y</span><span class="op">)</span> <span class="fu"><a href="init_lm_gprior.html">init_lm_gprior</a></span><span class="op">(</span><span class="va">y</span>, <span class="va">X</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                         transformation <span class="op">=</span> <span class="st">'log'</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Burn-In Period"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "0.42 seconds remaining"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "0.1 seconds remaining"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Starting sampling"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "0.85 seconds remaining"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "0.26 seconds remaining"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Total time:  2 seconds"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "0 seconds remaining"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Total time:  0 seconds"</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># What is included:</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">fit_log</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] "coefficients"        "post.beta"           "post.othercoefs"    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [4] "post.pred"           "post.predtest"       "post.sigma"         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [7] "post.log.like.point" "WAIC"                "p_waic"             </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [10] "post.lambda"         "fitted.values"       "post.fitted.values" </span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Posterior mean of each coefficient:</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit_log</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      beta1      beta2      beta3      beta4 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  0.4024203  0.7931272 -0.1351037 -0.2981660 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        beta1        beta2        beta3        beta4        beta5 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  0.240239425  0.623564718  0.588955162 -0.029877031 -0.002942044 </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># WAIC for STAR-log:</span></span></span>
 <span class="r-in"><span><span class="va">fit_log</span><span class="op">$</span><span class="va">WAIC</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 336.1432</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 377.8431</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># MCMC diagnostics:</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/ts.html" class="external-link">as.ts</a></span><span class="op">(</span><span class="va">fit_log</span><span class="op">$</span><span class="va">post.beta</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span></span>

@@ -82,8 +82,9 @@
 </h2>
 <p>The <code>countSTAR</code> package implements a variety of methods to
 analyze diverse count-valued data, all based on the idea of Simultaneous
-Transformation and Rounding (STAR). The package functionality is broadly
-split into three categories: Bayesian estimation of STAR models (<span class="citation">Kowal and Canale (<a href="#ref-Kowal2020a" role="doc-biblioref">2020</a>)</span>, <span class="citation">Kowal and
+Transformation and Rounding (STAR) models. The package functionality is
+broadly split into three categories: Bayesian estimation of STAR models
+(<span class="citation">Kowal and Canale (<a href="#ref-Kowal2020a" role="doc-biblioref">2020</a>)</span>, <span class="citation">Kowal and
 Wu (<a href="#ref-kowalSTARconjugate" role="doc-biblioref">2022</a>)</span>), frequentist/classical estimation
 (<span class="citation">Kowal and Wu (<a href="#ref-kowal2021semiparametric" role="doc-biblioref">2021</a>)</span>), and time series analysis using
 warped Dynamic Linear Models (<span class="citation">King and Kowal (<a href="#ref-king2023warped" role="doc-biblioref">2023</a>)</span>).</p>
@@ -248,7 +249,7 @@ two elements: the estimated <code>coefficients</code> <span class="math inline">
 <code>fitted.values</code> <span class="math inline">\(\hat
 \mu_\theta(x_i) = \mu_{\hat \theta}(x_i)\)</span>.</p>
 <div class="section level3">
-<h3 id="the-classical-linear-model">The Classical Linear Model<a class="anchor" aria-label="anchor" href="#the-classical-linear-model"></a>
+<h3 id="the-star-linear-model">The STAR Linear Model<a class="anchor" aria-label="anchor" href="#the-star-linear-model"></a>
 </h3>
 <p>For many applications, the STAR linear model is often the first
 method to try. In <code>countSTAR</code>, the linear model is
@@ -263,16 +264,17 @@ and fitted values, respectively.</p>
 <span><span class="co"># Select a transformation:</span></span>
 <span><span class="va">transformation</span> <span class="op">=</span> <span class="st">'np'</span> <span class="co"># Estimated transformation using empirical CDF</span></span>
 <span></span>
-<span><span class="co"># EM algorithm for STAR (using the log-link)</span></span>
-<span><span class="va">fit_em</span> <span class="op">=</span> <span class="fu"><a href="../reference/lm_star.html">lm_star</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">roach1</span> <span class="op">+</span> <span class="va">treatment</span> <span class="op">+</span> <span class="va">senior</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">exposure2</span><span class="op">)</span>,</span>
-<span>                 data <span class="op">=</span> <span class="va">roaches</span>, transformation <span class="op">=</span> <span class="va">transformation</span><span class="op">)</span></span>
+<span><span class="co"># EM algorithm for STAR</span></span>
+<span><span class="va">fit</span> <span class="op">=</span> <span class="fu"><a href="../reference/lm_star.html">lm_star</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">roach1</span> <span class="op">+</span> <span class="va">treatment</span> <span class="op">+</span> <span class="va">senior</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">exposure2</span><span class="op">)</span>,</span>
+<span>              data <span class="op">=</span> <span class="va">roaches</span>, </span>
+<span>              transformation <span class="op">=</span> <span class="va">transformation</span><span class="op">)</span></span>
 <span></span>
 <span></span>
 <span><span class="co"># Dimensions:</span></span>
-<span><span class="va">n</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">fit_em</span><span class="op">$</span><span class="va">X</span><span class="op">)</span>; <span class="va">p</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">fit_em</span><span class="op">$</span><span class="va">X</span><span class="op">)</span></span>
+<span><span class="va">n</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">X</span><span class="op">)</span>; <span class="va">p</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">X</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Fitted coefficients:</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit_em</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    (Intercept)         roach1      treatment         senior log(exposure2) </span></span>
 <span><span class="co">#&gt;          0.035          0.006         -0.285         -0.321          0.216</span></span></code></pre></div>
 <p>Here the <code>np</code> transformation was used, but other options
@@ -282,13 +284,13 @@ are available; see <code><a href="../reference/lm_star.html">?lm_star</a></code>
 <code>confint</code>:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Confidence interval for all coefficients</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">fit_em</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                       2.5 %       97.5 %</span></span>
-<span><span class="co">#&gt; (Intercept)    -0.136337697  0.205997724</span></span>
-<span><span class="co">#&gt; roach1          0.004924412  0.007446705</span></span>
-<span><span class="co">#&gt; treatment      -0.487244173 -0.087527892</span></span>
-<span><span class="co">#&gt; senior         -0.547105380 -0.099025723</span></span>
-<span><span class="co">#&gt; log(exposure2) -0.198367129  0.637369105</span></span></code></pre></div>
+<span><span class="co">#&gt; (Intercept)    -0.141422049  0.202055725</span></span>
+<span><span class="co">#&gt; roach1          0.004898197  0.007466265</span></span>
+<span><span class="co">#&gt; treatment      -0.486526183 -0.084393965</span></span>
+<span><span class="co">#&gt; senior         -0.548147166 -0.102149034</span></span>
+<span><span class="co">#&gt; log(exposure2) -0.197811283  0.637275996</span></span></code></pre></div>
 <p>Similarly, <em>p-values</em> are available using likelihood ratio
 tests, which can be applied for individual coefficients,</p>
 <p><span class="math display">\[
@@ -303,32 +305,31 @@ p-value for <em>any</em> effects are computed with the
 <code>pvals</code> function.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># P-values:</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="../reference/pvals.html">pvals</a></span><span class="op">(</span><span class="va">fit_em</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="../reference/pvals.html">pvals</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;        (Intercept)             roach1          treatment             senior </span></span>
-<span><span class="co">#&gt;       6.973317e-01       1.887412e-18       5.600911e-03       4.862510e-03 </span></span>
+<span><span class="co">#&gt;       6.973311e-01       1.887411e-18       5.600904e-03       4.862496e-03 </span></span>
 <span><span class="co">#&gt;     log(exposure2) Any linear effects </span></span>
-<span><span class="co">#&gt;       3.072374e-01       9.271142e-20</span></span></code></pre></div>
+<span><span class="co">#&gt;       3.072376e-01       9.271134e-20</span></span></code></pre></div>
 <p>Finally, we can get predictions at new data points (or the training
-data) using <code>predict</code>, which actually outputs samples from
-the . Optionally, prediction intervals can be estimated using the
-(plug-in) predictive distribution at the MLEs (see
-<code><a href="../reference/predict.lmstar.html">?predict.lmstar</a></code> for details). Note that the “plug-in”
-predictive distribution is a crude approximation, and better approaches
-for uncertainty quantification are available using the Bayesian
-models.</p>
+data) using <code>predict</code>.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#Compute the predictive draws (just using observed points here)</span></span>
-<span><span class="va">y_pred</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">fit_em</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">y_pred</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></code></pre></div>
+<p>Optionally, prediction intervals can be estimated using the (plug-in)
+predictive distribution at the MLEs (see <code><a href="../reference/predict.lmstar.html">?predict.lmstar</a></code>
+for details). Note that the “plug-in” predictive distribution is a crude
+approximation, and better approaches for uncertainty quantification are
+available using the Bayesian models.</p>
 </div>
 <div class="section level3">
-<h3 id="machine-learning-models">Machine Learning Models<a class="anchor" aria-label="anchor" href="#machine-learning-models"></a>
+<h3 id="star-machine-learning-models">STAR Machine Learning Models<a class="anchor" aria-label="anchor" href="#star-machine-learning-models"></a>
 </h3>
 <p>In addition to the linear model, <code>countSTAR</code> also has
 implementations for STAR models paired with more flexible regression
 methods, in particular random forests (<code><a href="../reference/randomForest_star.html">randomForest_star()</a></code>)
 and generalized boosted machines (<code><a href="../reference/gbm_star.html">gbm_star()</a></code>). In these
 functions, the user directly inputs the set of predictors <span class="math inline">\(X\)</span> alongside any test points in <span class="math inline">\(X_{test}\)</span>, as can be seen in the example
-below</p>
+below:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Select a transformation:</span></span>
 <span><span class="va">transformation</span> <span class="op">=</span> <span class="st">'np'</span> <span class="co"># Estimated transformation using empirical CDF</span></span>
@@ -338,20 +339,21 @@ below</p>
 <span><span class="va">X</span> <span class="op">=</span> <span class="va">roaches</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"roach1"</span>, <span class="st">"treatment"</span>, <span class="st">"senior"</span>, <span class="st">"exposure2"</span><span class="op">)</span><span class="op">]</span></span>
 <span></span>
 <span><span class="co">#Fit STAR with random forests</span></span>
-<span><span class="va">fit_rf</span> <span class="op">=</span> <span class="fu"><a href="../reference/randomForest_star.html">randomForest_star</a></span><span class="op">(</span><span class="va">y</span>, <span class="va">X</span>, transformation <span class="op">=</span> <span class="va">transformation</span><span class="op">)</span></span>
+<span><span class="va">fit_rf</span> <span class="op">=</span> <span class="fu"><a href="../reference/randomForest_star.html">randomForest_star</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">y</span>, X <span class="op">=</span> <span class="va">X</span>, </span>
+<span>                           transformation <span class="op">=</span> <span class="va">transformation</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">#Fit STAR with GBM</span></span>
-<span><span class="va">fit_gbm</span> <span class="op">=</span> <span class="fu"><a href="../reference/gbm_star.html">gbm_star</a></span><span class="op">(</span><span class="va">y</span>, <span class="va">X</span>, transformation <span class="op">=</span> <span class="va">transformation</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">fit_gbm</span> <span class="op">=</span> <span class="fu"><a href="../reference/gbm_star.html">gbm_star</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">y</span>, X <span class="op">=</span> <span class="va">X</span>, </span>
+<span>                   transformation <span class="op">=</span> <span class="va">transformation</span><span class="op">)</span></span></code></pre></div>
 <p>For all frequentist models, the functions output log-likelihood
 values at the MLEs, which allows for a quick comparison of model
 fit.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#Look at -2*log-likelihood</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="op">-</span><span class="fl">2</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">fit_rf</span><span class="op">$</span><span class="va">logLik</span>, <span class="va">fit_gbm</span><span class="op">$</span><span class="va">logLik</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 1666.349 1594.125</span></span></code></pre></div>
-<p>In this case, it seems the GBM model has better fit to the data,
-although this could be further backed up by performing an out-of-sample
-comparison of the two models.</p>
+<span><span class="co">#&gt; [1] 1665.662 1594.125</span></span></code></pre></div>
+<p>In general, it is preferable to compare these fits using
+out-of-sample predictive performance.</p>
 </div>
 </div>
 <div class="section level2">
@@ -371,11 +373,11 @@ Gaussian distribution.</p>
 <span class="math display">\[\begin{align*}
 z_i^* &amp;= x_i'\beta + \epsilon_i, \quad \epsilon_i
 \stackrel{iid}{\sim}N(0, \sigma^2) \\
-\sigma^2 &amp;\sim \mbox{Gamma}(\alpha=0.001, \beta=0.001) \;.
+1/\sigma^2 &amp;\sim \mbox{Gamma}(\alpha=0.001, \beta=0.001) \;.
 \end{align*}\]</span> The model is completed by assigning a prior
 structure for <span class="math inline">\(\beta\)</span>. The default in
 <code>countSTAR</code> is Zellner’s g-prior, which has the most
-functionality, but other options are available (namely horseshoe and
+functionality, but other options are available (namely, horseshoe and
 ridge priors). The model is estimated using <code><a href="../reference/blm_star.html">blm_star()</a></code>.
 Note that for the Bayesian models in <code>countSTAR</code>, the user
 must supply the design matrix <span class="math inline">\(X\)</span>
@@ -389,7 +391,8 @@ nonparametric transformation.</p>
 <span><span class="co"># Dimensions:</span></span>
 <span><span class="va">n</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span>; <span class="va">p</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">fit_blm</span> <span class="op">=</span> <span class="fu"><a href="../reference/blm_star.html">blm_star</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">y</span>, X<span class="op">=</span><span class="va">X</span>, transformation <span class="op">=</span> <span class="st">'np'</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">fit_blm</span> <span class="op">=</span> <span class="fu"><a href="../reference/blm_star.html">blm_star</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">y</span>, X <span class="op">=</span> <span class="va">X</span>, </span>
+<span>                   transformation <span class="op">=</span> <span class="st">'np'</span><span class="op">)</span></span></code></pre></div>
 <p>By default, the function uses a Gibbs sampler to draw from the
 posterior, but in some settings exact inference can be performed (see
 <span class="citation">Kowal and Wu (<a href="#ref-kowalSTARconjugate" role="doc-biblioref">2022</a>)</span> for details). To enable this, one
@@ -402,7 +405,7 @@ model are available as follows:</p>
 <code class="sourceCode R"><span><span class="co"># Posterior mean of each coefficient:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit_blm</span><span class="op">)</span>,<span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    (Intercept)         roach1      treatment         senior log(exposure2) </span></span>
-<span><span class="co">#&gt;          0.030          0.006         -0.286         -0.324          0.223</span></span>
+<span><span class="co">#&gt;          0.031          0.006         -0.291         -0.333          0.220</span></span>
 <span></span>
 <span><span class="co"># Credible intervals for regression coefficients</span></span>
 <span><span class="va">ci_all_bayes</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">fit_blm</span><span class="op">$</span><span class="va">post.beta</span>,</span>
@@ -412,11 +415,11 @@ model are available as follows:</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">ci_all_bayes</span><span class="op">)</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'Lower'</span>, <span class="st">'Upper'</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">ci_all_bayes</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                 Lower  Upper</span></span>
-<span><span class="co">#&gt; (Intercept)    -0.149  0.208</span></span>
+<span><span class="co">#&gt; (Intercept)    -0.148  0.204</span></span>
 <span><span class="co">#&gt; roach1          0.005  0.007</span></span>
-<span><span class="co">#&gt; treatment      -0.493 -0.085</span></span>
-<span><span class="co">#&gt; senior         -0.559 -0.103</span></span>
-<span><span class="co">#&gt; log(exposure2) -0.196  0.653</span></span></code></pre></div>
+<span><span class="co">#&gt; treatment      -0.503 -0.087</span></span>
+<span><span class="co">#&gt; senior         -0.552 -0.113</span></span>
+<span><span class="co">#&gt; log(exposure2) -0.171  0.660</span></span></code></pre></div>
 <p>We may further evaluate the model based on posterior diagnostics and
 posterior predictive checks on the simulated versus observed proportion
 of zeros. Posterior predictive checks are easily visualized using the <a href="https://mc-stan.org/bayesplot/index.html" class="external-link">bayesplot</a>
@@ -430,12 +433,14 @@ package.</p>
 <span><span class="co"># (Summary of) effective sample sizes across coefficients:</span></span>
 <span><span class="fu"><a href="../reference/getEffSize.html">getEffSize</a></span><span class="op">(</span><span class="va">fit_blm</span><span class="op">$</span><span class="va">post.beta</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span></span>
-<span><span class="co">#&gt;    3245    3421    3579    3699    3644    4608</span></span>
+<span><span class="co">#&gt;   629.9   677.4   781.2   750.4   791.9   871.7</span></span>
 <span></span>
 <span><span class="co"># Posterior predictive check using bayesplot</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressMessages</a></span><span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mc-stan.org/bayesplot/" class="external-link">bayesplot</a></span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">prop_zero</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">y</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">y</span> <span class="op">==</span> <span class="fl">0</span><span class="op">)</span></span>
-<span><span class="op">(</span><span class="fu"><a href="https://mc-stan.org/bayesplot/reference/PPC-test-statistics.html" class="external-link">ppc_stat</a></span><span class="op">(</span>y<span class="op">=</span><span class="va">roaches</span><span class="op">$</span><span class="va">y</span>, yrep<span class="op">=</span><span class="va">fit_blm</span><span class="op">$</span><span class="va">post.pred</span>, stat <span class="op">=</span> <span class="st">"prop_zero"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">prop_zero</span> <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">y</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">y</span> <span class="op">==</span> <span class="fl">0</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://mc-stan.org/bayesplot/reference/PPC-test-statistics.html" class="external-link">ppc_stat</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">roaches</span><span class="op">$</span><span class="va">y</span>, </span>
+<span>          yrep <span class="op">=</span> <span class="va">fit_blm</span><span class="op">$</span><span class="va">post.pred</span>, </span>
+<span>          stat <span class="op">=</span> <span class="st">"prop_zero"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="countSTAR_files/figure-html/diag-2.png" width="700"></p>
 </div>
 <div class="section level3">
@@ -450,20 +455,17 @@ model:</p>
 <span><span class="va">X</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">model.matrix</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span> <span class="op">+</span> <span class="va">roach1</span> <span class="op">+</span> <span class="va">treatment</span> <span class="op">+</span> <span class="va">senior</span> <span class="op">+</span> <span class="va">exposure2</span>,</span>
 <span>                 data <span class="op">=</span> <span class="va">roaches</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">fit_bart</span> <span class="op">=</span> <span class="fu"><a href="../reference/bart_star.html">bart_star</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">y</span>, X<span class="op">=</span><span class="va">X</span>, transformation <span class="op">=</span> <span class="st">'np'</span><span class="op">)</span></span>
+<span><span class="va">fit_bart</span> <span class="op">=</span> <span class="fu"><a href="../reference/bart_star.html">bart_star</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">y</span>, X <span class="op">=</span> <span class="va">X</span>, </span>
+<span>                     transformation <span class="op">=</span> <span class="st">'np'</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "Burn-In Period"</span></span>
-<span><span class="co">#&gt; [1] "5.87 seconds remaining"</span></span>
-<span><span class="co">#&gt; [1] "1.24 seconds remaining"</span></span>
 <span><span class="co">#&gt; [1] "Starting sampling"</span></span>
-<span><span class="co">#&gt; [1] "26.19 seconds remaining"</span></span>
-<span><span class="co">#&gt; [1] "18.66 seconds remaining"</span></span>
-<span><span class="co">#&gt; [1] "11.87 seconds remaining"</span></span>
-<span><span class="co">#&gt; [1] "5.16 seconds remaining"</span></span>
-<span><span class="co">#&gt; [1] "Total time:  32 seconds"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "0 seconds remaining"</span></span>
+<span><span class="co">#&gt; [1] "Total time:  3 seconds"</span></span></code></pre></div>
 <p>Once again, we can perform posterior predictive checks. This time we
 plot the densities.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://mc-stan.org/bayesplot/reference/PPC-distributions.html" class="external-link">ppc_dens_overlay</a></span><span class="op">(</span>y<span class="op">=</span><span class="va">roaches</span><span class="op">$</span><span class="va">y</span>, yrep<span class="op">=</span><span class="va">fit_bart</span><span class="op">$</span><span class="va">post.pred</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">50</span>,<span class="op">]</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://mc-stan.org/bayesplot/reference/PPC-distributions.html" class="external-link">ppc_dens_overlay</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">roaches</span><span class="op">$</span><span class="va">y</span>, </span>
+<span>                 yrep <span class="op">=</span> <span class="va">fit_bart</span><span class="op">$</span><span class="va">post.pred</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">50</span>,<span class="op">]</span><span class="op">)</span></span></code></pre></div>
 <p><img src="countSTAR_files/figure-html/bartppc-1.png" width="700"></p>
 <p>With all Bayesian models, pointwise log-likelihoods and WAIC values
 are outputted for model comparison. Using this information, we can see
@@ -471,10 +473,10 @@ the BART STAR model seems to have a better fit than the linear
 model.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">waic</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">fit_blm</span><span class="op">$</span><span class="va">WAIC</span>, <span class="va">fit_bart</span><span class="op">$</span><span class="va">WAIC</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">waic</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"STAR w/ Linear Model"</span>, <span class="st">"STAR w/ BART"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">waic</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"STAR Linear Model"</span>, <span class="st">"BART-STAR"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">waic</span><span class="op">)</span></span>
-<span><span class="co">#&gt; STAR w/ Linear Model         STAR w/ BART </span></span>
-<span><span class="co">#&gt;             1687.711             1638.951</span></span></code></pre></div>
+<span><span class="co">#&gt; STAR Linear Model         BART-STAR </span></span>
+<span><span class="co">#&gt;          1687.548          1639.219</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="other-models">Other Models<a class="anchor" aria-label="anchor" href="#other-models"></a>
@@ -482,10 +484,10 @@ model.</p>
 <p><code>countSTAR</code> also implements Bayesian additive models. With
 the function <code><a href="../reference/bam_star.html">bam_star()</a></code>, we can specify covariates to be
 modeled linearly and others to be modeled non-linearly using spline
-bases. As a word of warning, the additive models do take significantly
-longer to fit. For exploring the relationship between one predictor and
-count outcome <span class="math inline">\(y\)</span>, one can also use
-spline regression as implemented in <code><a href="../reference/spline_star.html">spline_star()</a></code>. See the
+bases. As a word of warning, the additive models can take much longer to
+fit. For exploring the relationship between one predictor and count
+outcome <span class="math inline">\(y\)</span>, one can also use spline
+regression as implemented in <code><a href="../reference/spline_star.html">spline_star()</a></code>. See the
 appropriate help pages for examples on how to run the models.</p>
 </div>
 </div>
@@ -516,17 +518,15 @@ resulting in the count time series framework known as a warped DLM
          y_t &amp;= h \circ g^{-1}(z_t) \\
         \{z_t\}_{t=1}^T &amp;\sim \text{DLM}
 \end{align*}\]</span></p>
-<p>The DLM form shown earlier is very general. To keep things simple,
-<code>countSTAR</code> implements only a few options for the DLM, namely
-the local level model and the local linear trend model. A local level
-model (also known as a random walk with noise model) has a univariate
-state <span class="math inline">\(\theta_t:=\mu_t\)</span>, and the DLM
-equations are simply <span class="math display">\[\begin{align*}
+<p>The DLM form shown earlier is very general. Among these DLMs,
+<code>countSTAR</code> currently implements the local level model and
+the local linear trend model. A local level model (also known as a
+random walk with noise model) has a univariate state <span class="math inline">\(\theta_t:=\mu_t\)</span>, and the DLM equations
+are simply <span class="math display">\[\begin{align*}
     z_t &amp;= \mu_t + v_t, \quad v_t \sim N(0, V) \\
     \mu_t &amp;= \mu_{t-1} +  w_t, \quad w_t \sim N(0, W)
 \end{align*}\]</span> The local linear trend model extends the local
-level model, incorporating a time varying drift <span class="math inline">\(\nu_t\)</span> in the dynamics. It is often
-described in the following three equation format: <span class="math display">\[\begin{align*}
+level model by incorporating a time varying drift <span class="math inline">\(\nu_t\)</span> in the dynamics: <span class="math display">\[\begin{align*}
     z_t &amp;= \mu_t + v_t, \quad v_t \sim N(0, V) \\
     \mu_t &amp;= \mu_{t-1} + \nu_{t-1} +  w_{\mu,t}, \quad w_{\mu,t}
 \sim N( 0, W_
@@ -535,8 +535,7 @@ described in the following three equation format: <span class="math display">\[\
 W_\nu)
 \end{align*}\]</span> This can in turn be recast into the general
 two-equation DLM form. Namely, if we let <span class="math inline">\(\theta_t:=(\mu_t, \nu_t)\)</span>, the local
-linear trend is written as</p>
-<p><span class="math display">\[\begin{align*}
+linear trend is written as <span class="math display">\[\begin{align*}
 z_t &amp; = \begin{pmatrix} 1 &amp; 0 \end{pmatrix} \begin{pmatrix}
 \mu_t \\ \nu_t \end{pmatrix} + v_t, \quad v_t \sim N(0, V) \\
 \begin{pmatrix} \mu_t \\ \nu_t \end{pmatrix} &amp; = \begin{bmatrix} 1
@@ -560,12 +559,13 @@ base R concerning yearly numbers of important discoveries from 1860 to
 <code class="sourceCode R"><span></span>
 <span><span class="co">#Fit the model</span></span>
 <span><span class="va">warpfit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/warpDLM.html">warpDLM</a></span><span class="op">(</span>y<span class="op">=</span><span class="va">discoveries</span>, type<span class="op">=</span><span class="st">"trend"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "Time taken:  84.692  seconds"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "Time taken:  67.026  seconds"</span></span></code></pre></div>
 <p>Once again, we can check fit using posterior predictive checks. The
 median of the posterior predictive draws can act as a sort of
 count-valued smoother of the time series.</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://mc-stan.org/bayesplot/reference/PPC-intervals.html" class="external-link">ppc_ribbon</a></span><span class="op">(</span>y<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/vector.html" class="external-link">as.vector</a></span><span class="op">(</span><span class="va">discoveries</span><span class="op">)</span>, yrep<span class="op">=</span><span class="va">warpfit</span><span class="op">$</span><span class="va">post_pred</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://mc-stan.org/bayesplot/reference/PPC-intervals.html" class="external-link">ppc_ribbon</a></span><span class="op">(</span>y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/vector.html" class="external-link">as.vector</a></span><span class="op">(</span><span class="va">discoveries</span><span class="op">)</span>, </span>
+<span>           yrep <span class="op">=</span> <span class="va">warpfit</span><span class="op">$</span><span class="va">post_pred</span><span class="op">)</span></span></code></pre></div>
 <p><img src="countSTAR_files/figure-html/warpPPC-1.png" width="700"></p>
 </div>
 <div class="section level2">

@@ -62,7 +62,6 @@
 <span>  b_sig <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span>,</span>
 <span>  sigma_true <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fl">2</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  ar1 <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>  intercept <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -100,11 +99,6 @@ twofold increase in the expected counts for a one unit increase in x</p></dd>
 <dd><p>the autoregressive coefficient among the columns of the X matrix; default is zero.</p></dd>
 
 
-<dt>intercept</dt>
-<dd><p>a Boolean indicating whether an intercept column should be included
-in the returned design matrix; default is FALSE</p></dd>
-
-
 <dt>seed</dt>
 <dd><p>optional integer to set the seed for reproducible simulation; default is NULL
 which results in a different dataset after each run</p></dd>
@@ -117,7 +111,7 @@ which results in a different dataset after each run</p></dd>
 <p>A named list with the simulated count response <code>y</code>, the simulated design matrix <code>X</code></p>
 
 
-<p>(possibly including the intercept), the true expected counts <code>Ey</code>,
+<p>(including an intercept), the true expected counts <code>Ey</code>,
 and the true regression coefficients <code>beta_true</code>.</p>
     </div>
     <div class="section level2">

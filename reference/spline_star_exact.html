@@ -63,9 +63,6 @@ distribution of a STAR spline regression model.</p>
 <span>  transformation <span class="op">=</span> <span class="st">"np"</span>,</span>
 <span>  y_max <span class="op">=</span> <span class="cn">Inf</span>,</span>
 <span>  psi <span class="op">=</span> <span class="fl">1000</span>,</span>
-<span>  method_sigma <span class="op">=</span> <span class="st">"mle"</span>,</span>
-<span>  approx_Fz <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  approx_Fy <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  nsave <span class="op">=</span> <span class="fl">1000</span>,</span>
 <span>  compute_marg <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -100,22 +97,6 @@ distribution of a STAR spline regression model.</p>
 <dd><p>prior variance (1/smoothing parameter)</p></dd>
 
 
-<dt>method_sigma</dt>
-<dd><p>method to estimate the latent data standard deviation; must be one of</p><ul><li><p>"mle" use the MLE from the STAR EM algorithm</p></li>
-<li><p>"mmle" use the marginal MLE (Note: slower!)</p></li>
-</ul></dd>
-
-
-<dt>approx_Fz</dt>
-<dd><p>logical; in BNP transformation, apply a (fast and stable)
-normal approximation for the marginal CDF of the latent data</p></dd>
-
-
-<dt>approx_Fy</dt>
-<dd><p>logical; in BNP transformation, approximate
-the marginal CDF of <code>y</code> using the empirical CDF</p></dd>
-
-
 <dt>nsave</dt>
 <dd><p>number of Monte Carlo simulations</p></dd>
 
@@ -129,7 +110,7 @@ marginal likelihood</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     
 
-<p>a list with the following elements:</p><ul><li><p><code>post_ytilde</code>: <code>nsave x n</code> samples
+<p>a list with the following elements:</p><ul><li><p><code>post.pred</code>: <code>nsave x n</code> samples
 from the posterior predictive distribution at the observation points <code>tau</code></p></li>
 <li><p><code>marg_like</code>: the marginal likelihood (if requested; otherwise NULL)</p></li>
 </ul></div>

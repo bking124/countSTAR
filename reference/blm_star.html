@@ -62,12 +62,9 @@
 <span>  y_max <span class="op">=</span> <span class="cn">Inf</span>,</span>
 <span>  prior <span class="op">=</span> <span class="st">"gprior"</span>,</span>
 <span>  use_MCMC <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  nsave <span class="op">=</span> <span class="fl">5000</span>,</span>
-<span>  nburn <span class="op">=</span> <span class="fl">5000</span>,</span>
+<span>  nsave <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>  nburn <span class="op">=</span> <span class="fl">1000</span>,</span>
 <span>  nskip <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>  method_sigma <span class="op">=</span> <span class="st">"mle"</span>,</span>
-<span>  approx_Fz <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  approx_Fy <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  psi <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  compute_marg <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -107,12 +104,11 @@ using I-splines)</p></li>
 
 <dt>prior</dt>
 <dd><p>prior to use for the latent linear regression; currently implemented options
-are "gprior", "horseshoe", and "ridge". Not all modeling options and transformations are
-available with the latter two priors.</p></dd>
+are "gprior", "horseshoe", and "ridge"</p></dd>
 
 
 <dt>use_MCMC</dt>
-<dd><p>= TRUE,</p></dd>
+<dd><p>logical; whether to run Gibbs sampler or Monte Carlo (default is TRUE)</p></dd>
 
 
 <dt>nsave</dt>
@@ -126,23 +122,6 @@ available with the latter two priors.</p></dd>
 <dt>nskip</dt>
 <dd><p>number of MCMC iterations to skip between saving iterations,
 i.e., save every (nskip + 1)th draw</p></dd>
-
-
-<dt>method_sigma</dt>
-<dd><p>method to estimate the latent data standard deviation in exact sampler;
-must be one of</p><ul><li><p>"mle" use the MLE from the STAR EM algorithm</p></li>
-<li><p>"mmle" use the marginal MLE (Note: slower!)</p></li>
-</ul></dd>
-
-
-<dt>approx_Fz</dt>
-<dd><p>logical; in BNP transformation, apply a (fast and stable)
-normal approximation for the marginal CDF of the latent data</p></dd>
-
-
-<dt>approx_Fy</dt>
-<dd><p>logical; in BNP transformation, approximate
-the marginal CDF of <code>y</code> using the empirical CDF</p></dd>
 
 
 <dt>psi</dt>
@@ -199,13 +178,55 @@ of the linear regression model with a g-prior.</p>
     </div>
     <div class="section level2">
     <h2 id="note">Note<a class="anchor" aria-label="anchor" href="#note"></a></h2>
-    <p>The 'bnp' transformation (without the <code>Fy</code> approximation) is
+    <p>The 'bnp' transformation is
 slower than the other transformations because of the way
 the <code>TruncatedNormal</code> sampler must be updated as the lower and upper
 limits change (due to the sampling of <code>g</code>). Thus, computational
 improvements are likely available.</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="co"># Simulate data with count-valued response y:</span></span></span>
+<span class="r-in"><span><span class="va">sim_dat</span> <span class="op">=</span> <span class="fu"><a href="simulate_nb_lm.html">simulate_nb_lm</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">100</span>, p <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">y</span> <span class="op">=</span> <span class="va">sim_dat</span><span class="op">$</span><span class="va">y</span>; <span class="va">X</span> <span class="op">=</span> <span class="va">sim_dat</span><span class="op">$</span><span class="va">X</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Fit the Bayesian STAR linear model:</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">=</span> <span class="fu">blm_star</span><span class="op">(</span>y <span class="op">=</span> <span class="va">y</span>, X <span class="op">=</span> <span class="va">X</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Burn-In Period"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Starting sampling"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "0 seconds remaining"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Total time:  1 seconds"</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># What is included:</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "coefficients"        "post.beta"           "post.pred"          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [4] "post.sigma"          "post.log.like.point" "WAIC"               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [7] "p_waic"             </span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Posterior mean of each coefficient:</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       beta1       beta2       beta3       beta4       beta5 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  0.08370276  0.29644099  0.41728039 -0.09148244 -0.06807578 </span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># WAIC:</span></span></span>
+<span class="r-in"><span><span class="va">fit</span><span class="op">$</span><span class="va">WAIC</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 325.1182</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># MCMC diagnostics:</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/ts.html" class="external-link">as.ts</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">post.beta</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="blm_star-1.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Posterior predictive check:</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html" class="external-link">hist</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">post.pred</span>, <span class="fl">1</span>,</span></span>
+<span class="r-in"><span>           <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">x</span><span class="op">==</span><span class="fl">0</span><span class="op">)</span><span class="op">)</span>, main <span class="op">=</span> <span class="st">'Proportion of Zeros'</span>, xlab<span class="op">=</span><span class="st">''</span><span class="op">)</span>;</span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>v <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">y</span><span class="op">==</span><span class="fl">0</span><span class="op">)</span>, lwd<span class="op">=</span><span class="fl">4</span>, col <span class="op">=</span><span class="st">'blue'</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="blm_star-2.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside></div>
 

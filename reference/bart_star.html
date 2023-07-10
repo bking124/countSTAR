@@ -74,9 +74,9 @@ The transformation can be known (e.g., log or sqrt) or unknown
 <span>  k <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  power <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  base <span class="op">=</span> <span class="fl">0.95</span>,</span>
-<span>  nsave <span class="op">=</span> <span class="fl">5000</span>,</span>
-<span>  nburn <span class="op">=</span> <span class="fl">5000</span>,</span>
-<span>  nskip <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  nsave <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>  nburn <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>  nskip <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  save_y_hat <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -226,7 +226,7 @@ of the transformation function.</p>
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="co"># Simulate data with count-valued response y:</span></span></span>
-<span class="r-in"><span><span class="va">sim_dat</span> <span class="op">=</span> <span class="fu"><a href="simulate_nb_friedman.html">simulate_nb_friedman</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">100</span>, p <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">sim_dat</span> <span class="op">=</span> <span class="fu"><a href="simulate_nb_friedman.html">simulate_nb_friedman</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">100</span>, p <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">y</span> <span class="op">=</span> <span class="va">sim_dat</span><span class="op">$</span><span class="va">y</span>; <span class="va">X</span> <span class="op">=</span> <span class="va">sim_dat</span><span class="op">$</span><span class="va">X</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># BART-STAR with log-transformation:</span></span></span>
@@ -234,9 +234,8 @@ of the transformation function.</p>
 <span class="r-in"><span>                    save_y_hat <span class="op">=</span> <span class="cn">TRUE</span>, nburn<span class="op">=</span><span class="fl">1000</span>, nskip<span class="op">=</span><span class="fl">0</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Burn-In Period"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Starting sampling"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "7.58 seconds remaining"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "1.93 seconds remaining"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Total time:  11 seconds"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "0 seconds remaining"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Total time:  2 seconds"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Fitted values</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="plot_fitted.html">plot_fitted</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">sim_dat</span><span class="op">$</span><span class="va">Ey</span>,</span></span>
@@ -246,7 +245,7 @@ of the transformation function.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># WAIC for BART-STAR-log:</span></span></span>
 <span class="r-in"><span><span class="va">fit_log</span><span class="op">$</span><span class="va">WAIC</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 379.0593</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 382.4023</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># MCMC diagnostics:</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/ts.html" class="external-link">as.ts</a></span><span class="op">(</span><span class="va">fit_log</span><span class="op">$</span><span class="va">post.fitted.values</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span></span>
@@ -262,14 +261,9 @@ of the transformation function.</p>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">=</span> <span class="fu">bart_star</span><span class="op">(</span>y <span class="op">=</span> <span class="va">y</span>, X <span class="op">=</span> <span class="va">X</span>,</span></span>
 <span class="r-in"><span>                     transformation <span class="op">=</span> <span class="st">'np'</span>, save_y_hat <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Burn-In Period"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "3.51 seconds remaining"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "0.92 seconds remaining"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Starting sampling"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "22.48 seconds remaining"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "17.51 seconds remaining"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "11.56 seconds remaining"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "4.92 seconds remaining"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Total time:  29 seconds"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "0 seconds remaining"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Total time:  4 seconds"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Fitted values</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="plot_fitted.html">plot_fitted</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">sim_dat</span><span class="op">$</span><span class="va">Ey</span>,</span></span>
@@ -279,7 +273,7 @@ of the transformation function.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># WAIC for BART-STAR-np:</span></span></span>
 <span class="r-in"><span><span class="va">fit</span><span class="op">$</span><span class="va">WAIC</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 366.8204</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 379.1259</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># MCMC diagnostics:</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/ts.html" class="external-link">as.ts</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">post.fitted.values</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span></span>

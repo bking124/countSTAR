@@ -200,7 +200,7 @@ Semiparametric count data regression for self‐reported mental health.
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Simulate data with count-valued response y:</span></span></span>
-<span class="r-in"><span><span class="va">sim_dat</span> <span class="op">=</span> <span class="fu"><a href="simulate_nb_friedman.html">simulate_nb_friedman</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">100</span>, p <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">sim_dat</span> <span class="op">=</span> <span class="fu"><a href="simulate_nb_friedman.html">simulate_nb_friedman</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">100</span>, p <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">y</span> <span class="op">=</span> <span class="va">sim_dat</span><span class="op">$</span><span class="va">y</span>; <span class="va">X</span> <span class="op">=</span> <span class="va">sim_dat</span><span class="op">$</span><span class="va">X</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># EM algorithm for STAR (using the log-link)</span></span></span>
@@ -224,7 +224,7 @@ Semiparametric count data regression for self‐reported mental health.
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Log-likelihood at MLEs:</span></span></span>
 <span class="r-in"><span><span class="va">fit_em</span><span class="op">$</span><span class="va">logLik</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -167.5501</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -181.3181</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
