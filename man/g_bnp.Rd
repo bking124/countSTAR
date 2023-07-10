@@ -4,27 +4,16 @@
 \alias{g_bnp}
 \title{Bayesian bootstrap-based transformation}
 \usage{
-g_bnp(
-  y,
-  xtSigmax = rep(0, length(y)),
-  zgrid = NULL,
-  sigma_epsilon = 1,
-  approx_Fz = FALSE
-)
+g_bnp(y, xt_Sigma_x = rep(0, length(y)), z_grid = NULL)
 }
 \arguments{
 \item{y}{\code{n x 1} vector of observed counts}
 
-\item{xtSigmax}{\code{n x 1} vector of \code{t(X_i) Sigma_theta X_i},
+\item{xt_Sigma_x}{\code{n x 1} vector of \code{t(X_i) Sigma_theta X_i},
 where \code{Sigma_theta} is the prior variance}
 
-\item{zgrid}{optional vector of grid points for evaluating the CDF
+\item{z_grid}{optional vector of grid points for evaluating the CDF
 of z (\code{Fz})}
-
-\item{sigma_epsilon}{latent standard deviation}
-
-\item{approx_Fz}{logical; if TRUE, use a normal approximation for \code{Fz},
-the marginal CDF of the latent z, which is faster and more stable}
 }
 \value{
 A smooth monotone function which can be used for evaluations of the transformation
@@ -36,15 +25,16 @@ implied by (separate) Bayesian bootstrap models for the CDFs
 of \code{y} and \code{X}.
 }
 \examples{
+\donttest{
 # Sample some data:
 y = rpois(n = 200, lambda = 5)
-# Compute 200 draws of g on a grid:
-t = seq(0, max(y), length.out = 100) # grid
-g_post = t(sapply(1:500, function(s) g_bnp(y, approx_Fz = TRUE)(t)))
+# Compute 100 draws of g on a grid:
+t = seq(0, max(y), length.out = 50) # grid
+g_post = t(sapply(1:100, function(s) g_bnp(y)(t)))
 # Plot together:
 plot(t, t, ylim = range(g_post), type='n', ylab = 'g(t)',  main = 'Bayesian bootstrap posterior: g')
-apply(g_post, 1, function(g) lines(t, g, col='gray'))
+temp = apply(g_post, 1, function(g) lines(t, g, col='gray'))
 # And the posterior mean of g:
 lines(t, colMeans(g_post), lwd=3)
-
+}
 }

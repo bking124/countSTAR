@@ -61,14 +61,15 @@
 #'
 #' @examples
 #' # Simulate data with count-valued response y:
-#' sim_dat = simulate_nb_lm(n = 100, p = 3)
-#' y = sim_dat$y; X = sim_dat$X
+#' sim_dat = simulate_nb_lm(n = 100, p = 5)
+#' y = sim_dat$y; X = sim_dat$X[,-1] # remove intercept
 #'
 #' # Fit model
-#' fit_em = lm_star(y~X)
+#' fit_em = lm_star(y ~ X)
 #'
 #' # Fitted coefficients:
 #' coef(fit_em)
+#'
 #' # Fitted values:
 #' y_hat = fitted(fit_em)
 #' plot(y_hat, y);
@@ -76,6 +77,7 @@
 #' # Residuals:
 #' plot(residuals(fit_em))
 #' qqnorm(residuals(fit_em)); qqline(residuals(fit_em))
+#'
 #' @export
 lm_star = function(formula, data=NULL, transformation = 'np',
                    y_max = Inf,
@@ -497,13 +499,13 @@ predict.lmstar <- function(object, newdata = NULL, interval=FALSE, level=0.95, N
 #' @examples
 #' #Simulate data with count-valued response y:
 #' sim_dat = simulate_nb_lm(n = 100, p = 2)
-#' y = sim_dat$y; X = sim_dat$X
+#' y = sim_dat$y; X = sim_dat$X[,-1] # remove intercept
 #'
-#' #Select a transformation:
+#' # Select a transformation:
 #' transformation = 'np'
 #'
 #' #Estimate model
-#' fit = lm_star(y~X, transformation=transformation)
+#' fit = lm_star(y~X, transformation = transformation)
 #'
 #' #Confidence interval for all parameters
 #' confint(fit)
@@ -646,7 +648,7 @@ confint.lmstar = function(object, parm,
 #' @examples
 #' # Simulate data with count-valued response y:
 #' sim_dat = simulate_nb_lm(n = 100, p = 2)
-#' y = sim_dat$y; X = sim_dat$X
+#' y = sim_dat$y; X = sim_dat$X[,-1] # remove intercept
 #'
 #' # Select a transformation:
 #' transformation = 'np'
@@ -771,7 +773,7 @@ pvals <- function(object){
 #' @examples
 #' \donttest{
 #' # Simulate data with count-valued response y:
-#' sim_dat = simulate_nb_friedman(n = 100, p = 10)
+#' sim_dat = simulate_nb_friedman(n = 100, p = 5)
 #' y = sim_dat$y; X = sim_dat$X
 #'
 #' # EM algorithm for STAR (using the log-link)
@@ -1114,7 +1116,7 @@ randomForest_star = function(y, X, X.test = NULL,
 #'
 #' @examples
 #' # Simulate data with count-valued response y:
-#' sim_dat = simulate_nb_friedman(n = 100, p = 10)
+#' sim_dat = simulate_nb_friedman(n = 100, p = 5)
 #' y = sim_dat$y; X = sim_dat$X
 #'
 #' # EM algorithm for STAR (using the log-link)

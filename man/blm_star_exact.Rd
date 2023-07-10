@@ -11,10 +11,7 @@ blm_star_exact(
   transformation = "np",
   y_max = Inf,
   psi = NULL,
-  method_sigma = "mle",
-  approx_Fz = FALSE,
-  approx_Fy = FALSE,
-  nsave = 5000,
+  nsave = 1000,
   compute_marg = FALSE
 )
 }
@@ -40,18 +37,6 @@ blm_star_exact(
 
 \item{psi}{prior variance (g-prior)}
 
-\item{method_sigma}{method to estimate the latent data standard deviation; must be one of
-\itemize{
-\item "mle" use the MLE from the STAR EM algorithm
-\item "mmle" use the marginal MLE (Note: slower!)
-}}
-
-\item{approx_Fz}{logical; in BNP transformation, apply a (fast and stable)
-normal approximation for the marginal CDF of the latent data}
-
-\item{approx_Fy}{logical; in BNP transformation, approximate
-the marginal CDF of \code{y} using the empirical CDF}
-
 \item{nsave}{number of Monte Carlo simulations}
 
 \item{compute_marg}{logical; if TRUE, compute and return the
@@ -60,7 +45,7 @@ marginal likelihood}
 \value{
 a list with the following elements:
 \itemize{
-\item \code{coefficients} the posterior mean of the regression coefficients
+\item \code{coefficients}: the posterior mean of the regression coefficients
 \item \code{post.beta}: \code{nsave x p} samples from the posterior distribution
 of the regression coefficients
 \item \code{post.pred}: draws from the posterior predictive distribution of \code{y}
@@ -104,7 +89,7 @@ from the posterior distribution and the posterior predictive distribution
 of the linear regression model with a g-prior.
 }
 \note{
-The 'bnp' transformation (without the \code{Fy} approximation) is
+The 'bnp' transformation is
 slower than the other transformations because of the way
 the \code{TruncatedNormal} sampler must be updated as the lower and upper
 limits change (due to the sampling of \code{g}). Thus, computational

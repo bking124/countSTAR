@@ -12,7 +12,6 @@ simulate_nb_lm(
   b_sig = log(2),
   sigma_true = sqrt(2 * log(1)),
   ar1 = 0,
-  intercept = FALSE,
   seed = NULL
 )
 }
@@ -34,15 +33,12 @@ twofold increase in the expected counts for a one unit increase in x}
 
 \item{ar1}{the autoregressive coefficient among the columns of the X matrix; default is zero.}
 
-\item{intercept}{a Boolean indicating whether an intercept column should be included
-in the returned design matrix; default is FALSE}
-
 \item{seed}{optional integer to set the seed for reproducible simulation; default is NULL
 which results in a different dataset after each run}
 }
 \value{
 A named list with the simulated count response \code{y}, the simulated design matrix \code{X}
-(possibly including the intercept), the true expected counts \code{Ey},
+(including an intercept), the true expected counts \code{Ey},
 and the true regression coefficients \code{beta_true}.
 }
 \description{

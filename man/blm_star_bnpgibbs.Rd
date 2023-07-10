@@ -10,8 +10,6 @@ blm_star_bnpgibbs(
   X_test = X,
   y_max = Inf,
   psi = NULL,
-  approx_Fz = FALSE,
-  approx_Fy = FALSE,
   nsave = 1000,
   nburn = 1000,
   nskip = 0,
@@ -30,12 +28,6 @@ default is the observed covariates \code{X}}
 
 \item{psi}{prior variance (g-prior)}
 
-\item{approx_Fz}{logical; in BNP transformation, apply a (fast and stable)
-normal approximation for the marginal CDF of the latent data}
-
-\item{approx_Fy}{logical; in BNP transformation, approximate
-the marginal CDF of \code{y} using the empirical CDF}
-
 \item{nsave}{number of MCMC iterations to save}
 
 \item{nburn}{number of MCMC iterations to discard}
@@ -46,12 +38,12 @@ i.e., save every (nskip + 1)th draw}
 \value{
 a list with the following elements:
 \itemize{
-\item \code{coefficients} the posterior mean of the regression coefficients
-\item \code{post_beta}: \code{nsave x p} samples from the posterior distribution
+\item \code{coefficients}: the posterior mean of the regression coefficients
+\item \code{post.beta}: \code{nsave x p} samples from the posterior distribution
 of the regression coefficients
-\item \code{post_ytilde}: \code{nsave x n0} samples
+\item \code{post.pred}: \code{nsave x n0} samples
 from the posterior predictive distribution at test points \code{X_test}
-\item \code{post_g}: \code{nsave} posterior samples of the transformation
+\item \code{post.g}: \code{nsave} posterior samples of the transformation
 evaluated at the unique \code{y} values (only applies for 'bnp' transformations)
 }
 }
@@ -59,27 +51,5 @@ evaluated at the unique \code{y} values (only applies for 'bnp' transformations)
 Compute MCMC samples from the posterior and predictive
 distributions of a STAR linear regression model with a g-prior
 and BNP transformation.
-}
-\details{
-STAR defines a count-valued probability model by
-(1) specifying a Gaussian model for continuous *latent* data and
-(2) connecting the latent data to the observed data via a
-*transformation and rounding* operation. Here, the continuous
-latent data model is a linear regression.
-
-There are several options for the transformation. First, the transformation
-can belong to the *Box-Cox* family, which includes the known transformations
-'identity', 'log', and 'sqrt'. Second, the transformation
-can be estimated (before model fitting) using the empirical distribution of the
-data \code{y}. Options in this case include the empirical cumulative
-distribution function (CDF), which is fully nonparametric ('np'), or the parametric
-alternatives based on Poisson ('pois') or Negative-Binomial ('neg-bin')
-distributions. For the parametric distributions, the parameters of the distribution
-are estimated using moments (means and variances) of \code{y}. The distribution-based
-transformations approximately preserve the mean and variance of the count data \code{y}
-on the latent data scale, which lends interpretability to the model parameters.
-Lastly, the transformation can be modeled using the Bayesian bootstrap ('bnp'),
-which is a Bayesian nonparametric model and incorporates the uncertainty
-about the transformation into posterior and predictive inference.
 }
 \keyword{internal}

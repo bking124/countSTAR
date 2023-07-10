@@ -11,9 +11,9 @@ bam_star(
   splinetype = "orthogonal",
   transformation = "np",
   y_max = Inf,
-  nsave = 5000,
-  nburn = 5000,
-  nskip = 2,
+  nsave = 1000,
+  nburn = 1000,
+  nskip = 0,
   save_y_hat = FALSE,
   verbose = TRUE
 )
@@ -117,7 +117,10 @@ X_lin = as.matrix(X[,-(1:3)])
 X_nonlin = as.matrix(X[,(1:3)])
 
 # STAR: nonparametric transformation
-fit <- bam_star(y,X_lin, X_nonlin, nburn=1000, nskip=0)
+fit = bam_star(y = y, X_lin = X_lin, X_nonlin = X_nonlin)
+
+# What is included:
+names(fit)
 
 # Posterior mean of each coefficient:
 coef(fit)

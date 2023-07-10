@@ -22,7 +22,7 @@ F test.
 \examples{
 # Simulate data with count-valued response y:
 sim_dat = simulate_nb_lm(n = 100, p = 2)
-y = sim_dat$y; X = sim_dat$X
+y = sim_dat$y; X = sim_dat$X[,-1] # remove intercept
 
 # Select a transformation:
 transformation = 'np'

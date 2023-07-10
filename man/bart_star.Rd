@@ -18,9 +18,9 @@ bart_star(
   k = 2,
   power = 2,
   base = 0.95,
-  nsave = 5000,
-  nburn = 5000,
-  nskip = 2,
+  nsave = 1000,
+  nburn = 1000,
+  nskip = 0,
   save_y_hat = FALSE,
   verbose = TRUE
 )
@@ -144,7 +144,7 @@ of the transformation function.
 \examples{
 \donttest{
 # Simulate data with count-valued response y:
-sim_dat = simulate_nb_friedman(n = 100, p = 10)
+sim_dat = simulate_nb_friedman(n = 100, p = 5)
 y = sim_dat$y; X = sim_dat$X
 
 # BART-STAR with log-transformation:

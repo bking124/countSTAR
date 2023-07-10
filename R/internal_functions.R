@@ -18,21 +18,12 @@
 #' }
 #' @param y_max a fixed and known upper bound for all observations; default is \code{Inf}
 #' @param psi prior variance (g-prior)
-#' @param method_sigma method to estimate the latent data standard deviation; must be one of
-#' \itemize{
-#' \item "mle" use the MLE from the STAR EM algorithm
-#' \item "mmle" use the marginal MLE (Note: slower!)
-#' }
-#' @param approx_Fz logical; in BNP transformation, apply a (fast and stable)
-#' normal approximation for the marginal CDF of the latent data
-#' @param approx_Fy logical; in BNP transformation, approximate
-#' the marginal CDF of \code{y} using the empirical CDF
 #' @param nsave number of Monte Carlo simulations
 #' @param compute_marg logical; if TRUE, compute and return the
 #' marginal likelihood
 #' @return a list with the following elements:
 #' \itemize{
-#' \item \code{coefficients} the posterior mean of the regression coefficients
+#' \item \code{coefficients}: the posterior mean of the regression coefficients
 #' \item \code{post.beta}: \code{nsave x p} samples from the posterior distribution
 #' of the regression coefficients
 #' \item \code{post.pred}: draws from the posterior predictive distribution of \code{y}
@@ -70,7 +61,7 @@
 #' from the posterior distribution and the posterior predictive distribution
 #' of the linear regression model with a g-prior.
 #'
-#' @note The 'bnp' transformation (without the \code{Fy} approximation) is
+#' @note The 'bnp' transformation is
 #' slower than the other transformations because of the way
 #' the \code{TruncatedNormal} sampler must be updated as the lower and upper
 #' limits change (due to the sampling of \code{g}). Thus, computational
@@ -83,10 +74,7 @@ blm_star_exact = function(y, X, X_test = X,
                        transformation = 'np',
                        y_max = Inf,
                        psi = NULL,
-                       method_sigma = 'mle',
-                       approx_Fz = FALSE,
-                       approx_Fy = FALSE,
-                       nsave = 5000,
+                       nsave = 1000,
                        compute_marg = FALSE){
   #----------------------------------------------------------------------------
   # Check: currently implemented for nonnegative integers
@@ -112,42 +100,38 @@ blm_star_exact = function(y, X, X_test = X,
   if(!is.element(transformation, c("identity", "log", "sqrt", "bnp", "np", "pois", "neg-bin")))
     stop("The transformation must be one of 'identity', 'log', 'sqrt', 'bnp', 'np', 'pois', or 'neg-bin'")
 
-  # Check: does the method for sigma make sense?
-  method_sigma = tolower(method_sigma);
-  if(!is.element(method_sigma, c("mle", "mmle")))
-    stop("The sigma estimation method must be 'mle' or 'mmle'")
-
-  # Assign a family for the transformation: Box-Cox or CDF?
-  transform_family = ifelse(
-    test = is.element(transformation, c("identity", "log", "sqrt", "box-cox")),
-    yes = 'bc', no = 'cdf'
-  )
-
   if(is.null(psi)){
     psi = n # default
     message("G-prior prior variance psi not set; using default of psi=n")
   }
   #----------------------------------------------------------------------------
+  # Key matrix quantities:
+  XtX = crossprod(X)
+  XtXinv = chol2inv(chol(XtX))
+  XtXinvXt = tcrossprod(XtXinv, X)
+  H = X%*%XtXinvXt # hat matrix
+  #----------------------------------------------------------------------------
   # Define the transformation:
-  if(transform_family == 'bc'){
-    # Lambda value for each Box-Cox argument:
-    if(transformation == 'identity') lambda = 1
-    if(transformation == 'log') lambda = 0
-    if(transformation == 'sqrt') lambda = 1/2
+  if(transformation == 'bnp'){
+    # Special treatment for BNP case
 
-    # Transformation function:
-    g = function(t) g_bc(t,lambda = lambda)
+    # Necessary quantity:
+    xt_Prior_x = sapply(1:n, function(i)
+      crossprod(X[i,], XtXinv)%*%X[i,])
 
-    # Inverse transformation function:
-    g_inv = function(s) g_inv_bc(s,lambda = lambda)
-  }
+    # Grid of values for the Fz approximation:
+    z_grid = sort(unique(
+      sapply(range(psi*xt_Prior_x), function(xtemp){
+        qnorm(seq(0.01, 0.99, length.out = 100),
+              mean = 0, # assuming prior mean zero
+              sd = sqrt(1 + xtemp))
+      })
+    ))
 
-  if(transform_family == 'cdf'){
-
-    # Transformation function:
-    g = g_cdf(y = y, distribution = ifelse(transformation == 'bnp',
-                                           'np', # for initialization
-                                           transformation))
+    # Initialize the transformation:
+    g = g_bnp(y = y,
+              xt_Sigma_x = psi*xt_Prior_x,
+              z_grid = z_grid)
 
     # Define the grid for approximations using equally-spaced + quantile points:
     t_grid = sort(unique(round(c(
@@ -156,66 +140,64 @@ blm_star_exact = function(y, X, X_test = X,
 
     # Inverse transformation function:
     g_inv = g_inv_approx(g = g, t_grid = t_grid)
-  }
 
-  # Lower and upper intervals:
-  g_a_y = g(a_j(y, y_max = y_max));
-  g_a_yp1 = g(a_j(y + 1, y_max = y_max))
-  #----------------------------------------------------------------------------
-  # Key matrix quantities:
-  XtX = crossprod(X)
-  XtXinv = chol2inv(chol(XtX))
-  XtXinvXt = tcrossprod(XtXinv, X)
-  H = X%*%XtXinvXt # hat matrix
-  #----------------------------------------------------------------------------
-  # Latent data SD:
-  if(method_sigma == 'mle'){
-    sigma_epsilon = lm_star(y ~ X-1,
-                            transformation = ifelse(transformation == 'bnp', 'np',
-                                                    transformation),
-                            y_max = y_max)$sigma.hat
-  }
-  if(method_sigma == 'mmle'){
-    sigma_seq = exp(seq(log(sd(y)) - 2,
-                        log(sd(y)) + 2, length.out = 10))
-    m_sigma = rep(NA, length(sigma_seq))
-    print('Marginal MLE evaluations:')
-    for(j in 1:length(sigma_seq)){
-      m_sigma[j] = TruncatedNormal::pmvnorm(
-        mu = rep(0, n),
-        sigma = sigma_seq[j]^2*(diag(n) + psi*H),
-        lb = g_a_y,
-        ub = g_a_yp1
-      )
-      print(paste(j, 'of 10'))
-    }
-    sigma_epsilon = sigma_seq[which.max(m_sigma)]
-    #plot(sigma_seq, m_sigma); abline(v = sigma_epsilon)
-  }
-  #----------------------------------------------------------------------------
-  # BNP specifications:
-  if(transformation == 'bnp'){
-
-    # Necessary quantity:
-    xt_XtXinv_x = sapply(1:n, function(i)
-      crossprod(X[i,], XtXinv)%*%X[i,])
-
-    # Grid of values to evaluate Fz:
-    zgrid = sort(unique(sapply(range(xt_XtXinv_x), function(xtemp){
-      qnorm(seq(0.001, 0.999, length.out = 250),
-            mean = 0,
-            sd = sqrt(sigma_epsilon^2 + sigma_epsilon^2*psi*xtemp))
-    })))
-
-    # The scale is not identified, but set at the MLE anyway:
-    sigma_epsilon = median(sigma_epsilon/sqrt(1 + psi*xt_XtXinv_x))
+    # Fix the scale:
+    sigma_epsilon = summary(lm(g(y) ~ X-1,
+                               subset = which(y!=min(y) & y != max(y))))$sigma
+    # sigma_epsilon = 1
 
     # Remove marginal likelihood computations:
     if(compute_marg){
       warning('Marginal likelihood not currently implemented for BNP')
       compute_marg = FALSE
     }
+
+  } else {
+
+    # Assign a family for the transformation: Box-Cox or CDF?
+    transform_family = ifelse(
+      test = is.element(transformation, c("identity", "log", "sqrt", "box-cox")),
+      yes = 'bc', no = 'cdf'
+    )
+
+    # Box-Cox family
+    if(transform_family == 'bc'){
+      # Lambda value for each Box-Cox argument:
+      if(transformation == 'identity') lambda = 1
+      if(transformation == 'log') lambda = 0
+      if(transformation == 'sqrt') lambda = 1/2
+
+      # Transformation function:
+      g = function(t) g_bc(t,lambda = lambda)
+
+      # Inverse transformation function:
+      g_inv = function(s) g_inv_bc(s,lambda = lambda)
+    }
+
+    # CDF family
+    if(transform_family == 'cdf'){
+
+      # Transformation function:
+      g = g_cdf(y = y, distribution = transformation)
+
+      # Define the grid for approximations using equally-spaced + quantile points:
+      t_grid = sort(unique(round(c(
+        seq(0, min(2*max(y), y_max), length.out = 250),
+        quantile(unique(y[y < y_max] + 1), seq(0, 1, length.out = 250))), 8)))
+
+      # Inverse transformation function:
+      g_inv = g_inv_approx(g = g, t_grid = t_grid)
+    }
+
+    # for non-bnp case, fix scale at the MLE
+    sigma_epsilon = lm_star(y ~ X-1,
+                            transformation = transformation,
+                            y_max = y_max)$sigma.hat
   }
+
+  # Lower and upper intervals:
+  g_a_y = g(a_j(y, y_max = y_max));
+  g_a_yp1 = g(a_j(y + 1, y_max = y_max))
   #----------------------------------------------------------------------------
   # Posterior simulations:
 
@@ -243,20 +225,18 @@ blm_star_exact = function(y, X, X_test = X,
   # Bayesian bootstrap sampling:
   if(transformation == 'bnp'){
     # MC draws:
-    post_beta = array(NA, c(nsave,p))
-    post_z = post_pred = array(NA, c(nsave, n)) # storage
-    if(!is.null(X_test)) post_predtest = array(NA, c(nsave, nrow(X_test)))
+    post.beta = array(NA, c(nsave,p))
+    post.z = post.pred = array(NA, c(nsave, n)) # storage
+    if(!is.null(X_test)) post.predtest = array(NA, c(nsave, nrow(X_test)))
     post.log.like.point = array(NA, c(nsave, n)) # Pointwise log-likelihood
-    post_g = array(NA, c(nsave, length(unique(y))))
+    post.g = array(NA, c(nsave, length(unique(y))))
 
     for(s in 1:nsave){
 
       # Sample the transformation:
       g = g_bnp(y = y,
-                xtSigmax = sigma_epsilon^2*psi*xt_XtXinv_x,
-                zgrid = zgrid,
-                sigma_epsilon = sigma_epsilon,
-                approx_Fz = approx_Fz)
+                xt_Sigma_x = psi*xt_Prior_x,
+                z_grid = z_grid)
 
       # Update the lower and upper intervals:
       g_a_y = g(a_j(y, y_max = y_max));
@@ -266,70 +246,70 @@ blm_star_exact = function(y, X, X_test = X,
       g_inv = g_inv_approx(g = g, t_grid = t_grid)
 
       # Sample z in this interval:
-      post_z[s,] = mvrandn(l = g_a_y,
+      post.z[s,] = mvrandn(l = g_a_y,
                            u = g_a_yp1,
                            Sig = Sigma_z,
                            n = 1)
 
       # Posterior samples of the coefficients:
-      post_beta[s,] = V1[s,] + tcrossprod(psi/(1+psi)*XtXinvXt, t(post_z[s,]))
+      post.beta[s,] = V1[s,] + tcrossprod(psi/(1+psi)*XtXinvXt, t(post.z[s,]))
 
       # Predictive samples of ztilde at design points
-      ztilde = tcrossprod(post_beta[s,], X) + sigma_epsilon*rnorm(n = nrow(X))
+      ztilde = tcrossprod(post.beta[s,], X) + sigma_epsilon*rnorm(n = nrow(X))
 
       # Predictive samples of ytilde at design points:
-      post_pred[s,] = round_floor(g_inv(ztilde), y_max)
+      post.pred[s,] = round_floor(g_inv(ztilde), y_max)
 
       if(!is.null(X_test)){
         # Predictive samples of ztilde at design points
-        ztilde = tcrossprod(post_beta[s,], X_test) + sigma_epsilon*rnorm(n = nrow(X_test))
+        ztilde = tcrossprod(post.beta[s,], X_test) + sigma_epsilon*rnorm(n = nrow(X_test))
         # Predictive samples of ytilde at design points:
-        post_predtest[s,] = round_floor(g_inv(ztilde), y_max)
+        post.predtest[s,] = round_floor(g_inv(ztilde), y_max)
       }
 
       # Posterior samples of the transformation:
-      post_g[s,] = g(sort(unique(y)))
+      post.g[s,] = g(sort(unique(y)))
 
       #Pointwise log-likelihood
       post.log.like.point[s, ] = logLikePointRcpp(g_a_j = g_a_y,
                                                   g_a_jp1 = g_a_yp1,
-                                                  mu = X%*%post_beta[s,],
+                                                  mu = X%*%post.beta[s,],
                                                   sigma = rep(sigma_epsilon, n))
     }
 
   } else {
     # Sample z in this interval:
-    post_z = t(mvrandn(l = g_a_y,
+    post.z = t(mvrandn(l = g_a_y,
                        u = g_a_yp1,
                        Sig = Sigma_z,
                        n = nsave))
 
     # Posterior samples of the coefficients:
-    post_beta = V1 + t(tcrossprod(psi/(1+psi)*XtXinvXt, post_z))
+    post.beta = V1 + t(tcrossprod(psi/(1+psi)*XtXinvXt, post.z))
 
     # Predictive samples of ztilde:
-    post_ztilde = tcrossprod(post_beta, X) + sigma_epsilon*rnorm(n = nsave*nrow(X))
+    post.ztilde = tcrossprod(post.beta, X) + sigma_epsilon*rnorm(n = nsave*nrow(X))
 
     # Predictive samples of ytilde:
-    post_pred = t(apply(post_ztilde, 1, function(z){
+    post.pred = t(apply(post.ztilde, 1, function(z){
       round_floor(g_inv(z), y_max)
     }))
 
     if(!is.null(X_test)){
       # Predictive samples of ztilde:
-      post_ztilde = tcrossprod(post_beta, X_test) + sigma_epsilon*rnorm(n = nsave*nrow(X_test))
+      post.ztilde = tcrossprod(post.beta, X_test) + sigma_epsilon*rnorm(n = nsave*nrow(X_test))
 
       # Predictive samples of ytilde:
-      post_predtest = t(apply(post_ztilde, 1, function(z){
+      post.predtest = t(apply(post.ztilde, 1, function(z){
         round_floor(g_inv(z), y_max)
       }))
     }
 
     # Not needed: transformation is fixed
-    post_g = NULL
+    post.g = NULL
 
     #Pointwise log-likelihood
-    post.log.like.point = apply(post_beta, 1, function(beta){logLikePointRcpp(g_a_j = g_a_y,
+    post.log.like.point = apply(post.beta, 1, function(beta){logLikePointRcpp(g_a_j = g_a_y,
                                                 g_a_jp1 = g_a_yp1,
                                                 mu = as.vector(X%*%beta),
                                                 sigma = rep(sigma_epsilon, n))})
@@ -337,11 +317,11 @@ blm_star_exact = function(y, X, X_test = X,
   }
 
   if(is.null(X_test)){
-    post_predtest = NULL
+    post.predtest = NULL
   }
 
   # Estimated coefficients:
-  beta_hat = rowMeans(tcrossprod(psi/(1+psi)*XtXinvXt, post_z))
+  beta_hat = rowMeans(tcrossprod(psi/(1+psi)*XtXinvXt, post.z))
 
   # Compute WAIC:
   lppd = sum(log(colMeans(exp(post.log.like.point))))
@@ -355,23 +335,22 @@ blm_star_exact = function(y, X, X_test = X,
   # V1tilde = rcpp_rmvnorm(n = nsave,
   #                        mu = rep(0, ntilde),
   #                        S = sigma_epsilon^2*(psi/(1+psi)*Htilde + diag(ntilde)))
-  # post_ztilde = V1tilde + t(tcrossprod(psi/(1+psi)*tcrossprod(XtildeXtXinv, X), post_z))
-  # post_ytilde = t(apply(post_ztilde, 1, function(z){round_floor(g_inv(z), y_max)}))
+  # post.ztilde = V1tilde + t(tcrossprod(psi/(1+psi)*tcrossprod(XtildeXtXinv, X), post.z))
+  # post.pred = t(apply(post.ztilde, 1, function(z){round_floor(g_inv(z), y_max)}))
 
   print('Done!')
 
   return(list(
     coefficients = beta_hat,
-    post.beta = post_beta,
-    post.pred = post_pred,
-    post.predtest = post_predtest,
+    post.beta = post.beta,
+    post.pred = post.pred,
+    post.predtest = post.predtest,
     post.log.like.point = post.log.like.point,
     WAIC = WAIC, p_waic = p_waic,
     sigma = sigma_epsilon,
-    post.g = post_g,
+    post.g = post.g,
     marg.like = marg_like))
 }
-
 #' Gibbs sampler for STAR linear regression with BNP transformation
 #'
 #' Compute MCMC samples from the posterior and predictive
@@ -384,51 +363,25 @@ blm_star_exact = function(y, X, X_test = X,
 #' default is the observed covariates \code{X}
 #' @param y_max a fixed and known upper bound for all observations; default is \code{Inf}
 #' @param psi prior variance (g-prior)
-#' @param approx_Fz logical; in BNP transformation, apply a (fast and stable)
-#' normal approximation for the marginal CDF of the latent data
-#' @param approx_Fy logical; in BNP transformation, approximate
-#' the marginal CDF of \code{y} using the empirical CDF
 #' @param nsave number of MCMC iterations to save
 #' @param nburn number of MCMC iterations to discard
 #' @param nskip number of MCMC iterations to skip between saving iterations,
 #' i.e., save every (nskip + 1)th draw
 #' @return a list with the following elements:
 #' \itemize{
-#' \item \code{coefficients} the posterior mean of the regression coefficients
-#' \item \code{post_beta}: \code{nsave x p} samples from the posterior distribution
+#' \item \code{coefficients}: the posterior mean of the regression coefficients
+#' \item \code{post.beta}: \code{nsave x p} samples from the posterior distribution
 #' of the regression coefficients
-#' \item \code{post_ytilde}: \code{nsave x n0} samples
+#' \item \code{post.pred}: \code{nsave x n0} samples
 #' from the posterior predictive distribution at test points \code{X_test}
-#' \item \code{post_g}: \code{nsave} posterior samples of the transformation
+#' \item \code{post.g}: \code{nsave} posterior samples of the transformation
 #' evaluated at the unique \code{y} values (only applies for 'bnp' transformations)
 #' }
-#' @details STAR defines a count-valued probability model by
-#' (1) specifying a Gaussian model for continuous *latent* data and
-#' (2) connecting the latent data to the observed data via a
-#' *transformation and rounding* operation. Here, the continuous
-#' latent data model is a linear regression.
-#'
-#' There are several options for the transformation. First, the transformation
-#' can belong to the *Box-Cox* family, which includes the known transformations
-#' 'identity', 'log', and 'sqrt'. Second, the transformation
-#' can be estimated (before model fitting) using the empirical distribution of the
-#' data \code{y}. Options in this case include the empirical cumulative
-#' distribution function (CDF), which is fully nonparametric ('np'), or the parametric
-#' alternatives based on Poisson ('pois') or Negative-Binomial ('neg-bin')
-#' distributions. For the parametric distributions, the parameters of the distribution
-#' are estimated using moments (means and variances) of \code{y}. The distribution-based
-#' transformations approximately preserve the mean and variance of the count data \code{y}
-#' on the latent data scale, which lends interpretability to the model parameters.
-#' Lastly, the transformation can be modeled using the Bayesian bootstrap ('bnp'),
-#' which is a Bayesian nonparametric model and incorporates the uncertainty
-#' about the transformation into posterior and predictive inference.
 #'
 #' @keywords internal
 blm_star_bnpgibbs = function(y, X, X_test = X,
                              y_max = Inf,
                              psi = NULL,
-                             approx_Fz = FALSE,
-                             approx_Fy = FALSE,
                              nsave = 1000,
                              nburn = 1000,
                              nskip = 0,
@@ -457,10 +410,27 @@ blm_star_bnpgibbs = function(y, X, X_test = X,
     message("G-prior prior variance psi not set; using default of psi=n")
   }
   #----------------------------------------------------------------------------
-  # Define the transformation:
+  # Key matrix quantities:
+  XtX = crossprod(X)
+  XtXinv = chol2inv(chol(XtX))
 
-  # Transformation function:
-  g = g_cdf(y = y, distribution = 'np')# for initialization
+  # Necessary quantity:
+  xt_Prior_x = sapply(1:n, function(i)
+    crossprod(X[i,], XtXinv)%*%X[i,])
+
+  # Grid of values for the Fz approximation:
+  z_grid = sort(unique(
+    sapply(range(psi*xt_Prior_x), function(xtemp){
+      qnorm(seq(0.01, 0.99, length.out = 100),
+            mean = 0, # assuming prior mean zero
+            sd = sqrt(1 + xtemp))
+    })
+  ))
+
+  # Initialize the transformation:
+  g = g_bnp(y = y,
+            xt_Sigma_x = psi*xt_Prior_x,
+            z_grid = z_grid)
 
   # Define the grid for approximations using equally-spaced + quantile points:
   t_grid = sort(unique(round(c(
@@ -473,39 +443,21 @@ blm_star_bnpgibbs = function(y, X, X_test = X,
   # Lower and upper intervals:
   g_a_y = g(a_j(y, y_max = y_max));
   g_a_yp1 = g(a_j(y + 1, y_max = y_max))
-  #----------------------------------------------------------------------------
-  # Initialize:
-  fit_em = lm_star(y ~ X-1, transformation = 'np', y_max = y_max)
 
-  # Coefficients and sd:
-  beta  = coef(fit_em)
-  sigma_epsilon = fit_em$sigma.hat
-  #----------------------------------------------------------------------------
-  # Key matrix quantities:
-  XtX = crossprod(X)
-  XtXinv = chol2inv(chol(XtX))
-
-  # BNP specifications:
-  # Necessary quantity:
-  xt_XtXinv_x = sapply(1:n, function(i)
-    crossprod(X[i,], XtXinv)%*%X[i,])
-
-  # Grid of values to evaluate Fz:
-  zgrid = sort(unique(sapply(range(xt_XtXinv_x), function(xtemp){
-    qnorm(seq(0.001, 0.999, length.out = 250),
-          mean = 0,
-          sd = sqrt(sigma_epsilon^2 + sigma_epsilon^2*psi*xtemp))
-  })))
-
-  # The scale is not identified, but set at the MLE anyway:
-  sigma_epsilon = median(sigma_epsilon/sqrt(1 + psi*xt_XtXinv_x))
+  # Initialize the coefficients and scale:
+  fit0 = lm(g(y) ~ X-1,
+            subset = which(y!=min(y) & y != max(y)))
+  beta = coef(fit0)
+  sigma_epsilon = summary(fit0)$sigma
+  # beta = rnorm(n = p)
+  # sigma_epsilon = 1
   #----------------------------------------------------------------------------
   # Posterior simulations:
 
   # Store MCMC output:
-  post_beta = array(NA, c(nsave, p))
-  post_ytilde = array(NA, c(nsave, n))
-  post_g = array(NA, c(nsave, length(unique(y))))
+  post.beta = array(NA, c(nsave, p))
+  post.pred = array(NA, c(nsave, n))
+  post.g = array(NA, c(nsave, length(unique(y))))
 
   # Total number of MCMC simulations:
   nstot = nburn+(nskip+1)*(nsave)
@@ -519,10 +471,8 @@ blm_star_bnpgibbs = function(y, X, X_test = X,
     # Block 0: sample the transformation
     # Sample the transformation:
     g = g_bnp(y = y,
-              xtSigmax = sigma_epsilon^2*psi*xt_XtXinv_x,
-              zgrid = zgrid,
-              sigma_epsilon = sigma_epsilon,
-              approx_Fz = approx_Fz)
+              xt_Sigma_x = psi*xt_Prior_x,
+              z_grid = z_grid)
 
     # Update the lower and upper intervals:
     g_a_y = g(a_j(y, y_max = y_max));
@@ -552,7 +502,13 @@ blm_star_bnpgibbs = function(y, X, X_test = X,
     beta = backsolve(ch_Q,
                      forwardsolve(t(ch_Q), ell_beta) +
                        rnorm(p))
-
+    #----------------------------------------------------------------------------
+    # Block 3: sample the scale adjustment (SD)
+    SSR_psi = sum(z_star^2) - psi/(psi+1)*crossprod(z_star, X%*%XtXinv%*%crossprod(X, z_star))
+    sigma_epsilon = 1/sqrt(rgamma(n = 1,
+                                  shape = .001 + n/2,
+                                  rate = .001 + SSR_psi/2))
+    #----------------------------------------------------------------------------
     # Store the MCMC:
     if(nsi > nburn){
 
@@ -565,16 +521,16 @@ blm_star_bnpgibbs = function(y, X, X_test = X,
         isave = isave + 1
 
         # Posterior samples of the model parameters:
-        post_beta[isave,] = beta
+        post.beta[isave,] = beta
 
         # Predictive samples of ztilde:
         ztilde = X_test%*%beta + sigma_epsilon*rnorm(n = nrow(X_test))
 
         # Predictive samples of ytilde:
-        post_ytilde[isave,] = round_floor(g_inv(ztilde), y_max)
+        post.pred[isave,] = round_floor(g_inv(ztilde), y_max)
 
         # Posterior samples of the transformation:
-        post_g[isave,] = g(sort(unique(y)))
+        post.g[isave,] = g(sort(unique(y)))
 
         # And reset the skip counter:
         skipcount = 0
@@ -596,13 +552,11 @@ blm_star_bnpgibbs = function(y, X, X_test = X,
   if(verbose) print(paste('Total time: ', round((proc.time()[3] - timer0)), 'seconds'))
 
   return(list(
-    coefficients = colMeans(post_beta),
-    post_beta = post_beta,
-    post_ytilde = post_ytilde,
-    post_g = post_g))
+    coefficients = colMeans(post.beta),
+    post.beta = post.beta,
+    post.pred = post.pred,
+    post.g = post.g))
 }
-
-
 #' Monte Carlo predictive sampler for spline regression
 #'
 #' Compute direct Monte Carlo samples from the posterior predictive
@@ -622,21 +576,12 @@ blm_star_bnpgibbs = function(y, X, X_test = X,
 #' }
 #' @param y_max a fixed and known upper bound for all observations; default is \code{Inf}
 #' @param psi prior variance (1/smoothing parameter)
-#' @param method_sigma method to estimate the latent data standard deviation; must be one of
-#' \itemize{
-#' \item "mle" use the MLE from the STAR EM algorithm
-#' \item "mmle" use the marginal MLE (Note: slower!)
-#' }
-#' @param approx_Fz logical; in BNP transformation, apply a (fast and stable)
-#' normal approximation for the marginal CDF of the latent data
-#' @param approx_Fy logical; in BNP transformation, approximate
-#' the marginal CDF of \code{y} using the empirical CDF
 #' @param nsave number of Monte Carlo simulations
 #' @param compute_marg logical; if TRUE, compute and return the
 #' marginal likelihood
 #' @return a list with the following elements:
 #' \itemize{
-#' \item \code{post_ytilde}: \code{nsave x n} samples
+#' \item \code{post.pred}: \code{nsave x n} samples
 #' from the posterior predictive distribution at the observation points \code{tau}
 #' \item \code{marg_like}: the marginal likelihood (if requested; otherwise NULL)
 #' }
@@ -675,60 +620,8 @@ spline_star_exact = function(y,
                        transformation = 'np',
                        y_max = Inf,
                        psi = 1000,
-                       method_sigma = 'mle',
-                       approx_Fz = FALSE,
-                       approx_Fy = FALSE,
                        nsave = 1000,
                        compute_marg = TRUE){
-  #----------------------------------------------------------------------------
-  # Check: does the method for sigma make sense?
-  method_sigma = tolower(method_sigma);
-  if(!is.element(method_sigma, c("mle", "mmle")))
-    stop("The sigma estimation method must be 'mle' or 'mmle'")
-
-  # Assign a family for the transformation: Box-Cox or CDF?
-  transform_family = ifelse(
-    test = is.element(transformation, c("identity", "log", "sqrt", "box-cox")),
-    yes = 'bc', no = 'cdf'
-  )
-
-  # If approximating F_y in BNP, use 'np':
-  if(transformation == 'bnp' && approx_Fy)
-    transformation = 'np'
-  #----------------------------------------------------------------------------
-  # Define the transformation:
-  if(transform_family == 'bc'){
-    # Lambda value for each Box-Cox argument:
-    if(transformation == 'identity') lambda = 1
-    if(transformation == 'log') lambda = 0
-    if(transformation == 'sqrt') lambda = 1/2
-
-    # Transformation function:
-    g = function(t) g_bc(t,lambda = lambda)
-
-    # Inverse transformation function:
-    g_inv = function(s) g_inv_bc(s,lambda = lambda)
-  }
-
-  if(transform_family == 'cdf'){
-
-    # Transformation function:
-    g = g_cdf(y = y, distribution = ifelse(transformation == 'bnp',
-                                           'np', # for initialization
-                                           transformation))
-
-    # Define the grid for approximations using equally-spaced + quantile points:
-    t_grid = sort(unique(round(c(
-      seq(0, min(2*max(y), y_max), length.out = 250),
-      quantile(unique(y[y < y_max] + 1), seq(0, 1, length.out = 250))), 8)))
-
-    # Inverse transformation function:
-    g_inv = g_inv_approx(g = g, t_grid = t_grid)
-  }
-
-  # Lower and upper intervals:
-  g_a_y = g(a_j(y, y_max = y_max));
-  g_a_yp1 = g(a_j(y + 1, y_max = y_max))
   #----------------------------------------------------------------------------
   # Number of observations:
   n = length(y)
@@ -743,55 +636,93 @@ spline_star_exact = function(y,
   BBt = tcrossprod(B)
   p = length(diagBtB)
   #----------------------------------------------------------------------------
-  # Latent data SD:
-  if(method_sigma == 'mle'){
-    sigma_epsilon = genEM_star(y = y,
-                            estimator = function(y) lm(y ~ B - 1),
-                            transformation = ifelse(transformation == 'bnp', 'np',
-                                                    transformation),
-                            y_max = y_max)$sigma.hat
-  }
-
-  if(method_sigma == 'mmle'){
-    sigma_seq = exp(seq(log(sd(y)) - 2,
-                        log(sd(y)) + 2, length.out = 10))
-    m_sigma = rep(NA, length(sigma_seq))
-    print('Marginal MLE evaluations:')
-    for(j in 1:length(sigma_seq)){
-      m_sigma[j] = TruncatedNormal::pmvnorm(
-        mu = rep(0, n),
-        sigma = sigma_seq[j]^2*(diag(n) + psi*BBt),
-        lb = g_a_y,
-        ub = g_a_yp1
-      )
-      print(paste(j, 'of 10'))
-    }
-    sigma_epsilon = sigma_seq[which.max(m_sigma)]
-    #plot(sigma_seq, m_sigma); abline(v = sigma_epsilon)
-  }
-  #----------------------------------------------------------------------------
-  # BNP specifications:
+  # Define the transformation:
   if(transformation == 'bnp'){
+    # Special treatment for BNP case
 
     # Necessary quantity:
-    xt_XtXinv_x = sapply(1:n, function(i) sum(B[i,]^2/diagBtB))
+    xt_Prior_x = rowSums(B^2) # sapply(1:n, function(i) sum(B[i,]^2/diagBtB))
 
-    # Grid of values to evaluate Fz:
-    zgrid = sort(unique(sapply(range(xt_XtXinv_x), function(xtemp){
-      qnorm(seq(0.001, 0.999, length.out = 250),
-            mean = 0,
-            sd = sqrt(sigma_epsilon^2 + sigma_epsilon^2*psi*xtemp))
-    })))
+    # Grid of values for the Fz approximation:
+    z_grid = sort(unique(
+      sapply(range(psi*xt_Prior_x), function(xtemp){
+        qnorm(seq(0.01, 0.99, length.out = 100),
+              mean = 0, # assuming prior mean zero
+              sd = sqrt(1 + xtemp))
+      })
+    ))
 
-    # The scale is not identified, but set at the MLE anyway:
-    sigma_epsilon = median(sigma_epsilon/sqrt(1 + psi*xt_XtXinv_x))
+    # Initialize the transformation:
+    g = g_bnp(y = y,
+              xt_Sigma_x = psi*xt_Prior_x,
+              z_grid = z_grid)
+
+    # Define the grid for approximations using equally-spaced + quantile points:
+    t_grid = sort(unique(round(c(
+      seq(0, min(2*max(y), y_max), length.out = 250),
+      quantile(unique(y[y < y_max] + 1), seq(0, 1, length.out = 250))), 8)))
+
+    # Inverse transformation function:
+    g_inv = g_inv_approx(g = g, t_grid = t_grid)
+
+    # Fix the scale:
+    sigma_epsilon = summary(lm(g(y) ~ B-1,
+                               subset = which(y!=min(y) & y != max(y))))$sigma
+    # sigma_epsilon = 1
 
     # Remove marginal likelihood computations:
     if(compute_marg){
       warning('Marginal likelihood not currently implemented for BNP')
       compute_marg = FALSE
     }
+
+  } else {
+
+    # Assign a family for the transformation: Box-Cox or CDF?
+    transform_family = ifelse(
+      test = is.element(transformation, c("identity", "log", "sqrt", "box-cox")),
+      yes = 'bc', no = 'cdf'
+    )
+
+    # Box-Cox family
+    if(transform_family == 'bc'){
+      # Lambda value for each Box-Cox argument:
+      if(transformation == 'identity') lambda = 1
+      if(transformation == 'log') lambda = 0
+      if(transformation == 'sqrt') lambda = 1/2
+
+      # Transformation function:
+      g = function(t) g_bc(t,lambda = lambda)
+
+      # Inverse transformation function:
+      g_inv = function(s) g_inv_bc(s,lambda = lambda)
+    }
+
+    # CDF family
+    if(transform_family == 'cdf'){
+
+      # Transformation function:
+      g = g_cdf(y = y, distribution = transformation)
+
+      # Define the grid for approximations using equally-spaced + quantile points:
+      t_grid = sort(unique(round(c(
+        seq(0, min(2*max(y), y_max), length.out = 250),
+        quantile(unique(y[y < y_max] + 1), seq(0, 1, length.out = 250))), 8)))
+
+      # Inverse transformation function:
+      g_inv = g_inv_approx(g = g, t_grid = t_grid)
+    }
+
+    # Latent data SD:
+    sigma_epsilon = genEM_star(y = y,
+                               estimator = function(y) lm(y ~ B - 1),
+                               transformation = transformation,
+                               y_max = y_max)$sigma.hat
   }
+
+  # Lower and upper intervals:
+  g_a_y = g(a_j(y, y_max = y_max));
+  g_a_yp1 = g(a_j(y + 1, y_max = y_max))
   #----------------------------------------------------------------------------
   # Posterior predictive simulations:
 
@@ -825,14 +756,13 @@ spline_star_exact = function(y,
   # Bayesian bootstrap sampling:
   if(transformation == 'bnp'){
     # MC draws:
-    post_ytilde = array(NA, c(nsave, n)) # storage
+    post.pred = array(NA, c(nsave, n)) # storage
     for(s in 1:nsave){
+
       # Sample the transformation:
       g = g_bnp(y = y,
-                xtSigmax = sigma_epsilon^2*psi*xt_XtXinv_x,
-                zgrid = zgrid,
-                sigma_epsilon = sigma_epsilon,
-                approx_Fz = approx_Fz)
+                xt_Sigma_x = psi*xt_Prior_x,
+                z_grid = z_grid)
 
       # Update the lower and upper intervals:
       g_a_y = g(a_j(y, y_max = y_max));
@@ -851,31 +781,30 @@ spline_star_exact = function(y,
       ztilde = V1tilde[s,] + t(crossprod(psi*Bd2Bt, z))
 
       # Predictive samples of ytilde:
-      post_ytilde[s,] = round_floor(g_inv(ztilde), y_max)
+      post.pred[s,] = round_floor(g_inv(ztilde), y_max)
     }
   } else {
     # Sample z in this interval:
-    post_z = t(mvrandn(l = g_a_y,
+    post.z = t(mvrandn(l = g_a_y,
                        u = g_a_yp1,
                        Sig = Sigma_z,
                        n = nsave))
 
     # Predictive samples of ztilde:
-    post_ztilde = V1tilde + t(tcrossprod(psi*Bd2Bt, post_z))
+    post.ztilde = V1tilde + t(tcrossprod(psi*Bd2Bt, post.z))
 
     # Predictive samples of ytilde:
-    post_ytilde = t(apply(post_ztilde, 1, function(z){
+    post.pred = t(apply(post.ztilde, 1, function(z){
       round_floor(g_inv(z), y_max)
     }))
-    #post_ytilde = matrix(round_floor(g_inv(post_ztilde), y_max), nrow = S)
+    #post.pred = matrix(round_floor(g_inv(post.ztilde), y_max), nrow = S)
   }
 
   print('Done!')
 
-  return(list(post_ytilde = post_ytilde,
+  return(list(post.pred = post.pred,
               marg_like = marg_like))
 }
-
 #' MCMC sampler for BART-STAR with a monotone spline model
 #' for the transformation
 #'
@@ -941,9 +870,9 @@ bart_star_ispline = function(y,
                             y_max = Inf,
                             n.trees = 200,
                             sigest = NULL, sigdf = 3, sigquant = 0.90, k = 2.0, power = 2.0, base = 0.95,
-                            nsave = 5000,
-                            nburn = 5000,
-                            nskip = 2,
+                            nsave = 1000,
+                            nburn = 1000,
+                            nskip = 0,
                             save_y_hat = FALSE,
                             target_acc_rate = 0.3,
                             adapt_rate = 0.75,
@@ -1405,8 +1334,8 @@ genMCMC_star_ispline = function(y,
                              init_params,
                              lambda_prior = 1/2,
                              y_max = Inf,
-                             nsave = 5000,
-                             nburn = 5000,
+                             nsave = 1000,
+                             nburn = 1000,
                              nskip = 0,
                              save_y_hat = FALSE,
                              target_acc_rate = 0.3,
@@ -2607,10 +2536,10 @@ invlogit = function(x) exp(x - log(1+exp(x))) # exp(x)/(1+exp(x))
 #' @param tol tolerance level for convergence of the optimization procedure
 #' @return a list of containing the following elements:
 #' \itemize{
-#' \item \code{fx} the minimum value of the input function
-#' \item \code{x} the argument that minimizes the function
-#' \item \code{iter} number of iterations to converge
-#' \item \code{vx} a vector that stores the arguments until convergence
+#' \item \code{fx}: the minimum value of the input function
+#' \item \code{x}: the argument that minimizes the function
+#' \item \code{iter}: number of iterations to converge
+#' \item \code{vx}: a vector that stores the arguments until convergence
 #' }
 #'
 #' @keywords internal

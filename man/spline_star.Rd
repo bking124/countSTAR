@@ -10,14 +10,11 @@ spline_star(
   transformation = "np",
   y_max = Inf,
   psi = NULL,
-  approx_Fz = FALSE,
-  approx_Fy = FALSE,
   nsave = 1000,
   use_MCMC = TRUE,
   nburn = 1000,
   nskip = 0,
-  verbose = TRUE,
-  method_sigma = "mle"
+  verbose = TRUE
 )
 }
 \arguments{
@@ -40,12 +37,6 @@ spline_star(
 
 \item{psi}{prior variance (1/smoothing parameter); if NULL, update in MCMC}
 
-\item{approx_Fz}{logical; in BNP transformation, apply a (fast and stable)
-normal approximation for the marginal CDF of the latent data}
-
-\item{approx_Fy}{logical; in BNP transformation, approximate
-the marginal CDF of \code{y} using the empirical CDF}
-
 \item{nsave}{number of MCMC iterations to save (or number of Monte Carlo simulations)}
 
 \item{use_MCMC}{logical; whether to run Gibbs sampler or Monte Carlo (default is TRUE)}
@@ -56,26 +47,19 @@ the marginal CDF of \code{y} using the empirical CDF}
 i.e., save every (nskip + 1)th draw}
 
 \item{verbose}{logical; if TRUE, print time remaining}
-
-\item{method_sigma}{method to estimate the latent data standard deviation (only applicable if \code{use_MCMC=FALSE});
-must be one of
-\itemize{
-\item "mle" use the MLE from the STAR EM algorithm (default)
-\item "mmle" use the marginal MLE (Note: slower!)
-}}
 }
 \value{
 a list with the following elements:
 \itemize{
-\item \code{post_ytilde}: \code{nsave x n} samples
+\item \code{post.pred}: \code{nsave x n} samples
 from the posterior predictive distribution at the observation points \code{tau}
 \item \code{marg_like}: the marginal likelihood (only if \code{use_MCMC=FALSE}; otherwise NULL)
 }
 }
 \description{
-Compute samples from the predictive
-distributions of a STAR spline regression model using either a Gibbs sampling approach
-or exact Monte Carlo sampling (default is Gibbs sampling which scales better for large n)
+Compute samples from the predictive distributions of a STAR spline
+regression model using either a Gibbs sampling approach or exact
+Monte Carlo sampling (default is Gibbs sampling which scales better for large n).
 }
 \details{
 STAR defines a count-valued probability model by
@@ -100,7 +84,7 @@ which is a Bayesian nonparametric model and incorporates the uncertainty
 about the transformation into posterior and predictive inference.
 }
 \note{
-For the 'bnp' transformation (without the \code{Fy} approximation),
+For the 'bnp' transformation
 there are numerical stability issues when \code{psi} is modeled as unknown.
 In this case, it is better to fix \code{psi} at some positive number.
 }
@@ -114,13 +98,13 @@ y = round_floor(exp(1 + rnorm(n)/4 + poly(tau, 4)\%*\%rnorm(n=4, sd = 4:1)))
 fit = spline_star(y = y, tau = tau)
 
 # Compute 90\% prediction intervals:
-pi_y = t(apply(fit$post_ytilde, 2, quantile, c(0.05, .95)))
+pi_y = t(apply(fit$post.pred, 2, quantile, c(0.05, .95)))
 
 # Plot the results: intervals, median, and smoothed mean
 plot(tau, y, ylim = range(pi_y, y))
 polygon(c(tau, rev(tau)),c(pi_y[,2], rev(pi_y[,1])),col='gray', border=NA)
-lines(tau, apply(fit$post_ytilde, 2, median), lwd=5, col ='black')
-lines(tau, smooth.spline(tau, apply(fit$post_ytilde, 2, mean))$y, lwd=5, col='blue')
+lines(tau, apply(fit$post.pred, 2, median), lwd=5, col ='black')
+lines(tau, smooth.spline(tau, apply(fit$post.pred, 2, mean))$y, lwd=5, col='blue')
 lines(tau, y, type='p')
 
 }

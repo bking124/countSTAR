@@ -10,8 +10,8 @@ genMCMC_star(
   init_params,
   transformation = "np",
   y_max = Inf,
-  nsave = 5000,
-  nburn = 5000,
+  nsave = 1000,
+  nburn = 1000,
   nskip = 0,
   save_y_hat = FALSE,
   verbose = TRUE
@@ -129,6 +129,10 @@ fit_log = genMCMC_star(y = y,
                          sample_params = function(y, params) sample_lm_gprior(y, X, params),
                          init_params = function(y) init_lm_gprior(y, X),
                          transformation = 'log')
+
+# What is included:
+names(fit_log)
+
 # Posterior mean of each coefficient:
 coef(fit_log)
 

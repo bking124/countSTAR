@@ -12,12 +12,9 @@ blm_star(
   y_max = Inf,
   prior = "gprior",
   use_MCMC = TRUE,
-  nsave = 5000,
-  nburn = 5000,
+  nsave = 1000,
+  nburn = 1000,
   nskip = 0,
-  method_sigma = "mle",
-  approx_Fz = FALSE,
-  approx_Fy = FALSE,
   psi = NULL,
   compute_marg = FALSE
 )
@@ -46,10 +43,9 @@ using I-splines)
 \item{y_max}{a fixed and known upper bound for all observations; default is \code{Inf}}
 
 \item{prior}{prior to use for the latent linear regression; currently implemented options
-are "gprior", "horseshoe", and "ridge". Not all modeling options and transformations are
-available with the latter two priors.}
+are "gprior", "horseshoe", and "ridge"}
 
-\item{use_MCMC}{= TRUE,}
+\item{use_MCMC}{logical; whether to run Gibbs sampler or Monte Carlo (default is TRUE)}
 
 \item{nsave}{number of MCMC iterations to save (or MC samples to draw if use_MCMC=FALSE)}
 
@@ -57,19 +53,6 @@ available with the latter two priors.}
 
 \item{nskip}{number of MCMC iterations to skip between saving iterations,
 i.e., save every (nskip + 1)th draw}
-
-\item{method_sigma}{method to estimate the latent data standard deviation in exact sampler;
-must be one of
-\itemize{
-\item "mle" use the MLE from the STAR EM algorithm
-\item "mmle" use the marginal MLE (Note: slower!)
-}}
-
-\item{approx_Fz}{logical; in BNP transformation, apply a (fast and stable)
-normal approximation for the marginal CDF of the latent data}
-
-\item{approx_Fy}{logical; in BNP transformation, approximate
-the marginal CDF of \code{y} using the empirical CDF}
 
 \item{psi}{prior variance (g-prior)}
 
@@ -123,9 +106,37 @@ from the posterior distribution and the posterior predictive distribution
 of the linear regression model with a g-prior.
 }
 \note{
-The 'bnp' transformation (without the \code{Fy} approximation) is
+The 'bnp' transformation is
 slower than the other transformations because of the way
 the \code{TruncatedNormal} sampler must be updated as the lower and upper
 limits change (due to the sampling of \code{g}). Thus, computational
 improvements are likely available.
+}
+\examples{
+\donttest{
+# Simulate data with count-valued response y:
+sim_dat = simulate_nb_lm(n = 100, p = 5)
+y = sim_dat$y; X = sim_dat$X
+
+# Fit the Bayesian STAR linear model:
+fit = blm_star(y = y, X = X)
+
+# What is included:
+names(fit)
+
+# Posterior mean of each coefficient:
+coef(fit)
+
+# WAIC:
+fit$WAIC
+
+# MCMC diagnostics:
+plot(as.ts(fit$post.beta))
+
+# Posterior predictive check:
+hist(apply(fit$post.pred, 1,
+           function(x) mean(x==0)), main = 'Proportion of Zeros', xlab='');
+abline(v = mean(y==0), lwd=4, col ='blue')
+
+}
 }

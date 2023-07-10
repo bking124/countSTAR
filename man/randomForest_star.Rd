@@ -110,7 +110,7 @@ that (i) it is appropriate to treat these observations as outliers and
 \examples{
 \donttest{
 # Simulate data with count-valued response y:
-sim_dat = simulate_nb_friedman(n = 100, p = 10)
+sim_dat = simulate_nb_friedman(n = 100, p = 5)
 y = sim_dat$y; X = sim_dat$X
 
 # EM algorithm for STAR (using the log-link)

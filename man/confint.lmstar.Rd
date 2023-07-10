@@ -29,13 +29,13 @@ profiling the log-likelihood.
 \examples{
 #Simulate data with count-valued response y:
 sim_dat = simulate_nb_lm(n = 100, p = 2)
-y = sim_dat$y; X = sim_dat$X
+y = sim_dat$y; X = sim_dat$X[,-1] # remove intercept
 
-#Select a transformation:
+# Select a transformation:
 transformation = 'np'
 
 #Estimate model
-fit = lm_star(y~X, transformation=transformation)
+fit = lm_star(y~X, transformation = transformation)
 
 #Confidence interval for all parameters
 confint(fit)

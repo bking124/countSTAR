@@ -159,34 +159,31 @@ g_cdf = function(y, distribution = "np") {
 #' of \code{y} and \code{X}.
 #'
 #' @param y \code{n x 1} vector of observed counts
-#' @param zgrid optional vector of grid points for evaluating the CDF
+#' @param z_grid optional vector of grid points for evaluating the CDF
 #' of z (\code{Fz})
-#' @param xtSigmax \code{n x 1} vector of \code{t(X_i) Sigma_theta X_i},
+#' @param xt_Sigma_x \code{n x 1} vector of \code{t(X_i) Sigma_theta X_i},
 #' where \code{Sigma_theta} is the prior variance
-#' @param sigma_epsilon latent standard deviation
-#' @param approx_Fz logical; if TRUE, use a normal approximation for \code{Fz},
-#' the marginal CDF of the latent z, which is faster and more stable
 #' @return A smooth monotone function which can be used for evaluations of the transformation
 #' at each posterior draw.
 #'
 #' @examples
+#' \donttest{
 #' # Sample some data:
 #' y = rpois(n = 200, lambda = 5)
-#' # Compute 200 draws of g on a grid:
-#' t = seq(0, max(y), length.out = 100) # grid
-#' g_post = t(sapply(1:500, function(s) g_bnp(y, approx_Fz = TRUE)(t)))
+#' # Compute 100 draws of g on a grid:
+#' t = seq(0, max(y), length.out = 50) # grid
+#' g_post = t(sapply(1:100, function(s) g_bnp(y)(t)))
 #' # Plot together:
 #' plot(t, t, ylim = range(g_post), type='n', ylab = 'g(t)',  main = 'Bayesian bootstrap posterior: g')
-#' apply(g_post, 1, function(g) lines(t, g, col='gray'))
+#' temp = apply(g_post, 1, function(g) lines(t, g, col='gray'))
 #' # And the posterior mean of g:
 #' lines(t, colMeans(g_post), lwd=3)
-#'
+#' }
 #' @export
+# Function to simulate g:
 g_bnp = function(y,
-                 xtSigmax = rep(0, length(y)),
-                 zgrid = NULL,
-                 sigma_epsilon = 1,
-                 approx_Fz = FALSE
+                 xt_Sigma_x = rep(0, length(y)),
+                 z_grid = NULL
 ){
 
   # Length:
@@ -198,60 +195,59 @@ g_bnp = function(y,
   weights_y = rgamma(n = n, shape = 1)
   weights_y  = weights_y/sum(weights_y)
 
-  # CDF as a function:
-  F_y = function(t) sapply(t, function(ttemp)
+  # CDF of y, as a function call:
+  Fy = function(t) sapply(t, function(ttemp)
     n/(n+1)*sum(weights_y[y <= ttemp]))/sum(weights_y)
 
-  if(approx_Fz){
-    # Use a fast normal approximation for the CDF of z
+  # # Fast normal approximation for the CDF of z
+  # # Pick a "representative" SD; faster than approximating Fz directly
+  # sigma_approx = median(sqrt(1 + xt_Sigma_x))
+  # Fz_inv = function(s) qnorm(s, sd = sigma_approx)
 
-    # Pick a "representative" SD; faster than approximating Fz directly
-    sigma_approx = median(sqrt(sigma_epsilon^2 + xtSigmax))
+  # Bayesian bootstrap for the CDF of z
 
-    # Approximate inverse function:
-    Fzinv = function(s) qnorm(s, sd = sigma_approx)
+  # Dirichlet(1) weights:
+  weights_x = rgamma(n = n, shape = 1)
+  weights_x  = weights_x/sum(weights_x) # dirichlet weights
 
-  } else {
-    # Bayesian bootstrap for the CDF of z
-
-    # Dirichlet(1) weights:
-    weights_x = rgamma(n = n, shape = 1)
-    weights_x  = weights_x/sum(weights_x) # dirichlet weights
-
-    # Compute the CDF Fz on a grid:
-    if(is.null(zgrid)){
-      zgrid = sort(unique(sapply(range(xtSigmax), function(xtemp){
-        qnorm(seq(0.001, 0.999, length.out = 250),
-              mean = 0,
-              sd = sqrt(sigma_epsilon^2 + xtemp))
-
-      })))
-    }
-
-    # CDF on the grid:
-    Fz = rowSums(sapply(1:n, function(i){
-      weights_x[i]*pnorm(zgrid,
-                         mean = 0,# assuming prior mean zero
-                         sd = sqrt(sigma_epsilon^2 + xtSigmax[i])
-      )
-    }))
-
-    # Inverse function:
-    Fzinv = function(s) stats::spline(Fz, zgrid,
-                                      method = "hyman",
-                                      xout = s)$y
-    # https://stats.stackexchange.com/questions/390931/compute-quantile-function-from-a-mixture-of-normal-distribution/390936#390936
-
-    # Check the inverse:
-    # plot(zgrid, Fzinv(Fz)); abline(0,1)
+  # Evaluate the CDF of z on a grid:
+  if(is.null(z_grid)){
+    z_grid = sort(unique(
+      sapply(range(xt_Sigma_x), function(xtemp){
+        qnorm(seq(0.01, 0.99, length.out = 1000),
+              mean = 0, # assuming prior mean zero
+              sd = sqrt(1 + xtemp))
+      })
+    ))
   }
 
+  # CDF of z:
+  Fz_eval = rowSums(sapply(1:n, function(i){
+    weights_x[i]*pnorm(z_grid,
+                       mean = 0,# assuming prior mean zero
+                       sd = sqrt(1 + xt_Sigma_x[i])
+    )
+  }))
+
+  # Remove duplicates:
+  ind_unique = which(!duplicated(Fz_eval))
+
+  # Inverse function:
+  Fz_inv = function(s) stats::spline(Fz_eval[ind_unique],
+                                     z_grid[ind_unique],
+                                     method = "hyman",
+                                     xout = s)$y
+  # https://stats.stackexchange.com/questions/390931/compute-quantile-function-from-a-mixture-of-normal-distribution/390936#390936
+
+  # Check the inverse:
+  # plot(z_grid, Fz_inv(Fz_eval)); abline(0,1)
+
   # Apply the function g(), including some smoothing
-    # (the smoothing is necessary to avoid g_a_y = g_a_yp1 for *unobserved* y-values)
+  # (the smoothing is necessary to avoid g_a_y = g_a_yp1 for *unobserved* y-values)
   t0 = sort(unique(y)) # point for smoothing
 
   # Initial transformation:
-  g0 = Fzinv(F_y(t0-1))
+  g0 = Fz_inv(Fy(t0-1))
 
   # Make sure we have only finite values of g0 (infinite values occur for F_y = 0 or F_y = 1)
   t0 = t0[which(is.finite(g0))]; g0 = g0[which(is.finite(g0))]
@@ -259,8 +255,6 @@ g_bnp = function(y,
   # Return the smoothed (monotone) transformation:
   return(splinefun(t0, g0, method = 'monoH.FC'))
 }
-
-
 #----------------------------------------------------------------------------
 #' Approximate inverse transformation
 #'
@@ -382,13 +376,11 @@ a_j = function(j, y_max = Inf) {
 #' twofold increase in the expected counts for a one unit increase in x
 #' @param sigma_true standard deviation of the Gaussian innovation; default is zero.
 #' @param ar1 the autoregressive coefficient among the columns of the X matrix; default is zero.
-#' @param intercept a Boolean indicating whether an intercept column should be included
-#' in the returned design matrix; default is FALSE
 #' @param seed optional integer to set the seed for reproducible simulation; default is NULL
 #' which results in a different dataset after each run
 #'
 #' @return A named list with the simulated count response \code{y}, the simulated design matrix \code{X}
-#' (possibly including the intercept), the true expected counts \code{Ey},
+#' (including an intercept), the true expected counts \code{Ey},
 #' and the true regression coefficients \code{beta_true}.
 #'
 #' @note Specifying \code{sigma_true = sqrt(2*log(1 + a))} implies that the expected counts are
@@ -409,7 +401,6 @@ simulate_nb_lm = function(n = 100,
                           b_sig = log(2.0),
                           sigma_true = sqrt(2*log(1.0)),
                           ar1 = 0,
-                          intercept = FALSE,
                           seed = NULL
                           ){
 
@@ -443,11 +434,6 @@ simulate_nb_lm = function(n = 100,
 
   # Conditional expectation:
   Ey = exp(X%*%beta_true)*exp(sigma_true^2/2)
-
-  #Get rid of intercept
-  if(!intercept){
-    X = X[,-1]
-  }
 
   list(
     y = y,

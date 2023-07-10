@@ -18,10 +18,10 @@ BrentMethod(a = 0, b, fcn, tol = .Machine$double.eps^0.25)
 \value{
 a list of containing the following elements:
 \itemize{
-\item \code{fx} the minimum value of the input function
-\item \code{x} the argument that minimizes the function
-\item \code{iter} number of iterations to converge
-\item \code{vx} a vector that stores the arguments until convergence
+\item \code{fx}: the minimum value of the input function
+\item \code{x}: the argument that minimizes the function
+\item \code{iter}: number of iterations to converge
+\item \code{vx}: a vector that stores the arguments until convergence
 }
 }
 \description{
