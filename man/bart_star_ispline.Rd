@@ -34,9 +34,9 @@ bart_star_ispline(
 
 \item{X}{\code{n x p} matrix of predictors}
 
-\item{X_test}{\code{n0 x p} matrix of predictors for test data}
+\item{X_test}{\code{n_test x p} matrix of predictors for test data}
 
-\item{y_test}{\code{n0 x 1} vector of the test data responses (used for
+\item{y_test}{\code{n_test x 1} vector of the test data responses (used for
 computing log-predictive scores)}
 
 \item{lambda_prior}{the prior mean for the transformation g() is the Box-Cox function with
@@ -90,10 +90,11 @@ a list with the following elements:
 \item \code{post.sigma}: draws from the posterior distribution of \code{sigma}
 \item \code{post.mu.test}: draws of the conditional mean of z_star at the test points
 \item \code{post.log.like.point}: draws of the log-likelihood for each of the \code{n} observations
-\item \code{post.log.pred.test}: draws of the log-predictive distribution for each of the \code{n0} test cases
+\item \code{post.log.pred.test}: draws of the log-predictive distribution for each of the \code{n_test} test cases
 \item \code{WAIC}: Widely-Applicable/Watanabe-Akaike Information Criterion
 \item \code{p_waic}: Effective number of parameters based on WAIC
-\item \code{post.g}: draws from the posterior distribution of the transformation \code{g}
+\item \code{post.g}: \code{nsave} posterior samples of the transformation
+evaluated at \code{1:max(y)}
 \item \code{post.sigma.gamma}: draws from the posterior distribution of \code{sigma.gamma},
 the prior standard deviation of the transformation \code{g} coefficients
 }

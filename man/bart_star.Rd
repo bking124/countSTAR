@@ -30,9 +30,9 @@ bart_star(
 
 \item{X}{\code{n x p} matrix of predictors}
 
-\item{X_test}{\code{n0 x p} matrix of predictors for test data}
+\item{X_test}{\code{n_test x p} matrix of predictors for test data}
 
-\item{y_test}{\code{n0 x 1} vector of the test data responses (used for
+\item{y_test}{\code{n_test x 1} vector of the test data responses (used for
 computing log-predictive scores)}
 
 \item{transformation}{transformation to use for the latent process; must be one of
@@ -93,7 +93,7 @@ a list with the following elements:
 (\code{NULL} if \code{X_test} is not given)
 \item \code{post.mu.test}: draws of the conditional mean of z_star at the test points \code{X_test}
 (\code{NULL} if \code{X_test} is not given)
-\item \code{post.log.pred.test}: draws of the log-predictive distribution for each of the \code{n0} test cases
+\item \code{post.log.pred.test}: draws of the log-predictive distribution for each of the \code{n_test} test cases
 (\code{NULL} if \code{X_test} is not given)
 \item \code{fitted.values}: the posterior mean of the conditional expectation of the counts \code{y}
 (\code{NULL} if \code{save_y_hat=FALSE})

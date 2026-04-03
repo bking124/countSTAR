@@ -118,6 +118,9 @@ distribution function (CDF), which is fully nonparametric ('np'), or the paramet
 alternatives based on Poisson ('pois') or Negative-Binomial ('neg-bin')
 distributions. For the parametric distributions, the parameters of the distribution
 are estimated using moments (means and variances) of \code{y}.
+
+For this generic function, the Bayesian nonparametric
+transformation(s) are not available.
 }
 \examples{
 # Simulate data with count-valued response y:

@@ -2,64 +2,82 @@
 % Please edit documentation in R/STAR_Bayesian.R
 \name{spline_star}
 \alias{spline_star}
-\title{Estimation for Bayesian STAR spline regression}
+\title{Posterior and predictive inference for Bayesian STAR splines}
 \usage{
 spline_star(
   y,
-  tau = NULL,
-  transformation = "np",
+  x = NULL,
+  x_test = NULL,
+  transformation = "bnp",
   y_max = Inf,
   psi = NULL,
-  nsave = 1000,
+  nbasis = NULL,
   use_MCMC = TRUE,
+  nsave = 1000,
   nburn = 1000,
   nskip = 0,
+  alpha = 1,
+  F0 = NULL,
   verbose = TRUE
 )
 }
 \arguments{
 \item{y}{\code{n x 1} vector of observed counts}
 
-\item{tau}{\code{n x 1} vector of observation points; if NULL, assume equally-spaced on [0,1]}
+\item{x}{\code{n x 1} vector of observation points; if NULL, assume equally-spaced on [0,1]}
+
+\item{x_test}{\code{n_test x 1} vector of testing points; default is \code{x}}
 
 \item{transformation}{transformation to use for the latent data; must be one of
 \itemize{
 \item "identity" (identity transformation)
 \item "log" (log transformation)
 \item "sqrt" (square root transformation)
-\item "bnp" (Bayesian nonparametric transformation using the Bayesian bootstrap)
 \item "np" (nonparametric transformation estimated from empirical CDF)
 \item "pois" (transformation for moment-matched marginal Poisson CDF)
 \item "neg-bin" (transformation for moment-matched marginal Negative Binomial CDF)
+\item "box-cox" (box-cox transformation with learned parameter)
+\item "bnp" (Bayesian nonparametric transformation)
 }}
 
 \item{y_max}{a fixed and known upper bound for all observations; default is \code{Inf}}
 
-\item{psi}{prior variance (1/smoothing parameter); if NULL, update in MCMC}
+\item{psi}{prior variance (1/smoothing parameter); if NULL, sample this parameter}
 
-\item{nsave}{number of MCMC iterations to save (or number of Monte Carlo simulations)}
+\item{nbasis}{number of spline basis functions; if NULL, use the default from \code{spikeSlabGAM::sm}}
 
 \item{use_MCMC}{logical; whether to run Gibbs sampler or Monte Carlo (default is TRUE)}
+
+\item{nsave}{number of MC(MC) iterations to save}
 
 \item{nburn}{number of MCMC iterations to discard}
 
 \item{nskip}{number of MCMC iterations to skip between saving iterations,
 i.e., save every (nskip + 1)th draw}
 
+\item{alpha}{prior precision for the Dirichlet Process prior ('bnp' transformation only); default is one}
+
+\item{F0}{function to evaluate the base measure CDF supported on \code{{0,...,y_max}} ('bnp' transformation only)}
+
 \item{verbose}{logical; if TRUE, print time remaining}
 }
 \value{
 a list with the following elements:
 \itemize{
-\item \code{post.pred}: \code{nsave x n} samples
-from the posterior predictive distribution at the observation points \code{tau}
+\item \code{coefficients}: the posterior mean of the spline coefficients
+\item \code{fitted.values} the posterior predictive mean at the test points \code{x_test}
+\item \code{post.beta}: \code{nsave x p} samples from the posterior distribution
+of the regression coefficients
+\item \code{post.pred}: \code{nsave x n_test} samples
+from the posterior predictive distribution at \code{x_test}
+\item \code{post.psi}: \code{nsave} draws from the prior variance (inverse smoothing) \code{psi}
 \item \code{marg_like}: the marginal likelihood (only if \code{use_MCMC=FALSE}; otherwise NULL)
 }
 }
 \description{
-Compute samples from the predictive distributions of a STAR spline
+Compute samples from the posterior and predictive distributions of a STAR spline
 regression model using either a Gibbs sampling approach or exact
-Monte Carlo sampling (default is Gibbs sampling which scales better for large n).
+Monte Carlo sampling. Cubic B-splines are used with a prior that penalizes roughness.
 }
 \details{
 STAR defines a count-valued probability model by
@@ -70,41 +88,42 @@ latent data model is a spline regression.
 
 There are several options for the transformation. First, the transformation
 can belong to the *Box-Cox* family, which includes the known transformations
-'identity', 'log', and 'sqrt'. Second, the transformation
-can be estimated (before model fitting) using the empirical distribution of the
-data \code{y}. Options in this case include the empirical cumulative
-distribution function (CDF), which is fully nonparametric ('np'), or the parametric
+'identity', 'log', and 'sqrt', as well as a version in which the Box-Cox parameter
+is inferred within the MCMC sampler ('box-cox').
+
+Second, the transformation can be estimated (before model fitting) using the
+the data \code{y}. Options in this case include the empirical cumulative
+distribution function (ECDF), which is fully nonparametric ('np'), or the parametric
 alternatives based on Poisson ('pois') or Negative-Binomial ('neg-bin')
 distributions. For the parametric distributions, the parameters of the distribution
-are estimated using moments (means and variances) of \code{y}. The distribution-based
-transformations approximately preserve the mean and variance of the count data \code{y}
-on the latent data scale, which lends interpretability to the model parameters.
-Lastly, the transformation can be modeled using the Bayesian bootstrap ('bnp'),
-which is a Bayesian nonparametric model and incorporates the uncertainty
-about the transformation into posterior and predictive inference.
-}
-\note{
-For the 'bnp' transformation
-there are numerical stability issues when \code{psi} is modeled as unknown.
-In this case, it is better to fix \code{psi} at some positive number.
+are estimated using moments (means and variances) of \code{y}.
+
+Lastly, the transformation can be modeled nonparametrically using
+Bayesian nonparametrics via Dirichlet processes ('bnp').
+The 'bnp' option is the default because it is highly flexible, accounts for
+uncertainty when the transformation is unknown, and is computationally efficient.
+
+The Monte Carlo sampler (\code{use_MCMC=FALSE}) produces direct, joint draws
+from the posterior predictive distribution. When \code{n} is
+moderate to large, MCMC sampling (\code{use_MCMC=TRUE}) is much faster and more convenient.
 }
 \examples{
 # Simulate some data:
 n = 100
-tau = seq(0,1, length.out = n)
-y = round_floor(exp(1 + rnorm(n)/4 + poly(tau, 4)\%*\%rnorm(n=4, sd = 4:1)))
+x = seq(0,1, length.out = n)
+y = round_floor(exp(1 + rnorm(n)/4 + poly(x, 4)\%*\%rnorm(n=4, sd = 4:1)))
 
 # Sample from the predictive distribution of a STAR spline model:
-fit = spline_star(y = y, tau = tau)
+fit = spline_star(y = y, x = x)
 
 # Compute 90\% prediction intervals:
 pi_y = t(apply(fit$post.pred, 2, quantile, c(0.05, .95)))
 
 # Plot the results: intervals, median, and smoothed mean
-plot(tau, y, ylim = range(pi_y, y))
-polygon(c(tau, rev(tau)),c(pi_y[,2], rev(pi_y[,1])),col='gray', border=NA)
-lines(tau, apply(fit$post.pred, 2, median), lwd=5, col ='black')
-lines(tau, smooth.spline(tau, apply(fit$post.pred, 2, mean))$y, lwd=5, col='blue')
-lines(tau, y, type='p')
+plot(x, y, ylim = range(pi_y, y))
+polygon(c(x, rev(x)),c(pi_y[,2], rev(pi_y[,1])),col='gray', border=NA)
+lines(x, apply(fit$post.pred, 2, median), lwd=5, col ='black')
+lines(x, smooth.spline(x, apply(fit$post.pred, 2, mean))$y, lwd=5, col='blue')
+lines(x, y, type='p')
 
 }

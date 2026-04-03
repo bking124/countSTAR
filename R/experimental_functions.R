@@ -408,7 +408,7 @@ Gauss_MCMC = function(y,
         skipcount = 0
       }
     }
-    if(verbose) computeTimeRemaining(nsi, timer0, nstot, nrep = 5000)
+    if(verbose) computeTimeRemaining(nsi, timer0, nstot)
   }
   if(verbose) print(paste('Total time: ', round((proc.time()[3] - timer0)), 'seconds'))
 
@@ -603,7 +603,7 @@ Gauss_sparse_means = function(y,
         skipcount = 0
       }
     }
-    if(verbose) computeTimeRemaining(nsi, timer0, nstot, nrep = 100)
+    if(verbose) computeTimeRemaining(nsi, timer0, nstot)
   }
   if(verbose) print(paste('Total time: ', round((proc.time()[3] - timer0)), 'seconds'))
 
@@ -926,7 +926,7 @@ STAR_sparse_means = function(y,
         skipcount = 0
       }
     }
-    if(verbose) computeTimeRemaining(nsi, timer0, nstot, nrep = 100)
+    if(verbose) computeTimeRemaining(nsi, timer0, nstot)
   }
   if(verbose) print(paste('Total time: ', round((proc.time()[3] - timer0)), 'seconds'))
 
@@ -1036,94 +1036,6 @@ g_wcdf = function(y, distribution = "np", weights = NULL) {
 
   # Return the smoothed (monotone) transformation:
   splinefun(t0, g0, method = 'monoH.FC')
-}
-
-#----------------------------------------------------------------------------
-#' Bayesian bootstrap-based transformation for sparse means
-#'
-#' Compute one posterior draw from the smoothed transformation
-#' implied by (separate) Bayesian bootstrap models for the CDFs
-#' of \code{y} and \code{X}.
-#' This function is for the special case of the sparse means model.
-#'
-#' @param y \code{n x 1} vector of observed counts
-#' @param psi prior variance for the slab component
-#' @param pi_inc prior inclusion  probability
-#' @param z_grid optional vector of grid points for evaluating the CDF
-#' of z (\code{Fz})
-#' @return A smooth monotone function which can be used for evaluations of the transformation
-#' at each posterior draw.
-#'
-#' @export
-g_bnp_sparse_means = function(y,
-                              psi = 0,
-                              pi_inc = 1,
-                              z_grid = NULL
-){
-
-  # Length:
-  n = length(y)
-
-  # Bayesian bootstrap for the CDF of y
-
-  # Dirichlet(1) weights:
-  weights_y = rgamma(n = n, shape = 1)
-  weights_y  = weights_y/sum(weights_y)
-
-  # CDF of y, as a function call:
-  Fy = function(t) sapply(t, function(ttemp)
-    n/(n+1)*sum(weights_y[y <= ttemp]))/sum(weights_y)
-
-  # For Fz_inv, there is a simple approximating case:
-  if(pi_inc == 1){
-    # fully sparse (as approximation)
-    Fz_inv = function(s) qnorm(s, sd = 1)
-  } else {
-    # CDF of z, as a function call:
-    # p(z) = (1 - pi_inc)*N(0, 1) +  pi_inc*N(0, psi)
-    Fz_fun = function(z){
-      (1 - pi_inc)*pnorm(z, mean = 0, sd = 1) +
-        pi_inc*pnorm(z, mean = 0, sd = sqrt(psi))
-    }
-
-    # Evaluate the CDF of z on a grid:
-    if(is.null(z_grid)){
-      z_grid = sort(unique(sapply(c(1, psi), function(xtemp){
-        qnorm(seq(0.01, 0.99, length.out = 1000),
-              mean = 0,
-              sd = sqrt(xtemp))
-      })))
-    }
-
-    # CDF on the grid:
-    Fz_eval = Fz_fun(z_grid)
-
-    # Remove duplicates:
-    ind_unique = which(!duplicated(Fz_eval))
-
-    # Inverse function:
-    Fz_inv = function(s) stats::spline(Fz_eval[ind_unique],
-                                       z_grid[ind_unique],
-                                       method = "hyman",
-                                       xout = s)$y
-    # https://stats.stackexchange.com/questions/390931/compute-quantile-function-from-a-mixture-of-normal-distribution/390936#390936
-
-    # Check the inverse:
-    # plot(z_grid, Fz_inv(Fz_eval)); abline(0,1)
-  }
-
-  # Apply the function g(), including some smoothing
-  # (the smoothing is necessary to avoid g_a_y = g_a_yp1 for *unobserved* y-values)
-  t0 = sort(unique(y)) # point for smoothing
-
-  # Initial transformation:
-  g0 = Fz_inv(Fy(t0-1))
-
-  # Make sure we have only finite values of g0 (infinite values occur for F_y = 0 or F_y = 1)
-  t0 = t0[which(is.finite(g0))]; g0 = g0[which(is.finite(g0))]
-
-  # Return the smoothed (monotone) transformation:
-  return(splinefun(t0, g0, method = 'monoH.FC'))
 }
 #----------------------------------------------------------------------------
 #' Inverse rounding function: usual rounding + bounds

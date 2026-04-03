@@ -18,6 +18,7 @@ posterior samples for possibly many variables
 }
 \examples{
 # ESS for iid simulations:
+library(coda)
 rand_iid = rnorm(n = 10^4)
 getEffSize(rand_iid)
 

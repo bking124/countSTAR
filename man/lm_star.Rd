@@ -68,8 +68,8 @@ an EM algorithm.
 }
 \details{
 Standard function calls including
-\code{\link{coefficients}}, \code{\link{fitted}}, and \code{\link{residuals}} apply. Fitted values are the expectation
-at the MLEs, and as such are not necessarily count-valued.
+\code{\link{coefficients}}, \code{\link{fitted}}, and \code{\link{residuals}} apply.
+Fitted values are the expectation at the MLEs, and as such are not necessarily count-valued.
 }
 \note{
 Infinite latent data values may occur when the transformed

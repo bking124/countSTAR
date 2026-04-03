@@ -12,3 +12,4 @@
 ^vignettes/countSTAR_cache$
 ^CRAN-SUBMISSION$
 ^cran-comments\.md$
+^revdep$

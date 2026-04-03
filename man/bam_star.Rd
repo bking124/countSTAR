@@ -117,6 +117,7 @@ X_lin = as.matrix(X[,-(1:3)])
 X_nonlin = as.matrix(X[,(1:3)])
 
 # STAR: nonparametric transformation
+library(spikeSlabGAM)
 fit = bam_star(y = y, X_lin = X_lin, X_nonlin = X_nonlin)
 
 # What is included:

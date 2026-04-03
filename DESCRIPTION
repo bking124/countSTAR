@@ -23,13 +23,13 @@ Description: For Bayesian and classical inference and prediction with count-valu
     Kowal and Canale (2020) <doi:10.1214/20-EJS1707>, 
     Kowal and Wu (2022) <doi:10.1111/biom.13617>, 
     King and Kowal (2023) <doi:10.1214/23-BA1394>, and 
-    Kowal and Wu (2023) <arXiv:2110.12316>.
+    Kowal and Wu (2023) <doi:10.48550/arXiv.2110.12316>.
 License: GPL (>=2)
 Encoding: UTF-8
 LinkingTo: Rcpp, RcppArmadillo
-Imports: stats, utils, coda, dbarts, FastGP, gbm, graphics, Matrix, spikeSlabGAM, splines2, randomForest, Rcpp, TruncatedNormal, truncdist, KFAS
-RoxygenNote: 7.2.3
-Suggests: knitr, rmarkdown, bayesplot, mgcv
+Imports: stats, utils, graphics, Rcpp
+RoxygenNote: 7.3.3
+Suggests: bayesplot, coda, dbarts, FastGP, gbm, KFAS, knitr, Matrix, mgcv, randomForest, rmarkdown, spikeSlabGAM, splines2, TruncatedNormal, truncdist
 VignetteBuilder: knitr
 URL: https://bking124.github.io/countSTAR/
      https://github.com/bking124/countSTAR

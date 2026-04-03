@@ -2,23 +2,23 @@
 % Please edit documentation in R/internal_functions.R
 \name{computeTimeRemaining}
 \alias{computeTimeRemaining}
-\title{Estimate the remaining time in the MCMC based on previous samples}
+\title{Estimate the remaining time in the algorithm}
 \usage{
-computeTimeRemaining(nsi, timer0, nsims, nrep = 1000)
+computeTimeRemaining(nsi, timer0, nsims, nprints = 1)
 }
 \arguments{
-\item{nsi}{Current iteration}
+\item{nsi}{current iteration}
 
-\item{timer0}{Initial timer value, returned from \code{proc.time()[3]}}
+\item{timer0}{initial timer value from \code{proc.time()[3]}}
 
-\item{nsims}{Total number of simulations}
+\item{nsims}{total number of simulations}
 
-\item{nrep}{Print the estimated time remaining every \code{nrep} iterations}
+\item{nprints}{total number of printed updates}
 }
 \value{
-Table of summary statistics using the function \code{summary}
+estimate of remaining time
 }
 \description{
-Estimate the remaining time in the MCMC based on previous samples
+Estimate the remaining time in the algorithm
 }
 \keyword{internal}

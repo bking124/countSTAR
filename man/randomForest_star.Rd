@@ -11,7 +11,7 @@ randomForest_star(
   transformation = "np",
   y_max = Inf,
   sd_init = 10,
-  tol = 10^-10,
+  tol = 10^-3,
   max_iters = 1000,
   ntree = 500,
   mtry = max(floor(ncol(X)/3), 1),
@@ -41,7 +41,7 @@ randomForest_star(
 \item{sd_init}{add random noise for EM algorithm initialization scaled by \code{sd_init}
 times the Gaussian MLE standard deviation; default is 10}
 
-\item{tol}{tolerance for stopping the EM algorithm; default is 10^-10;}
+\item{tol}{tolerance for stopping the EM algorithm;}
 
 \item{max_iters}{maximum number of EM iterations before stopping; default is 1000}
 
@@ -114,9 +114,9 @@ sim_dat = simulate_nb_friedman(n = 100, p = 5)
 y = sim_dat$y; X = sim_dat$X
 
 # EM algorithm for STAR (using the log-link)
+library(randomForest)
 fit_em = randomForest_star(y = y, X = X,
-                 transformation = 'log',
-                 max_iters = 100)
+                 transformation = 'log')
 
 # Fitted values (out-of-bag)
 y_hat = fitted(fit_em)

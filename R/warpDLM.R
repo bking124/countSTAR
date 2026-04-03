@@ -36,10 +36,13 @@
 #' \item \code{KFAS_mod}: the final KFAS model representing the latent DLM
 #' }
 #'
-#' @importFrom KFAS simulateSSM SSMtrend is.SSModel
+# #' @importFrom KFAS simulateSSM SSMtrend is.SSModel
 #' @export
 warpDLM <- function(y, type = c("level", "trend"), transformation = c("np", "identity", "log", "sqrt","pois", "neg-bin"),
                     y_max=Inf, R0=10, nsave = 5000, nburn = 5000, nskip = 1, n.ahead=1){
+
+  # Library required here:
+  if (!requireNamespace("KFAS", quietly = TRUE)) stop("Package \"KFAS\" must be installed to use this function.", call. = FALSE)
   #############################################################################
   #Model Checks and Configuration
 
@@ -52,7 +55,7 @@ warpDLM <- function(y, type = c("level", "trend"), transformation = c("np", "ide
   }
 
   #Checking for proper input
-  if(!is.SSModel(init_mod))
+  if(!KFAS::is.SSModel(init_mod))
     stop("initial model is not proper KFAS model")
   if (any(y < 0) || any(y != floor(y)))
     stop("y must be nonnegative counts")
@@ -98,7 +101,7 @@ warpDLM <- function(y, type = c("level", "trend"), transformation = c("np", "ide
   #first use of KFAS package
   fit <- init_mod
   fit["y"] <- z_star
-  theta <- drop(simulateSSM(fit, type="states", nsim=1))
+  theta <- drop(KFAS::simulateSSM(fit, type="states", nsim=1))
   p <- ncol(unlist(fit$Q))
 
   a_y = a_j(y, y_max)
@@ -191,10 +194,14 @@ warpDLM <- function(y, type = c("level", "trend"), transformation = c("np", "ide
 #' @return A KFAS model object (of class SSModel) updated with the newly
 #' sampled variance parameters
 #'
-#' @importFrom truncdist rtrunc
 #' @keywords internal
 update_struct <-
   function(fit, z_star, theta){
+
+    # Library required here:
+    if (!requireNamespace("truncdist", quietly = TRUE)) stop("Package \"truncdist\" must be installed to use this function.", call. = FALSE)
+    #----------------------------------------------------------------------------
+
     A <- 10^4
     n <- length(z_star)
     if(is.null(ncol(theta)))

@@ -10,6 +10,7 @@ spline_star_exact(
   transformation = "np",
   y_max = Inf,
   psi = 1000,
+  nbasis = NULL,
   nsave = 1000,
   compute_marg = TRUE
 )
@@ -33,6 +34,8 @@ spline_star_exact(
 \item{y_max}{a fixed and known upper bound for all observations; default is \code{Inf}}
 
 \item{psi}{prior variance (1/smoothing parameter)}
+
+\item{nbasis}{number of spline basis functions; if NULL, use the default from \code{spikeSlabGAM::sm}}
 
 \item{nsave}{number of Monte Carlo simulations}
 

@@ -10,7 +10,7 @@ blm_star_exact(
   X_test = X,
   transformation = "np",
   y_max = Inf,
-  psi = NULL,
+  psi = length(y),
   nsave = 1000,
   compute_marg = FALSE
 )
@@ -20,14 +20,13 @@ blm_star_exact(
 
 \item{X}{\code{n x p} matrix of predictors}
 
-\item{X_test}{\code{n0 x p} matrix of predictors for test data}
+\item{X_test}{\code{n_test x p} matrix of predictors for test data}
 
 \item{transformation}{transformation to use for the latent data; must be one of
 \itemize{
 \item "identity" (identity transformation)
 \item "log" (log transformation)
 \item "sqrt" (square root transformation)
-\item "bnp" (Bayesian nonparametric transformation using the Bayesian bootstrap)
 \item "np" (nonparametric transformation estimated from empirical CDF)
 \item "pois" (transformation for moment-matched marginal Poisson CDF)
 \item "neg-bin" (transformation for moment-matched marginal Negative Binomial CDF)
@@ -49,12 +48,10 @@ a list with the following elements:
 \item \code{post.beta}: \code{nsave x p} samples from the posterior distribution
 of the regression coefficients
 \item \code{post.pred}: draws from the posterior predictive distribution of \code{y}
-\item \code{post.pred.test}: \code{nsave x n0} samples
+\item \code{post.pred.test}: \code{nsave x n_test} samples
 from the posterior predictive distribution at test points \code{X_test}
 (if given, otherwise NULL)
 \item \code{sigma}: The estimated latent data standard deviation
-\item \code{post.g}: \code{nsave} posterior samples of the transformation
-evaluated at the unique \code{y} values (only applies for 'bnp' transformations)
 \item \code{marg.like}: the marginal likelihood (if requested; otherwise NULL)
 }
 }
@@ -71,28 +68,15 @@ latent data model is a linear regression.
 
 There are several options for the transformation. First, the transformation
 can belong to the *Box-Cox* family, which includes the known transformations
-'identity', 'log', and 'sqrt'. Second, the transformation
-can be estimated (before model fitting) using the empirical distribution of the
-data \code{y}. Options in this case include the empirical cumulative
-distribution function (CDF), which is fully nonparametric ('np'), or the parametric
-alternatives based on Poisson ('pois') or Negative-Binomial ('neg-bin')
-distributions. For the parametric distributions, the parameters of the distribution
-are estimated using moments (means and variances) of \code{y}. The distribution-based
-transformations approximately preserve the mean and variance of the count data \code{y}
-on the latent data scale, which lends interpretability to the model parameters.
-Lastly, the transformation can be modeled using the Bayesian bootstrap ('bnp'),
-which is a Bayesian nonparametric model and incorporates the uncertainty
-about the transformation into posterior and predictive inference.
+'identity', 'log', and 'sqrt' Second, the transformation can be estimated
+(before model fitting) using the the data \code{y}. Options in this case
+include the empirical cumulative distribution function (ECDF), which is
+fully nonparametric ('np'), or the parametric alternatives based on
+Poisson ('pois') or Negative-Binomial ('neg-bin') distributions. For the
+parametric distributions, the parameters of the distribution
+are estimated using moments (means and variances) of \code{y}.
 
-The Monte Carlo sampler produces direct, discrete, and joint draws
-from the posterior distribution and the posterior predictive distribution
-of the linear regression model with a g-prior.
-}
-\note{
-The 'bnp' transformation is
-slower than the other transformations because of the way
-the \code{TruncatedNormal} sampler must be updated as the lower and upper
-limits change (due to the sampling of \code{g}). Thus, computational
-improvements are likely available.
+The Monte Carlo sampler produces direct, joint draws
+from the posterior predictive distribution under a g-prior.
 }
 \keyword{internal}

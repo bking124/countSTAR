@@ -5,13 +5,12 @@
 #'
 #' @param y \code{n x 1} vector of observed counts
 #' @param X \code{n x p} matrix of predictors
-#' @param X_test \code{n0 x p} matrix of predictors for test data
+#' @param X_test \code{n_test x p} matrix of predictors for test data
 #' @param transformation transformation to use for the latent data; must be one of
 #' \itemize{
 #' \item "identity" (identity transformation)
 #' \item "log" (log transformation)
 #' \item "sqrt" (square root transformation)
-#' \item "bnp" (Bayesian nonparametric transformation using the Bayesian bootstrap)
 #' \item "np" (nonparametric transformation estimated from empirical CDF)
 #' \item "pois" (transformation for moment-matched marginal Poisson CDF)
 #' \item "neg-bin" (transformation for moment-matched marginal Negative Binomial CDF)
@@ -27,12 +26,10 @@
 #' \item \code{post.beta}: \code{nsave x p} samples from the posterior distribution
 #' of the regression coefficients
 #' \item \code{post.pred}: draws from the posterior predictive distribution of \code{y}
-#' \item \code{post.pred.test}: \code{nsave x n0} samples
+#' \item \code{post.pred.test}: \code{nsave x n_test} samples
 #' from the posterior predictive distribution at test points \code{X_test}
 #' (if given, otherwise NULL)
 #' \item \code{sigma}: The estimated latent data standard deviation
-#' \item \code{post.g}: \code{nsave} posterior samples of the transformation
-#' evaluated at the unique \code{y} values (only applies for 'bnp' transformations)
 #' \item \code{marg.like}: the marginal likelihood (if requested; otherwise NULL)
 #' }
 #'
@@ -44,38 +41,30 @@
 #'
 #' There are several options for the transformation. First, the transformation
 #' can belong to the *Box-Cox* family, which includes the known transformations
-#' 'identity', 'log', and 'sqrt'. Second, the transformation
-#' can be estimated (before model fitting) using the empirical distribution of the
-#' data \code{y}. Options in this case include the empirical cumulative
-#' distribution function (CDF), which is fully nonparametric ('np'), or the parametric
-#' alternatives based on Poisson ('pois') or Negative-Binomial ('neg-bin')
-#' distributions. For the parametric distributions, the parameters of the distribution
-#' are estimated using moments (means and variances) of \code{y}. The distribution-based
-#' transformations approximately preserve the mean and variance of the count data \code{y}
-#' on the latent data scale, which lends interpretability to the model parameters.
-#' Lastly, the transformation can be modeled using the Bayesian bootstrap ('bnp'),
-#' which is a Bayesian nonparametric model and incorporates the uncertainty
-#' about the transformation into posterior and predictive inference.
+#' 'identity', 'log', and 'sqrt' Second, the transformation can be estimated
+#' (before model fitting) using the the data \code{y}. Options in this case
+#' include the empirical cumulative distribution function (ECDF), which is
+#' fully nonparametric ('np'), or the parametric alternatives based on
+#' Poisson ('pois') or Negative-Binomial ('neg-bin') distributions. For the
+#' parametric distributions, the parameters of the distribution
+#' are estimated using moments (means and variances) of \code{y}.
 #'
-#' The Monte Carlo sampler produces direct, discrete, and joint draws
-#' from the posterior distribution and the posterior predictive distribution
-#' of the linear regression model with a g-prior.
+#' The Monte Carlo sampler produces direct, joint draws
+#' from the posterior predictive distribution under a g-prior.
 #'
-#' @note The 'bnp' transformation is
-#' slower than the other transformations because of the way
-#' the \code{TruncatedNormal} sampler must be updated as the lower and upper
-#' limits change (due to the sampling of \code{g}). Thus, computational
-#' improvements are likely available.
-#'
-#' @importFrom TruncatedNormal mvrandn pmvnorm
-#' @importFrom FastGP rcpp_rmvnorm
+# #' @importFrom TruncatedNormal mvrandn pmvnorm
+# #' @importFrom FastGP rcpp_rmvnorm
 #' @keywords internal
 blm_star_exact = function(y, X, X_test = X,
-                       transformation = 'np',
-                       y_max = Inf,
-                       psi = NULL,
-                       nsave = 1000,
-                       compute_marg = FALSE){
+                          transformation = 'np',
+                          y_max = Inf,
+                          psi = length(y),
+                          nsave = 1000,
+                          compute_marg = FALSE){
+
+  # Libraries required here:
+  if (!requireNamespace("FastGP", quietly = TRUE)) stop("Package \"FastGP\" must be installed to use this function.", call. = FALSE)
+  if (!requireNamespace("TruncatedNormal", quietly = TRUE)) stop("Package \"TruncatedNormal\" must be installed to use this function.", call. = FALSE)
   #----------------------------------------------------------------------------
   # Check: currently implemented for nonnegative integers
   if(any(y < 0) || any(y != floor(y)))
@@ -97,13 +86,8 @@ blm_star_exact = function(y, X, X_test = X,
 
   # Check: does the transformation make sense?
   transformation = tolower(transformation);
-  if(!is.element(transformation, c("identity", "log", "sqrt", "bnp", "np", "pois", "neg-bin")))
-    stop("The transformation must be one of 'identity', 'log', 'sqrt', 'bnp', 'np', 'pois', or 'neg-bin'")
-
-  if(is.null(psi)){
-    psi = n # default
-    message("G-prior prior variance psi not set; using default of psi=n")
-  }
+  if(!is.element(transformation, c("identity", "log", "sqrt", "np", "pois", "neg-bin")))
+    stop("The transformation must be one of 'identity', 'log', 'sqrt', 'np', 'pois', or 'neg-bin'")
   #----------------------------------------------------------------------------
   # Key matrix quantities:
   XtX = crossprod(X)
@@ -111,27 +95,30 @@ blm_star_exact = function(y, X, X_test = X,
   XtXinvXt = tcrossprod(XtXinv, X)
   H = X%*%XtXinvXt # hat matrix
   #----------------------------------------------------------------------------
-  # Define the transformation:
-  if(transformation == 'bnp'){
-    # Special treatment for BNP case
+  # Assign a family for the transformation: Box-Cox or CDF?
+  transform_family = ifelse(
+    test = is.element(transformation, c("identity", "log", "sqrt", "box-cox")),
+    yes = 'bc', no = 'cdf'
+  )
+  # Box-Cox family
+  if(transform_family == 'bc'){
+    # Lambda value for each Box-Cox argument:
+    if(transformation == 'identity') lambda = 1
+    if(transformation == 'log') lambda = 0
+    if(transformation == 'sqrt') lambda = 1/2
 
-    # Necessary quantity:
-    xt_Prior_x = sapply(1:n, function(i)
-      crossprod(X[i,], XtXinv)%*%X[i,])
+    # Transformation function:
+    g = function(t) g_bc(t,lambda = lambda)
 
-    # Grid of values for the Fz approximation:
-    z_grid = sort(unique(
-      sapply(range(psi*xt_Prior_x), function(xtemp){
-        qnorm(seq(0.01, 0.99, length.out = 100),
-              mean = 0, # assuming prior mean zero
-              sd = sqrt(1 + xtemp))
-      })
-    ))
+    # Inverse transformation function:
+    g_inv = function(s) g_inv_bc(s,lambda = lambda)
+  }
 
-    # Initialize the transformation:
-    g = g_bnp(y = y,
-              xt_Sigma_x = psi*xt_Prior_x,
-              z_grid = z_grid)
+  # CDF family
+  if(transform_family == 'cdf'){
+
+    # Transformation function:
+    g = g_cdf(y = y, distribution = transformation)
 
     # Define the grid for approximations using equally-spaced + quantile points:
     t_grid = sort(unique(round(c(
@@ -140,60 +127,12 @@ blm_star_exact = function(y, X, X_test = X,
 
     # Inverse transformation function:
     g_inv = g_inv_approx(g = g, t_grid = t_grid)
-
-    # Fix the scale:
-    sigma_epsilon = summary(lm(g(y) ~ X-1,
-                               subset = which(y!=min(y) & y != max(y))))$sigma
-    # sigma_epsilon = 1
-
-    # Remove marginal likelihood computations:
-    if(compute_marg){
-      warning('Marginal likelihood not currently implemented for BNP')
-      compute_marg = FALSE
-    }
-
-  } else {
-
-    # Assign a family for the transformation: Box-Cox or CDF?
-    transform_family = ifelse(
-      test = is.element(transformation, c("identity", "log", "sqrt", "box-cox")),
-      yes = 'bc', no = 'cdf'
-    )
-
-    # Box-Cox family
-    if(transform_family == 'bc'){
-      # Lambda value for each Box-Cox argument:
-      if(transformation == 'identity') lambda = 1
-      if(transformation == 'log') lambda = 0
-      if(transformation == 'sqrt') lambda = 1/2
-
-      # Transformation function:
-      g = function(t) g_bc(t,lambda = lambda)
-
-      # Inverse transformation function:
-      g_inv = function(s) g_inv_bc(s,lambda = lambda)
-    }
-
-    # CDF family
-    if(transform_family == 'cdf'){
-
-      # Transformation function:
-      g = g_cdf(y = y, distribution = transformation)
-
-      # Define the grid for approximations using equally-spaced + quantile points:
-      t_grid = sort(unique(round(c(
-        seq(0, min(2*max(y), y_max), length.out = 250),
-        quantile(unique(y[y < y_max] + 1), seq(0, 1, length.out = 250))), 8)))
-
-      # Inverse transformation function:
-      g_inv = g_inv_approx(g = g, t_grid = t_grid)
-    }
-
-    # for non-bnp case, fix scale at the MLE
-    sigma_epsilon = lm_star(y ~ X-1,
-                            transformation = transformation,
-                            y_max = y_max)$sigma.hat
   }
+
+  # Fix scale at the MLE
+  sigma_epsilon = lm_star(y ~ X-1,
+                          transformation = transformation,
+                          y_max = y_max)$sigma.hat
 
   # Lower and upper intervals:
   g_a_y = g(a_j(y, y_max = y_max));
@@ -218,103 +157,43 @@ blm_star_exact = function(y, X, X_test = X,
   print('Posterior sampling...')
 
   # Common term:
-  V1 = rcpp_rmvnorm(n = nsave,
-                    mu = rep(0, p),
-                    S = sigma_epsilon^2*psi/(1+psi)*XtXinv)
+  V1 = FastGP::rcpp_rmvnorm(n = nsave,
+                            mu = rep(0, p),
+                            S = sigma_epsilon^2*psi/(1+psi)*XtXinv)
 
-  # Bayesian bootstrap sampling:
-  if(transformation == 'bnp'){
-    # MC draws:
-    post.beta = array(NA, c(nsave,p))
-    post.z = post.pred = array(NA, c(nsave, n)) # storage
-    if(!is.null(X_test)) post.predtest = array(NA, c(nsave, nrow(X_test)))
-    post.log.like.point = array(NA, c(nsave, n)) # Pointwise log-likelihood
-    post.g = array(NA, c(nsave, length(unique(y))))
+  # Sample z in this interval:
+  post.z = t(TruncatedNormal::mvrandn(l = g_a_y,
+                                      u = g_a_yp1,
+                                      Sig = Sigma_z,
+                                      n = nsave))
 
-    for(s in 1:nsave){
+  # Posterior samples of the coefficients:
+  post.beta = V1 + t(tcrossprod(psi/(1+psi)*XtXinvXt, post.z))
 
-      # Sample the transformation:
-      g = g_bnp(y = y,
-                xt_Sigma_x = psi*xt_Prior_x,
-                z_grid = z_grid)
+  # Predictive samples of ztilde:
+  post.ztilde = tcrossprod(post.beta, X) + sigma_epsilon*rnorm(n = nsave*nrow(X))
 
-      # Update the lower and upper intervals:
-      g_a_y = g(a_j(y, y_max = y_max));
-      g_a_yp1 = g(a_j(y + 1, y_max = y_max))
+  # Predictive samples of ytilde:
+  post.pred = t(apply(post.ztilde, 1, function(z){
+    round_floor(g_inv(z), y_max)
+  }))
 
-      # Update the inverse transformation function:
-      g_inv = g_inv_approx(g = g, t_grid = t_grid)
-
-      # Sample z in this interval:
-      post.z[s,] = mvrandn(l = g_a_y,
-                           u = g_a_yp1,
-                           Sig = Sigma_z,
-                           n = 1)
-
-      # Posterior samples of the coefficients:
-      post.beta[s,] = V1[s,] + tcrossprod(psi/(1+psi)*XtXinvXt, t(post.z[s,]))
-
-      # Predictive samples of ztilde at design points
-      ztilde = tcrossprod(post.beta[s,], X) + sigma_epsilon*rnorm(n = nrow(X))
-
-      # Predictive samples of ytilde at design points:
-      post.pred[s,] = round_floor(g_inv(ztilde), y_max)
-
-      if(!is.null(X_test)){
-        # Predictive samples of ztilde at design points
-        ztilde = tcrossprod(post.beta[s,], X_test) + sigma_epsilon*rnorm(n = nrow(X_test))
-        # Predictive samples of ytilde at design points:
-        post.predtest[s,] = round_floor(g_inv(ztilde), y_max)
-      }
-
-      # Posterior samples of the transformation:
-      post.g[s,] = g(sort(unique(y)))
-
-      #Pointwise log-likelihood
-      post.log.like.point[s, ] = logLikePointRcpp(g_a_j = g_a_y,
-                                                  g_a_jp1 = g_a_yp1,
-                                                  mu = X%*%post.beta[s,],
-                                                  sigma = rep(sigma_epsilon, n))
-    }
-
-  } else {
-    # Sample z in this interval:
-    post.z = t(mvrandn(l = g_a_y,
-                       u = g_a_yp1,
-                       Sig = Sigma_z,
-                       n = nsave))
-
-    # Posterior samples of the coefficients:
-    post.beta = V1 + t(tcrossprod(psi/(1+psi)*XtXinvXt, post.z))
-
+  if(!is.null(X_test)){
     # Predictive samples of ztilde:
-    post.ztilde = tcrossprod(post.beta, X) + sigma_epsilon*rnorm(n = nsave*nrow(X))
+    post.ztilde = tcrossprod(post.beta, X_test) + sigma_epsilon*rnorm(n = nsave*nrow(X_test))
 
     # Predictive samples of ytilde:
-    post.pred = t(apply(post.ztilde, 1, function(z){
+    post.predtest = t(apply(post.ztilde, 1, function(z){
       round_floor(g_inv(z), y_max)
     }))
-
-    if(!is.null(X_test)){
-      # Predictive samples of ztilde:
-      post.ztilde = tcrossprod(post.beta, X_test) + sigma_epsilon*rnorm(n = nsave*nrow(X_test))
-
-      # Predictive samples of ytilde:
-      post.predtest = t(apply(post.ztilde, 1, function(z){
-        round_floor(g_inv(z), y_max)
-      }))
-    }
-
-    # Not needed: transformation is fixed
-    post.g = NULL
-
-    #Pointwise log-likelihood
-    post.log.like.point = apply(post.beta, 1, function(beta){logLikePointRcpp(g_a_j = g_a_y,
-                                                g_a_jp1 = g_a_yp1,
-                                                mu = as.vector(X%*%beta),
-                                                sigma = rep(sigma_epsilon, n))})
-    post.log.like.point = t(post.log.like.point)
   }
+
+  #Pointwise log-likelihood
+  post.log.like.point = apply(post.beta, 1, function(beta){logLikePointRcpp(g_a_j = g_a_y,
+                                                                            g_a_jp1 = g_a_yp1,
+                                                                            mu = as.vector(X%*%beta),
+                                                                            sigma = rep(sigma_epsilon, n))})
+  post.log.like.point = t(post.log.like.point)
 
   if(is.null(X_test)){
     post.predtest = NULL
@@ -332,7 +211,7 @@ blm_star_exact = function(y, X, X_test = X,
   # ntilde = ncol(X_test)
   # XtildeXtXinv = X_test%*%XtXinv
   # Htilde = tcrossprod(XtildeXtXinv, X_test)
-  # V1tilde = rcpp_rmvnorm(n = nsave,
+  # V1tilde = FastGP::rcpp_rmvnorm(n = nsave,
   #                        mu = rep(0, ntilde),
   #                        S = sigma_epsilon^2*(psi/(1+psi)*Htilde + diag(ntilde)))
   # post.ztilde = V1tilde + t(tcrossprod(psi/(1+psi)*tcrossprod(XtildeXtXinv, X), post.z))
@@ -348,21 +227,436 @@ blm_star_exact = function(y, X, X_test = X,
     post.log.like.point = post.log.like.point,
     WAIC = WAIC, p_waic = p_waic,
     sigma = sigma_epsilon,
-    post.g = post.g,
     marg.like = marg_like))
+}
+#' Monte Carlo sampler for STAR linear regression with BNP transformation
+#'
+#' Compute direct Monte Carlo samples from the posterior and predictive
+#' distributions of a STAR linear regression model with a g-prior
+#' and Bayesian nonparametric (BNP) transformation.
+#'
+#' @param y \code{n x 1} vector of observed counts
+#' @param X \code{n x p} matrix of predictors (including an intercept)
+#' @param X_test \code{n_test x p} matrix of predictors for test data
+#' (including an intercept); default is the observed covariates \code{X}
+#' @param y_max a fixed and known upper bound for all observations; default is \code{Inf}
+#' @param psi prior variance (g-prior); default is \code{n}
+#' @param alpha prior precision for the Dirichlet Process prior; default is one
+#' @param P0 function to evaluate the base measure PMF supported on \code{{0,...,y_max}};
+#' see below for default values when unspecified (\code{NULL})
+#' @param pilot_run logical; if \code{TRUE}, use a short pilot run to approximate
+#' the marginal CDF of the latent \code{z}; otherwise, use a Laplace approximation
+#' @param nsave number of Monte Carlo iterations to save
+#' @return a list with the following elements:
+#' \itemize{
+#' \item \code{coefficients}: the posterior mean of the regression coefficients
+#' \item \code{post.beta}: \code{nsave x p} samples from the posterior distribution
+#' of the regression coefficients
+#' \item \code{post.pred}: \code{nsave x n_test} samples
+#' from the posterior predictive distribution at test points \code{X_test}
+#' \item \code{post.g}: \code{nsave} posterior samples of the transformation
+#' evaluated at \code{1:max(y)}
+#' \item \code{post.log.like.point}: draws of the log-likelihood for each of the \code{n} observations
+#' \item \code{WAIC}: Widely-Applicable/Watanabe-Akaike Information Criterion
+#' \item \code{p_waic}: Effective number of parameters based on WAIC
+#' }
+#'
+#' @details This function provides fully Bayesian inference for a
+#' transformed linear model with discrete data. The sampling algorithm draws the
+#' transformation \code{g} together with the regression coefficients \code{beta}
+#' from their *joint* posterior distribution using Monte Carlo (not MCMC) sampling.
+#' When \code{n} is moderate to larger, \link{blm_star_gibbs_bnp} is recommended.
+#'
+#' The BNP model for the transformation \code{g} is derived from a Dirichlet Process (DP)
+#' prior on the marginal CDF of \code{y}. The user can specify the prior precision
+#' \code{alpha} and the base measure, e.g., \code{P0 = function(t) dpois(t, lambda = 10)}.
+#' Otherwise, the default approach views the base measure as a means to ensure
+#' correct support and avoid boundary issues, both of which are concerns with the
+#' Bayesian bootstrap (\code{alpha = 0}). Thus, the default is a small prior
+#' precision \code{alpha = 1} and base measures that guarantee the right support.
+#' For \code{y_max < Inf}, we simply use \code{Uniform{0,...,y_max}}. Otherwise,
+#' we use \code{Geom(pi_geom)}, where \code{pi_geom} is elicited by fixing
+#' the probability of exceeding the maximum observed value, \code{P(y > max(y))},
+#' which we set at 0.10. Recall that the DP posterior for the marginal CDF
+#' of \code{y} combines the base measure with the empirical measure: in expectation,
+#' the base measure has weight \code{alpha/(n + alpha) = 1/(n+1)} while the empirical
+#' part has weight \code{n/(n + alpha) = n/(n+1)}. Thus, the base measure's contribution is small,
+#' and matters most for data values that may exceed \code{max(y)}.
+#'
+#' @note The location (intercept) and scale (\code{sigma_epsilon}) are
+#' not identified. These quantities are used for a location-scale
+#' adjustment (or parameter expansion) that substantially improves the initial
+#' approximation of the marginal CDF of \code{z}, but are otherwise
+#' not interpretable.
+#'
+# #' @importFrom TruncatedNormal mvrandn
+#' @keywords internal
+blm_star_exact_bnp = function(y, X, X_test = X,
+                              y_max = Inf,
+                              psi = length(y),
+                              alpha = 1,
+                              P0 = NULL,
+                              pilot_run = FALSE,
+                              nsave = 1000,
+                              verbose = TRUE){
+
+  # Library required here:
+  if (!requireNamespace("TruncatedNormal", quietly = TRUE)) stop("Package \"TruncatedNormal\" must be installed to use this function.", call. = FALSE)
+  #----------------------------------------------------------------------------
+  # To report the full computing time:
+  if(verbose) timer00 = proc.time()[3]
+
+  # Initial checks:
+  if(any(y < 0) || any(y != floor(y))) stop('y must be nonnegative counts')
+  if(any(y > y_max)) stop('y must not exceed y_max')
+  if(!is.matrix(X)) stop("X must be a matrix (rows = observations, columns = variables)")
+  if(!is.matrix(X_test)) stop("X_test must be a matrix (rows = observations, columns = variables)")
+  if(ncol(X) != ncol(X_test)) stop('X_test and X must have the same number of columns (variables)')
+  if(nrow(X) != length(y)) stop('the length of y must equal nrow(X)')
+  if(any(X[,1] != 1)) stop('the first column of X must be an intercept (X[,1] = 1)')
+  if(any(X_test[,1] != 1)) stop('the first column of X_test must be an intercept (X_test[,1] = 1)')
+
+  # Data dimensions:
+  n = length(y) # number of observations
+  p = ncol(X) # number of variables
+  n_test = nrow(X_test) # number of testing data points
+
+  # And some checks on columns:
+  if(p >= n) stop('The g-prior requires p < n')
+  #----------------------------------------------------------------------------
+  # Hyperparameters and initializations
+
+  # Gamma(a_sigma, b_sigma) prior on error precision
+  a_sigma = b_sigma = 0.001
+
+  # Key matrix quantities (one-time cost):
+  chXtX_psi = sqrt((1+psi)/(psi))*chol(crossprod(X)) # Note: chol2inv(chXtX_psi) = psi/(1+psi)*solve(XtX)
+  #XtXinv = chol2inv(chol(crossprod(X))); XtXinvXt = tcrossprod(XtXinv, X); H = X%*%XtXinvXt # hat matrix
+  H_psi = (1+psi)*X%*%tcrossprod(chol2inv(chXtX_psi), X)  # = psi*H, where H is the hat matrix
+
+  # This is the unscaled covariance (i.e., no sigma_epsilon) for OLS regression
+  Sigma_hat_unscaled = chol2inv(chXtX_psi) # psi/(1+psi)*solve(crossprod(X))
+
+  # To set a grid for Fz, determine based on the *prior* for beta,
+  # with empirical averaging over x...
+  #   Roughly, the range of prior covariance, sandwiched by X[i,]
+  z_lim = range(
+    (1+psi)*sapply(1:n, function(i)
+      crossprod(X[i,], Sigma_hat_unscaled)%*%X[i,])
+  )
+  #   Then set the grid:
+  z_grid = sort(unique(
+    sapply(z_lim, function(xtemp){
+      qnorm(seq(0.01, 0.99, length.out = 100),
+            mean = 0, sd = sqrt(1 + xtemp))
+    })
+  ))
+  #----------------------------------------------------------------------------
+  # Recurring terms for the CDF of y (and thus the transformation g)
+
+  # Grid of integers for
+  #   evaluating g(...)
+  #   computing g_inv(...)
+  if(y_max < Inf){
+    y_grid = 0:y_max
+  } else {
+    y_grid = 0:max(y) # we'll expand this for prediction, but only as needed
+  }
+  n_grid = length(y_grid) # number of grid points
+
+  # DP(alpha, P0) prior on the marginal CDF of y
+  if(is.null(P0)){ # Default base measure, if none supplied...
+
+    if(y_max < Inf){
+      # Uniform{0,...,y_max}
+      P0 = function(t) {
+        ifelse(t == floor(t) & t >= 0 & t <= y_max,
+               1/(y_max + 1),
+               0)
+      }
+
+    } else {
+      # Geom(pi_geom), where pi_geom is set s.t. P(y > max(y)) = p_exceed_max
+      p_exceed_max = 0.1 # 10% chance of exceeding the maximum observed value
+      pi_geom = 1 - p_exceed_max^(1/(max(y) + 1))
+      P0 = function(t) dgeom(t, pi_geom)
+
+      # Alternative: negative-binomial w/ empirical estimates
+      # y_bar = mean(y); s_hat = sd(y)
+      # if(y_bar >= s_hat^2) s_hat = sqrt(abs(y_bar)) # forces size = Inf (i.e., Poisson)
+      # P0 = function(t) dnbinom(t, mu = y_bar, size = y_bar^2/(s_hat^2 - y_bar))
+
+    }
+  }
+
+  # Base probabilities, evaluated on the grid:
+  P0_eval = P0(y_grid)
+
+  # count observations per grid point:
+  idx = match(y, y_grid)
+  nj = tabulate(idx[!is.na(idx)], nbins = n_grid)
+
+  # DP parameters:
+  dp_params = alpha*P0_eval + nj
+
+  # If infinite support, include tail probabilities:
+  if(is.infinite(y_max)){
+
+    # Tail probability for base measure:
+    P0tail = 1 - sum(P0_eval)
+
+    # Augment:
+    dp_params = c(dp_params, alpha*P0tail) # no obs in the tail (by design)
+
+  }
+  #----------------------------------------------------------------------------
+  # Define/estimate Fz() and Fz_inv():
+  if(pilot_run){
+
+    # Pilot run: estimate the posterior of beta (w/ fixed transformation)
+    pilot.fit = blm_star(y, X, transformation = 'np', y_max = y_max,
+                         prior = "gprior", use_MCMC = TRUE,
+                         nsave = 500, nburn = 500, verbose = FALSE)
+
+    # Initialize coefficients:
+    beta = colMeans(pilot.fit$post.beta)
+
+    # Now compute Fz:
+    #   Integrate over post.beta
+    #   Average over X[i,] for i=1,...,n
+    post.Xbeta = tcrossprod(X, pilot.fit$post.beta); rm(pilot.fit)
+    zrep = rep(z_grid, times = ncol(post.Xbeta))
+    Fz_eval = rowMeans(
+      sapply(1:n, function(i){
+        rowMeans(matrix(pnorm(zrep,
+                              mean = rep(post.Xbeta[i,], each = length(z_grid)),
+                              sd = 1), nrow = length(z_grid)))
+      })
+    )
+    rm(post.Xbeta) # clean up
+
+  } else {
+    # Laplace approximation: [beta | data] ~ N(...)
+
+    # Recurring terms:
+    xt_Sigma_hat_unscaled_x = sapply(1:n, function(i)
+      crossprod(X[i,], Sigma_hat_unscaled)%*%X[i,])
+
+    # Initial latent data:
+    z = qnorm(n/(n+1)*ecdf(y)(y))
+
+    # Initial coefficients:
+    beta = Sigma_hat_unscaled%*%crossprod(X, z) # point estimate
+
+    # Moments of Z|X:
+    mu_z = X%*%beta
+    sigma_z = sqrt(1 + xt_Sigma_hat_unscaled_x)
+
+    # CDF of Z, evaluated on the grid:
+    Fz_eval = rowMeans(sapply(1:n, function(i){
+      pnorm(z_grid,
+            mean = mu_z[i],
+            sd = sigma_z[i])
+    }))
+  }
+
+  # Quick clean-up: remove potential duplicates
+  z_unique = which(!duplicated(Fz_eval));
+  Fz_eval = Fz_eval[z_unique]; z_grid = z_grid[z_unique]
+
+  # CDF of Z, as a function
+  #   Note: no guarantee that Fz(...) is in [0,1] for all inputs!
+  Fz = stats::splinefun(z_grid, Fz_eval, method = 'monoH.FC')
+
+  # Inverse CDF of Z:
+  Fz_inv = function(s) stats::spline(Fz_eval, z_grid, method = "hyman", xout = s)$y
+
+  # Storage for the lower and upper intervals
+  #   These will be updated immediately in the sampler
+  g_a_y = rep(-Inf, n) # -Inf occurs for y=0
+  g_a_yp1 = rep(Inf, n) # Inf occurs for y_max + 1
+
+  # Initial SD:
+  sigma_epsilon = 1
+  #----------------------------------------------------------------------------
+  # Posterior simulations:
+
+  # Covariance matrix of z (ignoring sigma_epsilon)
+  Sigma_z = diag(n) + H_psi #psi*H
+
+  # Store MC output:
+  post.beta = array(NA, c(nsave, p))
+  post.pred = array(NA, c(nsave, n_test))
+  post.g = array(NA, c(nsave, length(1:max(y))))
+  post.log.like.point = array(NA, c(nsave, n)) # Pointwise log-likelihood
+
+  if(verbose) timer0 = proc.time()[3] # for estimating the time remaining
+  for(s in 1:nsave){
+    #----------------------------------------------------------------------------
+    # Block 0: sample the transformation
+    #   g(0) = -Inf
+    #   g(j) = F_z^{-1}( F_y(j-1) ), j = 1,...,y_max
+    #   g(y_max + 1) = Inf
+
+    # DP posterior draw for y:
+    w_y = rdir(dp_params) # probability weights on each grid point
+    if(is.infinite(y_max)) w_tail = w_y[n_grid + 1] # save the tail, if needed
+
+    # CDF of y, evaluated on 0:y_max (y_max < Inf) or 0:max(y)
+    Fy_eval = cumsum(w_y[1:n_grid])
+    Fy_eval = pmin(1, pmax(0, Fy_eval)) # make sure to restrict to [0,1]
+
+    # g(a_y) at observed y's:
+    y_eval = y[y!=0] # ignore y=0 (g(0) = -Inf)
+    g_a_y[y!=0] = Fz_inv(Fy_eval[match(y_eval - 1, y_grid)])
+
+    # g(a_{y+1}) observed (y+1)'s:
+    y_eval = (y+1)[y!=y_max] # ignore y=y_max (g(y_max + 1) = Inf)
+    g_a_yp1[y!=y_max] = Fz_inv(Fy_eval[match(y_eval - 1, y_grid)])
+    #----------------------------------------------------------------------------
+    # Block 1: sample z_star *unconditional* on theta
+    z_star = TruncatedNormal::mvrandn(l = g_a_y,
+                                      u = g_a_yp1,
+                                      Sig = sigma_epsilon^2*Sigma_z,
+                                      n = 1)
+
+    # # Option in development: faster, but less accurate
+    # z_star = nntmvn::rtmvn(cens_lb = g_a_y,
+    #                        cens_ub = g_a_yp1,
+    #                        covmat = sigma_epsilon^2*Sigma_z)
+
+    # Recurring terms for Blocks 2-3:
+    Xtz = crossprod(X, z_star)
+    fsolve_beta = forwardsolve(t(chXtX_psi), Xtz)
+    #----------------------------------------------------------------------------
+    # Block 2: sample the scale adjustment (SD)
+    SSR_psi = sum(z_star^2) - crossprod(Xtz, backsolve(chXtX_psi, fsolve_beta)) # SSR_psi = sum(z_star^2) - psi/(psi+1)*crossprod(Xtz, XtXinv%*%Xtz)
+    sigma_epsilon = 1/sqrt(rgamma(n = 1,
+                                  shape = a_sigma + n/2,
+                                  rate = b_sigma + SSR_psi/2))
+    #----------------------------------------------------------------------------
+    # Block 3: sample the regression coefficients
+    beta = backsolve(chXtX_psi/sigma_epsilon,
+                     fsolve_beta/sigma_epsilon + rnorm(p))# c(0, rnorm(p-1))) #
+    #----------------------------------------------------------------------------
+    # Sample from the posterior predictive distribution at X_test:
+    #   First, predictions in the latent space:
+    ztilde = X_test%*%beta + sigma_epsilon*rnorm(n = n_test)
+
+    #   Then apply g_inv() for the observable space:
+    ytilde = g_inv(Fz(ztilde), Fy_eval, y_grid)
+
+    #   Finally, check for NAs...just means that Fz(ztilde) > max(Fy_eval)
+    #   (which is not a problem!)
+    if(any(is.na(ytilde))){
+
+      if(y_max < Inf){
+
+        # The inverse is simply the upper bound:
+        ytilde[is.na(ytilde)] = y_max
+
+      } else {
+
+        # When y_max = Inf, the grid stops at y_grid[n_grid] = max(y);
+        # NAs imply that we need a grid with larger values, so we just
+        # shift up the grid in batches (for simple/fast computing)
+        n_expand = 50 # batch size
+        counter = 1 # track the loop and exit if it gets too long
+        while(any(is.na(ytilde))){
+
+          # Evaluate the sampled CDF of y on an expanded grid using DP recursions
+
+          # Create a grid of length n_expand, starting at max(y)+1 and shifting up as needed:
+          y_grid_expand = (y_grid[n_grid] + 1 + (counter-1)*n_expand):(y_grid[n_grid] + counter*n_expand)
+
+          # Evaluate the base probabilities and tail
+          P0_expand = P0(y_grid_expand)
+          P0tail =  1 - sum(P0(0:y_grid_expand[n_expand])) #P0tail - sum(P0_expand) # update the tail probability
+
+          # Dirichlet sampling within tail:
+          w_tail_prev = w_tail
+          v = rdir(c(alpha*P0_expand, alpha*P0tail))
+          w_expand = w_tail_prev*v[1:n_expand]
+          w_tail = w_tail_prev*v[(n_expand + 1)]
+          Fy_expand = (1 - w_tail_prev) + cumsum(w_expand)
+          Fy_expand = pmin(1, pmax(0, Fy_expand)) # make sure to restrict to [0,1]
+
+          # Probabilities too small, so exit and take a large value:
+          if(any(is.nan(Fy_expand))){
+            ytilde[is.na(ytilde)] = max(y_grid_expand)
+            warning('Some predicted y-values growing too large! Capping to ensure algorithm completion...')
+            break
+          }
+
+          # Compute the inverse: if it stays NA, we need to shift up the grid again
+          ytilde[is.na(ytilde)] = g_inv(Fz(ztilde[is.na(ytilde)]), Fy_expand, y_grid_expand)
+          counter = counter + 1
+
+          # Eventually, stop trying and just take a large value:
+          if(counter == 1000){
+            ytilde[is.na(ytilde)] = max(y_grid_expand)
+            warning('Some predicted y-values growing too large! Capping to ensure algorithm completion...')
+            break
+          }
+        }
+      }
+    }
+    #----------------------------------------------------------------------------
+    # Store the posterior draws:
+    post.beta[s,] = beta/sigma_epsilon # coefficients; undo scaling (not identified)
+    post.pred[s,] = ytilde # predictives
+
+    # Transformation evaluated at 1:max(y)
+    g_eval = Fz_inv(Fy_eval[match(1:max(y) - 1, y_grid)])
+    post.g[s, ] = (g_eval - beta[1])/sigma_epsilon # undo location/scale (not identified)
+
+    # Pointwise Log-likelihood:
+    post.log.like.point[s, ] = logLikePointRcpp(g_a_j = g_a_y,
+                                                g_a_jp1 = g_a_yp1,
+                                                mu = X%*%beta,
+                                                sigma = rep(sigma_epsilon, n))
+
+    if(verbose) computeTimeRemaining(s, timer0, nsave, nprints = 3)
+  }
+
+  # Compute WAIC:
+  lppd = sum(log(colMeans(exp(post.log.like.point))))
+  p_waic = sum(apply(post.log.like.point, 2, function(x) sd(x)^2))
+  WAIC = -2*(lppd - p_waic)
+
+  # Summarize computing time:
+  if(verbose){
+    tfinal = proc.time()[3] - timer00
+    if(tfinal > 60){
+      print(paste('Total time:', round(tfinal/60,1), 'minutes'))
+    } else print(paste('Total time:', round(tfinal), 'seconds'))
+  }
+
+  return(list(
+    coefficients = colMeans(post.beta),
+    post.beta = post.beta,
+    post.pred = post.pred,
+    post.g = post.g,
+    post.log.like.point = post.log.like.point,
+    WAIC = WAIC, p_waic = p_waic))
 }
 #' Gibbs sampler for STAR linear regression with BNP transformation
 #'
 #' Compute MCMC samples from the posterior and predictive
 #' distributions of a STAR linear regression model with a g-prior
-#' and BNP transformation.
+#' and Bayesian nonparametric (BNP) transformation.
 #'
 #' @param y \code{n x 1} vector of observed counts
-#' @param X \code{n x p} matrix of predictors
-#' @param X_test \code{n0 x p} matrix of predictors for test data;
-#' default is the observed covariates \code{X}
+#' @param X \code{n x p} matrix of predictors (including an intercept)
+#' @param X_test \code{n_test x p} matrix of predictors for test data
+#' (including an intercept); default is the observed covariates \code{X}
 #' @param y_max a fixed and known upper bound for all observations; default is \code{Inf}
-#' @param psi prior variance (g-prior)
+#' @param psi prior variance (g-prior); default is \code{n}
+#' @param alpha prior precision for the Dirichlet Process prior; default is one
+#' @param P0 function to evaluate the base measure PMF supported on \code{{0,...,y_max}};
+#' see below for default values when unspecified (\code{NULL})
+#' @param pilot_run logical; if \code{TRUE}, use a short pilot run to approximate
+#' the marginal CDF of the latent \code{z}; otherwise, use a Laplace approximation
 #' @param nsave number of MCMC iterations to save
 #' @param nburn number of MCMC iterations to discard
 #' @param nskip number of MCMC iterations to skip between saving iterations,
@@ -372,114 +666,271 @@ blm_star_exact = function(y, X, X_test = X,
 #' \item \code{coefficients}: the posterior mean of the regression coefficients
 #' \item \code{post.beta}: \code{nsave x p} samples from the posterior distribution
 #' of the regression coefficients
-#' \item \code{post.pred}: \code{nsave x n0} samples
+#' \item \code{post.pred}: \code{nsave x n_test} samples
 #' from the posterior predictive distribution at test points \code{X_test}
 #' \item \code{post.g}: \code{nsave} posterior samples of the transformation
-#' evaluated at the unique \code{y} values (only applies for 'bnp' transformations)
+#' evaluated at \code{1:max(y)}
+#' \item \code{post.log.like.point}: draws of the log-likelihood for each of the \code{n} observations
+#' \item \code{WAIC}: Widely-Applicable/Watanabe-Akaike Information Criterion
+#' \item \code{p_waic}: Effective number of parameters based on WAIC
 #' }
 #'
+#' @details This function provides fully Bayesian inference for a
+#' transformed linear model with discrete data. The sampling algorithm draws the
+#' transformation \code{g} directly from its *marginal* posterior distribution
+#' and then uses a Gibbs sampler for the latent data \code{z} and the
+#' regression coefficients \code{beta}. Compared to the direct Monte Carlo
+#' version in \link{blm_star_exact}, this MCMC algorithm uses a blocking structure
+#' that balances MCMC efficiency (the marginal sampler for \code{g}) with
+#' computational scalability (the Gibbs sampler for \code{z} and \code{beta}).
+#'
+#' The BNP model for the transformation \code{g} is derived from a Dirichlet Process (DP)
+#' prior on the marginal CDF of \code{y}. The user can specify the prior precision
+#' \code{alpha} and the base measure, e.g., \code{P0 = function(t) dpois(t, lambda = 10)}.
+#' Otherwise, the default approach views the base measure as a means to ensure
+#' correct support and avoid boundary issues, both of which are concerns with the
+#' Bayesian bootstrap (\code{alpha = 0}). Thus, the default is a small prior
+#' precision \code{alpha = 1} and base measures that guarantee the right support.
+#' For \code{y_max < Inf}, we simply use \code{Uniform{0,...,y_max}}. Otherwise,
+#' we use \code{Geom(pi_geom)}, where \code{pi_geom} is elicited by fixing
+#' the probability of exceeding the maximum observed value, \code{P(y > max(y))},
+#' which we set at 0.10. Recall that the DP posterior for the marginal CDF
+#' of \code{y} combines the base measure with the empirical measure: in expectation,
+#' the base measure has weight \code{alpha/(n + alpha) = 1/(n+1)} while the empirical
+#' part has weight \code{n/(n + alpha) = n/(n+1)}. Thus, the base measure's contribution is small,
+#' and matters most for data values that may exceed \code{max(y)}.
+#'
+#' @note The location (intercept) and scale (\code{sigma_epsilon}) are
+#' not identified. These quantities are used for a location-scale
+#' adjustment (or parameter expansion) that substantially improves the initial
+#' approximation of the marginal CDF of \code{z}, but are otherwise
+#' not interpretable.
+#'
 #' @keywords internal
-blm_star_bnpgibbs = function(y, X, X_test = X,
-                             y_max = Inf,
-                             psi = NULL,
-                             nsave = 1000,
-                             nburn = 1000,
-                             nskip = 0,
-                             verbose = TRUE){
+blm_star_gibbs_bnp = function(y, X, X_test = X,
+                              y_max = Inf,
+                              psi = length(y),
+                              alpha = 1,
+                              P0 = NULL,
+                              pilot_run = FALSE,
+                              nsave = 1000,
+                              nburn = 1000,
+                              nskip = 0,
+                              verbose = TRUE){
   #----------------------------------------------------------------------------
-  # Check: currently implemented for nonnegative integers
-  if(any(y < 0) || any(y != floor(y)))
-    stop('y must be nonnegative counts')
+  # To report the full computing time:
+  if(verbose) timer00 = proc.time()[3]
 
-  # Check: y_max must be a true upper bound
-  if(any(y > y_max))
-    stop('y must not exceed y_max')
+  # Initial checks:
+  if(any(y < 0) || any(y != floor(y))) stop('y must be nonnegative counts')
+  if(any(y > y_max)) stop('y must not exceed y_max')
+  if(!is.matrix(X)) stop("X must be a matrix (rows = observations, columns = variables)")
+  if(!is.matrix(X_test)) stop("X_test must be a matrix (rows = observations, columns = variables)")
+  if(ncol(X) != ncol(X_test)) stop('X_test and X must have the same number of columns (variables)')
+  if(nrow(X) != length(y)) stop('the length of y must equal nrow(X)')
+  if(any(X[,1] != 1)) stop('the first column of X must be an intercept (X[,1] = 1)')
+  if(any(X_test[,1] != 1)) stop('the first column of X_test must be an intercept (X_test[,1] = 1)')
 
   # Data dimensions:
-  n = length(y); p = ncol(X)
-
-  # Testing data points:
-  if(!is.matrix(X_test)) X_test = matrix(X_test, nrow  = 1)
+  n = length(y) # number of observations
+  p = ncol(X) # number of variables
+  n_test = nrow(X_test) # number of testing data points
 
   # And some checks on columns:
   if(p >= n) stop('The g-prior requires p < n')
-  if(p != ncol(X_test)) stop('X_test and X must have the same number of columns')
-
-  if(is.null(psi)){
-    psi = n # default
-    message("G-prior prior variance psi not set; using default of psi=n")
-  }
   #----------------------------------------------------------------------------
-  # Key matrix quantities:
-  XtX = crossprod(X)
-  XtXinv = chol2inv(chol(XtX))
+  # Hyperparameters and initializations
 
-  # Necessary quantity:
-  xt_Prior_x = sapply(1:n, function(i)
-    crossprod(X[i,], XtXinv)%*%X[i,])
+  # Gamma(a_sigma, b_sigma) prior on error precision
+  a_sigma = b_sigma = 0.001
 
-  # Grid of values for the Fz approximation:
+  # One-time computing cost: useful to initialize/sample (beta, sigma) efficiently
+  chXtX_psi = sqrt((1+psi)/(psi))*chol(crossprod(X))
+
+  # This is the unscaled covariance (i.e., no sigma_epsilon) for OLS regression
+  Sigma_hat_unscaled = chol2inv(chXtX_psi) # psi/(1+psi)*solve(crossprod(X))
+
+  # To set a grid for Fz, determine based on the *prior* for beta,
+  # with empirical averaging over x...
+  #   Roughly, the range of prior covariance, sandwiched by X[i,]
+  z_lim = range(
+    (1+psi)*sapply(1:n, function(i)
+      crossprod(X[i,], Sigma_hat_unscaled)%*%X[i,])
+  )
+  #   Then set the grid:
   z_grid = sort(unique(
-    sapply(range(psi*xt_Prior_x), function(xtemp){
+    sapply(z_lim, function(xtemp){
       qnorm(seq(0.01, 0.99, length.out = 100),
-            mean = 0, # assuming prior mean zero
-            sd = sqrt(1 + xtemp))
+            mean = 0, sd = sqrt(1 + xtemp))
     })
   ))
+  #----------------------------------------------------------------------------
+  # Recurring terms for the CDF of y (and thus the transformation g)
 
-  # Initialize the transformation:
-  g = g_bnp(y = y,
-            xt_Sigma_x = psi*xt_Prior_x,
-            z_grid = z_grid)
+  # Grid of integers for
+  #   evaluating g(...)
+  #   computing g_inv(...)
+  if(y_max < Inf){
+    y_grid = 0:y_max
+  } else {
+    y_grid = 0:max(y) # we'll expand this for prediction, but only as needed
+  }
+  n_grid = length(y_grid) # number of grid points
 
-  # Define the grid for approximations using equally-spaced + quantile points:
-  t_grid = sort(unique(round(c(
-    seq(0, min(2*max(y), y_max), length.out = 250),
-    quantile(unique(y[y < y_max] + 1), seq(0, 1, length.out = 250))), 8)))
+  # DP(alpha, P0) prior on the marginal CDF of y
+  if(is.null(P0)){ # Default base measure, if none supplied...
 
-  # Inverse transformation function:
-  g_inv = g_inv_approx(g = g, t_grid = t_grid)
+    if(y_max < Inf){
+      # Uniform{0,...,y_max}
+      P0 = function(t) {
+        ifelse(t == floor(t) & t >= 0 & t <= y_max,
+               1/(y_max + 1),
+               0)
+      }
 
-  # Lower and upper intervals:
-  g_a_y = g(a_j(y, y_max = y_max));
-  g_a_yp1 = g(a_j(y + 1, y_max = y_max))
+    } else {
+      # Geom(pi_geom), where pi_geom is set s.t. P(y > max(y)) = p_exceed_max
+      p_exceed_max = 0.1 # 10% chance of exceeding the maximum observed value
+      pi_geom = 1 - p_exceed_max^(1/(max(y) + 1))
+      P0 = function(t) dgeom(t, pi_geom)
 
-  # Initialize the coefficients and scale:
-  fit0 = lm(g(y) ~ X-1,
-            subset = which(y!=min(y) & y != max(y)))
-  beta = coef(fit0)
-  sigma_epsilon = summary(fit0)$sigma
-  # beta = rnorm(n = p)
-  # sigma_epsilon = 1
+      # Alternative: negative-binomial w/ empirical estimates
+      # y_bar = mean(y); s_hat = sd(y)
+      # if(y_bar >= s_hat^2) s_hat = sqrt(abs(y_bar)) # forces size = Inf (i.e., Poisson)
+      # P0 = function(t) dnbinom(t, mu = y_bar, size = y_bar^2/(s_hat^2 - y_bar))
+
+    }
+  }
+
+  # Base probabilities, evaluated on the grid:
+  P0_eval = P0(y_grid)
+
+  # count observations per grid point:
+  idx = match(y, y_grid)
+  nj = tabulate(idx[!is.na(idx)], nbins = n_grid)
+
+  # DP parameters:
+  dp_params = alpha*P0_eval + nj
+
+  # If infinite support, include tail probabilities:
+  if(is.infinite(y_max)){
+
+    # Tail probability for base measure:
+    P0tail = 1 - sum(P0_eval)
+
+    # Augment:
+    dp_params = c(dp_params, alpha*P0tail) # no obs in the tail (by design)
+
+  }
+  #----------------------------------------------------------------------------
+  # Define/estimate Fz() and Fz_inv():
+  if(pilot_run){
+
+    # Pilot run: estimate the posterior of beta (w/ fixed transformation)
+    pilot.fit = blm_star(y, X, transformation = 'np', y_max = y_max,
+                         prior = "gprior", use_MCMC = TRUE,
+                         nsave = 500, nburn = 500, verbose = FALSE)
+
+    # Initialize coefficients:
+    beta = colMeans(pilot.fit$post.beta)
+
+    #sigma_epsilon = mean(pilot.fit$post.sigma)
+
+    # Now compute Fz:
+    #   Integrate over post.beta
+    #   Average over X[i,] for i=1,...,n
+    post.Xbeta = tcrossprod(X, pilot.fit$post.beta); rm(pilot.fit)
+    zrep = rep(z_grid, times = ncol(post.Xbeta))
+    Fz_eval = rowMeans(
+      sapply(1:n, function(i){
+        rowMeans(matrix(pnorm(zrep,
+                              mean = rep(post.Xbeta[i,], each = length(z_grid)),
+                              sd = 1), nrow = length(z_grid)))
+      })
+    )
+    rm(post.Xbeta) # clean up
+
+  } else {
+    # Laplace approximation: [beta | data] ~ N(...)
+
+    # Recurring terms:
+    xt_Sigma_hat_unscaled_x = sapply(1:n, function(i)
+      crossprod(X[i,], Sigma_hat_unscaled)%*%X[i,])
+
+    # Initial latent data:
+    z = qnorm(n/(n+1)*ecdf(y)(y))
+
+    # Initial coefficients:
+    beta = Sigma_hat_unscaled%*%crossprod(X, z) # point estimate
+
+    # Moments of Z|X:
+    mu_z = X%*%beta
+    sigma_z = sqrt(1 + xt_Sigma_hat_unscaled_x)
+
+    # CDF of Z, evaluated on the grid:
+    Fz_eval = rowMeans(sapply(1:n, function(i){
+      pnorm(z_grid,
+            mean = mu_z[i],
+            sd = sigma_z[i])
+    }))
+  }
+
+  # Quick clean-up: remove potential duplicates
+  z_unique = which(!duplicated(Fz_eval));
+  Fz_eval = Fz_eval[z_unique]; z_grid = z_grid[z_unique]
+
+  # CDF of Z, as a function
+  #   Note: no guarantee that Fz(...) is in [0,1] for all inputs!
+  Fz = stats::splinefun(z_grid, Fz_eval, method = 'monoH.FC')
+
+  # Inverse CDF of Z:
+  Fz_inv = function(s) stats::spline(Fz_eval, z_grid, method = "hyman", xout = s)$y
+
+  # Storage for the lower and upper intervals
+  #   These will be updated immediately in the sampler
+  g_a_y = rep(-Inf, n) # -Inf occurs for y=0
+  g_a_yp1 = rep(Inf, n) # Inf occurs for y_max + 1
+
+  # Initial scale:
+  sigma_epsilon = 1
   #----------------------------------------------------------------------------
   # Posterior simulations:
 
   # Store MCMC output:
   post.beta = array(NA, c(nsave, p))
-  post.pred = array(NA, c(nsave, n))
-  post.g = array(NA, c(nsave, length(unique(y))))
+  post.pred = array(NA, c(nsave, n_test))
+  post.g = array(NA, c(nsave, length(1:max(y))))
+  post.log.like.point = array(NA, c(nsave, n)) # Pointwise log-likelihood
 
   # Total number of MCMC simulations:
   nstot = nburn+(nskip+1)*(nsave)
   skipcount = 0; isave = 0 # For counting
 
   # Run the MCMC:
-  if(verbose) timer0 = proc.time()[3] # For timing the sampler
+  if(verbose) timer0 = proc.time()[3] # for estimating the time remaining
   for(nsi in 1:nstot){
 
     #----------------------------------------------------------------------------
     # Block 0: sample the transformation
-    # Sample the transformation:
-    g = g_bnp(y = y,
-              xt_Sigma_x = psi*xt_Prior_x,
-              z_grid = z_grid)
+    #   g(0) = -Inf
+    #   g(j) = F_z^{-1}( F_y(j-1) ), j = 1,...,y_max
+    #   g(y_max + 1) = Inf
 
-    # Update the lower and upper intervals:
-    g_a_y = g(a_j(y, y_max = y_max));
-    g_a_yp1 = g(a_j(y + 1, y_max = y_max))
+    # DP posterior draw for y:
+    w_y = rdir(dp_params) # probability weights on each grid point
+    if(is.infinite(y_max)) w_tail = w_y[n_grid + 1] # save the tail, if needed
 
-    # Update the inverse transformation function:
-    g_inv = g_inv_approx(g = g, t_grid = t_grid)
+    # CDF of y, evaluated on 0:y_max (y_max < Inf) or 0:max(y)
+    Fy_eval = cumsum(w_y[1:n_grid])
+    Fy_eval = pmin(1, pmax(0, Fy_eval)) # make sure to restrict to [0,1]
+
+    # g(a_y) at observed y's:
+    y_eval = y[y!=0] # ignore y=0 (g(0) = -Inf)
+    g_a_y[y!=0] = Fz_inv(Fy_eval[match(y_eval - 1, y_grid)])
+
+    # g(a_{y+1}) observed (y+1)'s:
+    y_eval = (y+1)[y!=y_max] # ignore y=y_max (g(y_max + 1) = Inf)
+    g_a_yp1[y!=y_max] = Fz_inv(Fy_eval[match(y_eval - 1, y_grid)])
     #----------------------------------------------------------------------------
     # Block 1: sample the z_star
     z_star = rtruncnormRcpp(y_lower = g_a_y,
@@ -487,27 +938,21 @@ blm_star_bnpgibbs = function(y, X, X_test = X,
                             mu = X%*%beta,
                             sigma = rep(sigma_epsilon, n),
                             u_rand = runif(n = n))
-    # if(any(is.infinite(z_star)) || any(is.nan(z_star))){
-    #   inds = which(is.infinite(z_star) | is.nan(z_star))
-    #   z_star[inds] = runif(n = length(inds),
-    #                        min = g_a_y[inds],
-    #                        max = g_a_y[inds] + 1)
-    #   warning('Some infinite z_star values during sampling')
-    # }
+
+    # Recurring terms for Blocks 2-3:
+    Xtz = crossprod(X, z_star)
+    fsolve_beta = forwardsolve(t(chXtX_psi), Xtz)
     #----------------------------------------------------------------------------
-    # Block 2: sample the regression coefficients
-    Q_beta = 1/sigma_epsilon^2*(1+psi)/(psi)*XtX
-    ell_beta = 1/sigma_epsilon^2*crossprod(X, z_star)
-    ch_Q = chol(Q_beta)
-    beta = backsolve(ch_Q,
-                     forwardsolve(t(ch_Q), ell_beta) +
-                       rnorm(p))
-    #----------------------------------------------------------------------------
-    # Block 3: sample the scale adjustment (SD)
-    SSR_psi = sum(z_star^2) - psi/(psi+1)*crossprod(z_star, X%*%XtXinv%*%crossprod(X, z_star))
+    # Block 2: sample the scale adjustment (SD)
+    SSR_psi = sum(z_star^2) - crossprod(Xtz, backsolve(chXtX_psi, fsolve_beta)) # SSR_psi = sum(z_star^2) - psi/(psi+1)*crossprod(Xtz, XtXinv%*%Xtz)
+    #sigma_epsilon = as.numeric(sqrt(SSR_psi/n))
     sigma_epsilon = 1/sqrt(rgamma(n = 1,
-                                  shape = .001 + n/2,
-                                  rate = .001 + SSR_psi/2))
+                                  shape = a_sigma + n/2,
+                                  rate = b_sigma + SSR_psi/2))
+    #----------------------------------------------------------------------------
+    # Block 3: sample the regression coefficients
+    beta = backsolve(chXtX_psi/sigma_epsilon,
+                     fsolve_beta/sigma_epsilon + rnorm(p))# c(0, rnorm(p-1))) #
     #----------------------------------------------------------------------------
     # Store the MCMC:
     if(nsi > nburn){
@@ -520,42 +965,545 @@ blm_star_bnpgibbs = function(y, X, X_test = X,
         # Increment the save index
         isave = isave + 1
 
-        # Posterior samples of the model parameters:
-        post.beta[isave,] = beta
+        # Posterior samples of the regression coefficients:
+        post.beta[isave,] = beta/sigma_epsilon # undo scaling (not identified)
 
-        # Predictive samples of ztilde:
-        ztilde = X_test%*%beta + sigma_epsilon*rnorm(n = nrow(X_test))
+        # Posterior samples of the transformation evaluated at 1:max(y)
+        g_eval = Fz_inv(Fy_eval[match(1:max(y) - 1, y_grid)])
+        post.g[isave, ] = (g_eval - beta[1])/sigma_epsilon # undo location/scale (not identified)
 
-        # Predictive samples of ytilde:
-        post.pred[isave,] = round_floor(g_inv(ztilde), y_max)
+        # Pointwise Log-likelihood:
+        post.log.like.point[isave, ] = logLikePointRcpp(g_a_j = g_a_y,
+                                                        g_a_jp1 = g_a_yp1,
+                                                        mu = X%*%beta,
+                                                        sigma = rep(sigma_epsilon, n))
+        # Predictive samples:
+        #   First, predictions in the latent space:
+        ztilde = X_test%*%beta + sigma_epsilon*rnorm(n = n_test)
 
-        # Posterior samples of the transformation:
-        post.g[isave,] = g(sort(unique(y)))
+        #   Then apply g_inv() for the observable space:
+        ytilde = g_inv(Fz(ztilde), Fy_eval, y_grid)
+
+        #   Finally, check for NAs...just means that Fz(ztilde) > max(Fy_eval)
+        #   (which is not a problem!)
+        if(any(is.na(ytilde))){
+
+          if(y_max < Inf){
+
+            # The inverse is simply the upper bound:
+            ytilde[is.na(ytilde)] = y_max
+
+          } else {
+
+            # When y_max = Inf, the grid stops at y_grid[n_grid] = max(y);
+            # NAs imply that we need a grid with larger values, so we just
+            # shift up the grid in batches (for simple/fast computing)
+            n_expand = 50 # batch size
+            counter = 1 # track the loop and exit if it gets too long
+            while(any(is.na(ytilde))){
+
+              # Evaluate the sampled CDF of y on an expanded grid using DP recursions
+
+              # Create a grid of length n_expand, starting at max(y)+1 and shifting up as needed:
+              y_grid_expand = (y_grid[n_grid] + 1 + (counter-1)*n_expand):(y_grid[n_grid] + counter*n_expand)
+
+              # Evaluate the base probabilities and tail
+              P0_expand = P0(y_grid_expand)
+              P0tail =  1 - sum(P0(0:y_grid_expand[n_expand])) #P0tail - sum(P0_expand) # update the tail probability
+
+              # Dirichlet sampling within tail:
+              w_tail_prev = w_tail
+              v = rdir(c(alpha*P0_expand, alpha*P0tail))
+              w_expand = w_tail_prev*v[1:n_expand]
+              w_tail = w_tail_prev*v[(n_expand + 1)]
+              Fy_expand = (1 - w_tail_prev) + cumsum(w_expand)
+              Fy_expand = pmin(1, pmax(0, Fy_expand)) # make sure to restrict to [0,1]
+
+              # Probabilities too small, so exit and take a large value:
+              if(any(is.nan(Fy_expand))){
+                ytilde[is.na(ytilde)] = max(y_grid_expand)
+                warning('Some predicted y-values growing too large! Capping to ensure algorithm completion...')
+                break
+              }
+
+              # Compute the inverse: if it stays NA, we need to shift up the grid again
+              ytilde[is.na(ytilde)] = g_inv(Fz(ztilde[is.na(ytilde)]), Fy_expand, y_grid_expand)
+              counter = counter + 1
+
+              # Eventually, stop trying and just take a large value:
+              if(counter == 1000){
+                ytilde[is.na(ytilde)] = max(y_grid_expand)
+                warning('Some predicted y-values growing too large! Capping to ensure algorithm completion...')
+                break
+              }
+            }
+          }
+        }
+        post.pred[isave,] = ytilde
 
         # And reset the skip counter:
         skipcount = 0
       }
     }
-    if(verbose){
-      if(nsi==1){
-        print("Burn-In Period")
-      } else if (nsi < nburn){
-        computeTimeRemaining(nsi, timer0, nstot, nrep = 4000)
-      } else if (nsi==nburn){
-        print("Starting sampling")
-        timer1 = proc.time()[3]
-      } else {
-        computeTimeRemaining(nsi-nburn, timer1, nstot-nburn, nrep = 4000)
-      }
-    }
+    if(verbose) computeTimeRemaining(nsi, timer0, nstot)
   }
-  if(verbose) print(paste('Total time: ', round((proc.time()[3] - timer0)), 'seconds'))
+
+  # Compute WAIC:
+  lppd = sum(log(colMeans(exp(post.log.like.point))))
+  p_waic = sum(apply(post.log.like.point, 2, function(x) sd(x)^2))
+  WAIC = -2*(lppd - p_waic)
+
+  # Summarize computing time:
+  if(verbose){
+    tfinal = proc.time()[3] - timer00
+    if(tfinal > 60){
+      print(paste('Total time:', round(tfinal/60,1), 'minutes'))
+    } else print(paste('Total time:', round(tfinal), 'seconds'))
+  }
 
   return(list(
     coefficients = colMeans(post.beta),
     post.beta = post.beta,
     post.pred = post.pred,
-    post.g = post.g))
+    post.g = post.g,
+    post.log.like.point = post.log.like.point,
+    WAIC = WAIC, p_waic = p_waic))
+}
+#' Gibbs sampler for STAR spline regression with BNP transformation
+#'
+#' Compute MCMC samples from the posterior and predictive
+#' distributions of a STAR spline regression model with a
+#' Bayesian nonparametric (BNP) transformation. Cubic B-splines are
+#' used with a prior that penalizes roughness.
+#'
+#' @param y \code{n x 1} vector of observed counts
+#' @param x \code{n x 1} vector of observation points; if NULL, assume equally-spaced on [0,1]
+#' @param x_test \code{n_test x 1} vector of testing points; default is \code{x}
+#' @param y_max a fixed and known upper bound for all observations; default is \code{Inf}
+#' @param psi prior variance (inverse smoothing parameter); if NULL,
+#' sample this parameter
+#' @param nbasis number of spline basis functions; if NULL, use the default from \code{spikeSlabGAM::sm}
+#' @param alpha prior precision for the Dirichlet Process prior; default is one
+#' @param P0 function to evaluate the base measure PMF supported on \code{{0,...,y_max}};
+#' see below for default values when unspecified (\code{NULL})
+#' @param nsave number of MCMC iterations to save
+#' @param nburn number of MCMC iterations to discard
+#' @param nskip number of MCMC iterations to skip between saving iterations,
+#' i.e., save every (nskip + 1)th draw
+#' @return a list with the following elements:
+#' \itemize{
+#' \item \code{coefficients}: the posterior mean of the spline coefficients
+#' \item \code{fitted.values} the posterior predictive mean at the test points \code{x_test}
+#' \item \code{post.beta}: \code{nsave x p} samples from the posterior distribution
+#' of the regression coefficients
+#' \item \code{post.pred}: \code{nsave x n_test} samples
+#' from the posterior predictive distribution at test points \code{x_test}
+#' \item \code{post.g}: \code{nsave} posterior samples of the transformation
+#' evaluated at \code{1:max(y)}
+#' \item \code{post.psi}: \code{nsave} draws from the prior variance (inverse smoothing) \code{psi}
+#' }
+#'
+#' @details This function provides fully Bayesian inference for a
+#' transformed spline model with discrete data. The sampling algorithm draws the
+#' transformation \code{g} directly from its *marginal* posterior distribution
+#' and then uses a Gibbs sampler for the latent data \code{z} and the
+#' spline coefficients \code{beta}.
+#'
+#' The BNP model for the transformation \code{g} is derived from a Dirichlet Process (DP)
+#' prior on the marginal CDF of \code{y}. The user can specify the prior precision
+#' \code{alpha} and the base measure, e.g., \code{P0 = function(t) dpois(t, lambda = 10)}.
+#' Otherwise, the default approach views the base measure as a means to ensure
+#' correct support and avoid boundary issues, both of which are concerns with the
+#' Bayesian bootstrap (\code{alpha = 0}). Thus, the default is a small prior
+#' precision \code{alpha = 1} and base measures that guarantee the right support.
+#' For \code{y_max < Inf}, we simply use \code{Uniform{0,...,y_max}}. Otherwise,
+#' we use \code{Geom(pi_geom)}, where \code{pi_geom} is elicited by fixing
+#' the probability of exceeding the maximum observed value, \code{P(y > max(y))},
+#' which we set at 0.10. Recall that the DP posterior for the marginal CDF
+#' of \code{y} combines the base measure with the empirical measure: in expectation,
+#' the base measure has weight \code{alpha/(n + alpha) = 1/(n+1)} while the empirical
+#' part has weight \code{n/(n + alpha) = n/(n+1)}. Thus, the base measure's contribution is small,
+#' and matters most for data values that may exceed \code{max(y)}.
+#'
+#'
+#' @note The location (intercept) and scale (\code{sigma_epsilon}) are
+#' not identified. These quantities are used for a location-scale
+#' adjustment (or parameter expansion) that substantially improves the initial
+#' approximation of the marginal CDF of \code{z}, but are otherwise
+#' not interpretable.
+#'
+# #' @importFrom spikeSlabGAM sm
+#' @keywords internal
+spline_star_gibbs_bnp = function(y,
+                                 x = NULL,
+                                 x_test = NULL,
+                                 y_max = Inf,
+                                 psi = NULL,
+                                 nbasis = NULL,
+                                 alpha = 1,
+                                 P0 = NULL,
+                                 nsave = 1000,
+                                 nburn = 1000,
+                                 nskip = 0,
+                                 verbose = TRUE){
+
+  # Library required here:
+  if (!requireNamespace("spikeSlabGAM", quietly = TRUE)) stop("Package \"spikeSlabGAM\" must be installed to use this function.", call. = FALSE)
+  #----------------------------------------------------------------------------
+  # To report the full computing time:
+  if(verbose) timer00 = proc.time()[3]
+
+  # Initial checks:
+  if(any(y < 0) || any(y != floor(y))) stop('y must be nonnegative counts')
+  if(any(y > y_max)) stop('y must not exceed y_max')
+
+  # Data dimensions:
+  n = length(y)
+
+  # Observation points, rescaled to [0,1]
+  if(is.null(x)) x = seq(0, 1, length=n)
+  x = (x - min(x))/(max(x) - min(x))
+
+  # Testing points, rescaled to [0,1]
+  if(is.null(x_test)) x_test = x
+  x_test = (x_test - min(x_test))/(max(x_test) - min(x_test))
+
+  # Initial checks:
+  if(length(x) != n) stop('x and y must have the same number of observations')
+  #----------------------------------------------------------------------------
+  # Hyperparameters and initializations
+
+  # Gamma(a_sigma, b_sigma) prior on error precision
+  a_sigma = b_sigma = 0.001
+
+  # Gamma(a_psi, b_psi) prior on smoothing prior precision
+  a_psi = b_psi = 0.01
+  #----------------------------------------------------------------------------
+  # Recurring terms for the CDF of y (and thus the transformation g)
+
+  # Grid of integers for
+  #   evaluating g(...)
+  #   computing g_inv(...)
+  if(y_max < Inf){
+    y_grid = 0:y_max
+  } else {
+    y_grid = 0:max(y) # we'll expand this for prediction, but only as needed
+  }
+  n_grid = length(y_grid) # number of grid points
+
+  # DP(alpha, P0) prior on the marginal CDF of y
+  if(is.null(P0)){ # Default base measure, if none supplied...
+
+    if(y_max < Inf){
+      # Uniform{0,...,y_max}
+      P0 = function(t) {
+        ifelse(t == floor(t) & t >= 0 & t <= y_max,
+               1/(y_max + 1),
+               0)
+      }
+
+    } else {
+      # Geom(pi_geom), where pi_geom is set s.t. P(y > max(y)) = p_exceed_max
+      p_exceed_max = 0.1 # 10% chance of exceeding the maximum observed value
+      pi_geom = 1 - p_exceed_max^(1/(max(y) + 1))
+      P0 = function(t) dgeom(t, pi_geom)
+
+      # Alternative: negative-binomial w/ empirical estimates
+      # y_bar = mean(y); s_hat = sd(y)
+      # if(y_bar >= s_hat^2) s_hat = sqrt(abs(y_bar)) # forces size = Inf (i.e., Poisson)
+      # P0 = function(t) dnbinom(t, mu = y_bar, size = y_bar^2/(s_hat^2 - y_bar))
+
+    }
+  }
+
+  # Base probabilities, evaluated on the grid:
+  P0_eval = P0(y_grid)
+
+  # count observations per grid point:
+  idx = match(y, y_grid)
+  nj = tabulate(idx[!is.na(idx)], nbins = n_grid)
+
+  # DP parameters:
+  dp_params = alpha*P0_eval + nj
+
+  # If infinite support, include tail probabilities:
+  if(is.infinite(y_max)){
+
+    # Tail probability for base measure:
+    P0tail = 1 - sum(P0_eval)
+
+    # Augment:
+    dp_params = c(dp_params, alpha*P0tail) # no obs in the tail (by design)
+
+  }
+  #----------------------------------------------------------------------------
+  # Orthogonalized P-spline and related quantities:
+  if(is.null(nbasis)){
+    nbasis = min(length(unique(x)), 20); rankZ = 0.999 # defaults in sm()
+  } else rankZ = nbasis # this stops the rank reduction to preserve the specified nbasis
+  X = cbind(1/sqrt(n), poly(x, 1), spikeSlabGAM::sm(x, K = nbasis, rankZ = rankZ))
+  diagXtX = colSums(X^2)
+  p = length(diagXtX) - 1 # omit intercept
+
+  # Define/estimate Fz() and Fz_inv():
+  #   Laplace approximation: [beta | data] ~ N(...)
+
+  # Initial latent data:
+  z = qnorm(n/(n+1)*ecdf(y)(y))
+  Xtz = crossprod(X, z)
+
+  # Smoothing parameter: if NULL, then
+  #   initialize from method-of-moments approximation
+  #   & prepare to sample later
+  if(is.null(psi)) {
+    sample_psi = TRUE
+    #psi =  100 # (sum(Xtz^2) - sum(diagXtX))/sum(diagXtX^2) # since Xtz ~ N(0, diagXtX + psi*diagXtX^2)
+    psi = mean((Xtz/diagXtX)^2) # MoM estimator...
+  } else sample_psi = FALSE
+
+  # Diagonal of LA posterior covariance, unscaled by sigma:
+  diag_Sigma_hat_unscaled = 1/(diagXtX + 1/psi)
+
+  # Initial coefficients:
+  beta = diag_Sigma_hat_unscaled*Xtz # point estimate
+
+  # LA posterior covariance sandwiched by X[i,]
+  xt_Sigma_hat_unscaled_x = colSums(t(X^2)*diag_Sigma_hat_unscaled) # sapply(1:n, function(i) crossprod(X[i,], diag(diag_Sigma_hat_unscaled))%*%X[i,])
+
+  # Moments of Z|X:
+  mu_z = X%*%beta
+  sigma_z = sqrt(1 + xt_Sigma_hat_unscaled_x)
+
+  # To set a grid for Fz, use 100* LA posterior covariance
+  # with empirical averaging over x...
+  #   Roughly, an expanded range of LA posterior covariance, sandwiched by X[i,]
+  z_grid = sort(unique(
+    sapply(range(100*xt_Sigma_hat_unscaled_x), # sapply(range(psi*rowSums(X^2)),
+           function(xtemp){
+             qnorm(seq(0.01, 0.99, length.out = 100),
+                   mean = 0, sd = sqrt(1 + xtemp))
+           })
+  ))
+
+  # CDF of Z, evaluated on the grid:
+  Fz_eval = rowMeans(sapply(1:n, function(i){
+    pnorm(z_grid,
+          mean = mu_z[i],
+          sd = sigma_z[i])
+  }))
+
+  # Quick clean-up: remove potential duplicates
+  z_unique = which(!duplicated(Fz_eval));
+  Fz_eval = Fz_eval[z_unique]; z_grid = z_grid[z_unique]
+
+  # CDF of Z, as a function
+  #   Note: no guarantee that Fz(...) is in [0,1] for all inputs!
+  Fz = stats::splinefun(z_grid, Fz_eval, method = 'monoH.FC')
+
+  # Inverse CDF of Z:
+  Fz_inv = function(s) stats::spline(Fz_eval, z_grid, method = "hyman", xout = s)$y
+
+  # Storage for the lower and upper intervals
+  #   These will be updated immediately in the sampler
+  g_a_y = rep(-Inf, n) # -Inf occurs for y=0
+  g_a_yp1 = rep(Inf, n) # Inf occurs for y_max + 1
+
+  # Initial scale:
+  sigma_epsilon = 1
+  #----------------------------------------------------------------------------
+  # Posterior simulations:
+
+  # Store MCMC output:
+  post.beta = array(NA, c(nsave, p))
+  post.pred = array(NA, c(nsave, length(x_test)))
+  post.g = array(NA, c(nsave, length(1:max(y))))
+  post.psi = rep(NA, nsave)
+  #post.log.like.point = array(NA, c(nsave, n)) # Pointwise log-likelihood
+
+  # Total number of MCMC simulations:
+  nstot = nburn+(nskip+1)*(nsave)
+  skipcount = 0; isave = 0 # For counting
+
+  # Run the MCMC:
+  if(verbose) timer0 = proc.time()[3] # for estimating the time remaining
+  for(nsi in 1:nstot){
+
+    #----------------------------------------------------------------------------
+    # Block 0: sample the transformation
+    #   g(0) = -Inf
+    #   g(j) = F_z^{-1}( F_y(j-1) ), j = 1,...,y_max
+    #   g(y_max + 1) = Inf
+
+    # DP posterior draw for y:
+    w_y = rdir(dp_params) # probability weights on each grid point
+    if(is.infinite(y_max)) w_tail = w_y[n_grid + 1] # save the tail, if needed
+
+    # CDF of y, evaluated on 0:y_max (y_max < Inf) or 0:max(y)
+    Fy_eval = cumsum(w_y[1:n_grid])
+    Fy_eval = pmin(1, pmax(0, Fy_eval)) # make sure to restrict to [0,1]
+
+    # g(a_y) at observed y's:
+    y_eval = y[y!=0] # ignore y=0 (g(0) = -Inf)
+    g_a_y[y!=0] = Fz_inv(Fy_eval[match(y_eval - 1, y_grid)])
+
+    # g(a_{y+1}) observed (y+1)'s:
+    y_eval = (y+1)[y!=y_max] # ignore y=y_max (g(y_max + 1) = Inf)
+    g_a_yp1[y!=y_max] = Fz_inv(Fy_eval[match(y_eval - 1, y_grid)])
+    #----------------------------------------------------------------------------
+    # Block 1: sample the z_star
+    z_star = rtruncnormRcpp(y_lower = g_a_y,
+                            y_upper = g_a_yp1,
+                            mu = X%*%beta,
+                            sigma = rep(sigma_epsilon, n),
+                            u_rand = runif(n = n))
+
+    # Recurring term:
+    Xtz = crossprod(X, z_star)
+    #----------------------------------------------------------------------------
+    # Block 2: sample the scale adjustment (SD)
+    SSR_psi = sum(z_star^2) - crossprod(sqrt(diag_Sigma_hat_unscaled)*Xtz) # SSR_psi = sum(z_star^2) - crossprod(1/sqrt(diagXtX + 1/psi)*Xtz)
+    sigma_epsilon = 1/sqrt(rgamma(n = 1,
+                                  shape = a_sigma + n/2,
+                                  rate = b_sigma + SSR_psi/2))
+    #----------------------------------------------------------------------------
+    # Block 3: sample the regression coefficients
+    mean_beta = diag_Sigma_hat_unscaled*Xtz
+    sd_beta = sigma_epsilon*sqrt(diag_Sigma_hat_unscaled)
+    beta = rnorm(n = p + 1,
+                 mean = mean_beta,
+                 sd = sd_beta)
+    #----------------------------------------------------------------------------
+    # Block 4: sample the smoothing parameter
+    if(sample_psi){
+      psi = 1/rgamma(n = 1,
+                     shape = a_psi + (p+1)/2,
+                     rate = b_psi + sum(beta^2)/(2*sigma_epsilon^2))
+      # update:
+      diag_Sigma_hat_unscaled = 1/(diagXtX + 1/psi)
+    }
+    #----------------------------------------------------------------------------
+    # Store the MCMC:
+    if(nsi > nburn){
+
+      # Increment the skip counter:
+      skipcount = skipcount + 1
+
+      # Save the iteration:
+      if(skipcount > nskip){
+        # Increment the save index
+        isave = isave + 1
+
+        # Posterior samples of the regression coefficients:
+        post.beta[isave,] = beta[-1]/sigma_epsilon # undo scaling and omit intercept (not identified)
+
+        # Posterior samples of the transformation evaluated at 1:max(y)
+        g_eval = Fz_inv(Fy_eval[match(1:max(y) - 1, y_grid)])
+        post.g[isave, ] = (g_eval - 1/sqrt(n)*beta[1])/sigma_epsilon # undo location/scale (not identified)
+
+        # # Pointwise Log-likelihood:
+        # post.log.like.point[isave, ] = logLikePointRcpp(g_a_j = g_a_y,
+        #                                                 g_a_jp1 = g_a_yp1,
+        #                                                 mu = X%*%beta,
+        #                                                 sigma = rep(sigma_epsilon, n))
+
+        # Predictive samples:
+        #   First, predictions in the latent space:
+        #   Note: it's easier/faster to just smoothly interpolate on the testing points
+        #   (the orthogonalized basis is a pain to recompute)
+        ztilde = stats::spline(x = x, y = X%*%beta, xout = x_test, ties = mean)$y +
+          sigma_epsilon*rnorm(n = length(x_test))
+
+        #   Then apply g_inv() for the observable space:
+        ytilde = g_inv(Fz(ztilde), Fy_eval, y_grid)
+
+        #   Finally, check for NAs...just means that Fz(ztilde) > max(Fy_eval)
+        #   (which is not a problem!)
+        if(any(is.na(ytilde))){
+
+          if(y_max < Inf){
+
+            # The inverse is simply the upper bound:
+            ytilde[is.na(ytilde)] = y_max
+
+          } else {
+
+            # When y_max = Inf, the grid stops at y_grid[n_grid] = max(y);
+            # NAs imply that we need a grid with larger values, so we just
+            # shift up the grid in batches (for simple/fast computing)
+            n_expand = 50 # batch size
+            counter = 1 # track the loop and exit if it gets too long
+            while(any(is.na(ytilde))){
+
+              # Evaluate the sampled CDF of y on an expanded grid using DP recursions
+
+              # Create a grid of length n_expand, starting at max(y)+1 and shifting up as needed:
+              y_grid_expand = (y_grid[n_grid] + 1 + (counter-1)*n_expand):(y_grid[n_grid] + counter*n_expand)
+
+              # Evaluate the base probabilities and tail
+              P0_expand = P0(y_grid_expand)
+              P0tail =  1 - sum(P0(0:y_grid_expand[n_expand])) #P0tail - sum(P0_expand) # update the tail probability
+
+              # Dirichlet sampling within tail:
+              w_tail_prev = w_tail
+              v = rdir(c(alpha*P0_expand, alpha*P0tail))
+              w_expand = w_tail_prev*v[1:n_expand]
+              w_tail = w_tail_prev*v[(n_expand + 1)]
+              Fy_expand = (1 - w_tail_prev) + cumsum(w_expand)
+              Fy_expand = pmin(1, pmax(0, Fy_expand)) # make sure to restrict to [0,1]
+
+              # Probabilities too small, so exit and take a large value:
+              if(any(is.nan(Fy_expand))){
+                ytilde[is.na(ytilde)] = max(y_grid_expand)
+                warning('Some predicted y-values growing too large! Capping to ensure algorithm completion...')
+                break
+              }
+
+              # Compute the inverse: if it stays NA, we need to shift up the grid again
+              ytilde[is.na(ytilde)] = g_inv(Fz(ztilde[is.na(ytilde)]), Fy_expand, y_grid_expand)
+              counter = counter + 1
+
+              # Eventually, stop trying and just take a large value:
+              if(counter == 1000){
+                ytilde[is.na(ytilde)] = max(y_grid_expand)
+                warning('Some predicted y-values growing too large! Capping to ensure algorithm completion...')
+                break
+              }
+            }
+          }
+        }
+        post.pred[isave,] = ytilde
+
+        # Posterior samples of the prior variance, which controls smoothness
+        post.psi[isave] = psi
+
+        # And reset the skip counter:
+        skipcount = 0
+      }
+    }
+    if(verbose) computeTimeRemaining(nsi, timer0, nstot)
+  }
+
+  # # Compute WAIC:
+  # lppd = sum(log(colMeans(exp(post.log.like.point))))
+  # p_waic = sum(apply(post.log.like.point, 2, function(x) sd(x)^2))
+  # WAIC = -2*(lppd - p_waic)
+
+  # Summarize computing time:
+  if(verbose){
+    tfinal = proc.time()[3] - timer00
+    if(tfinal > 60){
+      print(paste('Total time:', round(tfinal/60,1), 'minutes'))
+    } else print(paste('Total time:', round(tfinal), 'seconds'))
+  }
+
+  return(list(
+    coefficients = colMeans(post.beta),
+    fitted.values = pmin(y_max, pmax(0, predict(stats::smooth.spline(x_test, colMeans(post.pred)), x_test)$y)), # smooth the fitted values
+    post.beta = post.beta,
+    post.pred = post.pred,
+    post.g = post.g, post.psi = post.psi))
+  #post.log.like.point = post.log.like.point,
+  #WAIC = WAIC, p_waic = p_waic))
 }
 #' Monte Carlo predictive sampler for spline regression
 #'
@@ -576,6 +1524,7 @@ blm_star_bnpgibbs = function(y, X, X_test = X,
 #' }
 #' @param y_max a fixed and known upper bound for all observations; default is \code{Inf}
 #' @param psi prior variance (1/smoothing parameter)
+#' @param nbasis number of spline basis functions; if NULL, use the default from \code{spikeSlabGAM::sm}
 #' @param nsave number of Monte Carlo simulations
 #' @param compute_marg logical; if TRUE, compute and return the
 #' marginal likelihood
@@ -611,17 +1560,21 @@ blm_star_bnpgibbs = function(y, X, X_test = X,
 #' from the posterior predictive distribution of the spline regression model
 #' at the observed tau points.
 #'
-#' @importFrom TruncatedNormal mvrandn pmvnorm
-#' @importFrom FastGP rcpp_rmvnorm
-#' @importFrom spikeSlabGAM sm
+# #' @importFrom TruncatedNormal mvrandn pmvnorm
+# #' @importFrom FastGP rcpp_rmvnorm
+# #' @importFrom spikeSlabGAM sm
 #' @keywords internal
 spline_star_exact = function(y,
-                       tau = NULL,
-                       transformation = 'np',
-                       y_max = Inf,
-                       psi = 1000,
-                       nsave = 1000,
-                       compute_marg = TRUE){
+                             tau = NULL,
+                             transformation = 'np',
+                             y_max = Inf,
+                             psi = 1000,
+                             nbasis = NULL,
+                             nsave = 1000,
+                             compute_marg = TRUE){
+
+  # Library required here:
+  if (!requireNamespace("spikeSlabGAM", quietly = TRUE)) stop("Package \"spikeSlabGAM\" must be installed to use this function.", call. = FALSE)
   #----------------------------------------------------------------------------
   # Number of observations:
   n = length(y)
@@ -630,32 +1583,42 @@ spline_star_exact = function(y,
   if(is.null(tau)) tau = seq(0, 1,length.out = n)
   #----------------------------------------------------------------------------
   # Orthogonalized P-spline and related quantities:
-  B = cbind(1/sqrt(n), poly(tau, 1), sm(tau))
+  if(is.null(nbasis)){
+    nbasis = min(length(unique(tau)), 20); rankZ = 0.999 # defaults in sm()
+  } else rankZ = nbasis # this stops the rank reduction to preserve the specified nbasis
+  B = cbind(1/sqrt(n), poly(tau, 1), spikeSlabGAM::sm(tau, K = nbasis, rankZ = rankZ))
   B = B/sqrt(sum(diag(crossprod(B))))
   diagBtB = colSums(B^2)
   BBt = tcrossprod(B)
   p = length(diagBtB)
   #----------------------------------------------------------------------------
   # Define the transformation:
-  if(transformation == 'bnp'){
-    # Special treatment for BNP case
 
-    # Necessary quantity:
-    xt_Prior_x = rowSums(B^2) # sapply(1:n, function(i) sum(B[i,]^2/diagBtB))
+  # Assign a family for the transformation: Box-Cox or CDF?
+  transform_family = ifelse(
+    test = is.element(transformation, c("identity", "log", "sqrt", "box-cox")),
+    yes = 'bc', no = 'cdf'
+  )
 
-    # Grid of values for the Fz approximation:
-    z_grid = sort(unique(
-      sapply(range(psi*xt_Prior_x), function(xtemp){
-        qnorm(seq(0.01, 0.99, length.out = 100),
-              mean = 0, # assuming prior mean zero
-              sd = sqrt(1 + xtemp))
-      })
-    ))
+  # Box-Cox family
+  if(transform_family == 'bc'){
+    # Lambda value for each Box-Cox argument:
+    if(transformation == 'identity') lambda = 1
+    if(transformation == 'log') lambda = 0
+    if(transformation == 'sqrt') lambda = 1/2
 
-    # Initialize the transformation:
-    g = g_bnp(y = y,
-              xt_Sigma_x = psi*xt_Prior_x,
-              z_grid = z_grid)
+    # Transformation function:
+    g = function(t) g_bc(t,lambda = lambda)
+
+    # Inverse transformation function:
+    g_inv = function(s) g_inv_bc(s,lambda = lambda)
+  }
+
+  # CDF family
+  if(transform_family == 'cdf'){
+
+    # Transformation function:
+    g = g_cdf(y = y, distribution = transformation)
 
     # Define the grid for approximations using equally-spaced + quantile points:
     t_grid = sort(unique(round(c(
@@ -664,61 +1627,13 @@ spline_star_exact = function(y,
 
     # Inverse transformation function:
     g_inv = g_inv_approx(g = g, t_grid = t_grid)
-
-    # Fix the scale:
-    sigma_epsilon = summary(lm(g(y) ~ B-1,
-                               subset = which(y!=min(y) & y != max(y))))$sigma
-    # sigma_epsilon = 1
-
-    # Remove marginal likelihood computations:
-    if(compute_marg){
-      warning('Marginal likelihood not currently implemented for BNP')
-      compute_marg = FALSE
-    }
-
-  } else {
-
-    # Assign a family for the transformation: Box-Cox or CDF?
-    transform_family = ifelse(
-      test = is.element(transformation, c("identity", "log", "sqrt", "box-cox")),
-      yes = 'bc', no = 'cdf'
-    )
-
-    # Box-Cox family
-    if(transform_family == 'bc'){
-      # Lambda value for each Box-Cox argument:
-      if(transformation == 'identity') lambda = 1
-      if(transformation == 'log') lambda = 0
-      if(transformation == 'sqrt') lambda = 1/2
-
-      # Transformation function:
-      g = function(t) g_bc(t,lambda = lambda)
-
-      # Inverse transformation function:
-      g_inv = function(s) g_inv_bc(s,lambda = lambda)
-    }
-
-    # CDF family
-    if(transform_family == 'cdf'){
-
-      # Transformation function:
-      g = g_cdf(y = y, distribution = transformation)
-
-      # Define the grid for approximations using equally-spaced + quantile points:
-      t_grid = sort(unique(round(c(
-        seq(0, min(2*max(y), y_max), length.out = 250),
-        quantile(unique(y[y < y_max] + 1), seq(0, 1, length.out = 250))), 8)))
-
-      # Inverse transformation function:
-      g_inv = g_inv_approx(g = g, t_grid = t_grid)
-    }
-
-    # Latent data SD:
-    sigma_epsilon = genEM_star(y = y,
-                               estimator = function(y) lm(y ~ B - 1),
-                               transformation = transformation,
-                               y_max = y_max)$sigma.hat
   }
+
+  # Latent data SD:
+  sigma_epsilon = genEM_star(y = y,
+                             estimator = function(y) lm(y ~ B - 1),
+                             transformation = transformation,
+                             y_max = y_max)$sigma.hat
 
   # Lower and upper intervals:
   g_a_y = g(a_j(y, y_max = y_max));
@@ -749,56 +1664,24 @@ spline_star_exact = function(y,
   print('Posterior predictive sampling...')
 
   # Common term for predictive draws:
-  V1tilde = rcpp_rmvnorm(n = nsave,
-                         mu = rep(0, n),
-                         S = sigma_epsilon^2*(psi*BdBt + diag(n)))
+  V1tilde = FastGP::rcpp_rmvnorm(n = nsave,
+                                 mu = rep(0, n),
+                                 S = sigma_epsilon^2*(psi*BdBt + diag(n)))
 
-  # Bayesian bootstrap sampling:
-  if(transformation == 'bnp'){
-    # MC draws:
-    post.pred = array(NA, c(nsave, n)) # storage
-    for(s in 1:nsave){
+  # Sample z in this interval:
+  post.z = t(TruncatedNormal::mvrandn(l = g_a_y,
+                                      u = g_a_yp1,
+                                      Sig = Sigma_z,
+                                      n = nsave))
 
-      # Sample the transformation:
-      g = g_bnp(y = y,
-                xt_Sigma_x = psi*xt_Prior_x,
-                z_grid = z_grid)
+  # Predictive samples of ztilde:
+  post.ztilde = V1tilde + t(tcrossprod(psi*Bd2Bt, post.z))
 
-      # Update the lower and upper intervals:
-      g_a_y = g(a_j(y, y_max = y_max));
-      g_a_yp1 = g(a_j(y + 1, y_max = y_max))
-
-      # Update the inverse transformation function:
-      g_inv = g_inv_approx(g = g, t_grid = t_grid)
-
-      # Sample z in this interval:
-      z = mvrandn(l = g_a_y,
-                  u = g_a_yp1,
-                  Sig = Sigma_z,
-                  n = 1)
-
-      # Predictive samples of ztilde:
-      ztilde = V1tilde[s,] + t(crossprod(psi*Bd2Bt, z))
-
-      # Predictive samples of ytilde:
-      post.pred[s,] = round_floor(g_inv(ztilde), y_max)
-    }
-  } else {
-    # Sample z in this interval:
-    post.z = t(mvrandn(l = g_a_y,
-                       u = g_a_yp1,
-                       Sig = Sigma_z,
-                       n = nsave))
-
-    # Predictive samples of ztilde:
-    post.ztilde = V1tilde + t(tcrossprod(psi*Bd2Bt, post.z))
-
-    # Predictive samples of ytilde:
-    post.pred = t(apply(post.ztilde, 1, function(z){
-      round_floor(g_inv(z), y_max)
-    }))
-    #post.pred = matrix(round_floor(g_inv(post.ztilde), y_max), nrow = S)
-  }
+  # Predictive samples of ytilde:
+  post.pred = t(apply(post.ztilde, 1, function(z){
+    round_floor(g_inv(z), y_max)
+  }))
+  #post.pred = matrix(round_floor(g_inv(post.ztilde), y_max), nrow = S)
 
   print('Done!')
 
@@ -815,8 +1698,8 @@ spline_star_exact = function(y,
 #'
 #' @param y \code{n x 1} vector of observed counts
 #' @param X \code{n x p} matrix of predictors
-#' @param X_test \code{n0 x p} matrix of predictors for test data
-#' @param y_test \code{n0 x 1} vector of the test data responses (used for
+#' @param X_test \code{n_test x p} matrix of predictors for test data
+#' @param y_test \code{n_test x 1} vector of the test data responses (used for
 #' computing log-predictive scores)
 #' @param lambda_prior the prior mean for the transformation g() is the Box-Cox function with
 #' parameter \code{lambda_prior}
@@ -852,32 +1735,40 @@ spline_star_exact = function(y,
 #' \item \code{post.sigma}: draws from the posterior distribution of \code{sigma}
 #' \item \code{post.mu.test}: draws of the conditional mean of z_star at the test points
 #' \item \code{post.log.like.point}: draws of the log-likelihood for each of the \code{n} observations
-#' \item \code{post.log.pred.test}: draws of the log-predictive distribution for each of the \code{n0} test cases
+#' \item \code{post.log.pred.test}: draws of the log-predictive distribution for each of the \code{n_test} test cases
 #' \item \code{WAIC}: Widely-Applicable/Watanabe-Akaike Information Criterion
 #' \item \code{p_waic}: Effective number of parameters based on WAIC
-#' \item \code{post.g}: draws from the posterior distribution of the transformation \code{g}
+#' \item \code{post.g}: \code{nsave} posterior samples of the transformation
+#' evaluated at \code{1:max(y)}
 #' \item \code{post.sigma.gamma}: draws from the posterior distribution of \code{sigma.gamma},
 #' the prior standard deviation of the transformation \code{g} coefficients
 #' }
 #'
-#' @importFrom splines2 iSpline
-#' @importFrom Matrix Matrix chol
+# #' @importFrom splines2 iSpline
 #' @keywords internal
 bart_star_ispline = function(y,
-                            X,
-                            X_test = NULL, y_test = NULL,
-                            lambda_prior = 1/2,
-                            y_max = Inf,
-                            n.trees = 200,
-                            sigest = NULL, sigdf = 3, sigquant = 0.90, k = 2.0, power = 2.0, base = 0.95,
-                            nsave = 1000,
-                            nburn = 1000,
-                            nskip = 0,
-                            save_y_hat = FALSE,
-                            target_acc_rate = 0.3,
-                            adapt_rate = 0.75,
-                            stop_adapt_perc = 0.5,
-                            verbose = TRUE){
+                             X,
+                             X_test = NULL, y_test = NULL,
+                             lambda_prior = 1/2,
+                             y_max = Inf,
+                             n.trees = 200,
+                             sigest = NULL, sigdf = 3, sigquant = 0.90, k = 2.0, power = 2.0, base = 0.95,
+                             nsave = 1000,
+                             nburn = 1000,
+                             nskip = 0,
+                             save_y_hat = FALSE,
+                             target_acc_rate = 0.3,
+                             adapt_rate = 0.75,
+                             stop_adapt_perc = 0.5,
+                             verbose = TRUE){
+
+  # Libraries required here:
+  if (!requireNamespace("dbarts", quietly = TRUE)) stop("Package \"dbarts\" must be installed to use this function.", call. = FALSE)
+  if (!requireNamespace("splines2", quietly = TRUE)) stop("Package \"splines2\" must be installed to use this function.", call. = FALSE)
+  if (!requireNamespace("Matrix", quietly = TRUE)) stop("Package \"Matrix\" must be installed to use this function.", call. = FALSE)
+  #----------------------------------------------------------------------------
+  # To report the full computing time:
+  if(verbose) timer00 = proc.time()[3]
 
   # Check: currently implemented for nonnegative integers
   if(any(y < 0) || any(y != floor(y)))
@@ -927,11 +1818,11 @@ bart_star_ispline = function(y,
 
   # Include a test dataset:
   include_test = !is.null(X_test)
-  if(include_test) n0 = nrow(X_test) # Size of test dataset
+  if(include_test) n_test = nrow(X_test) # Size of test dataset
 
   # Initialize the dbarts() object:
-  control = dbartsControl(n.chains = 1, n.burn = 0, n.samples = 1,
-                          n.trees = n.trees)
+  control = dbarts::dbartsControl(n.chains = 1, n.burn = 0, n.samples = 1,
+                                  n.trees = n.trees)
 
   # Initialize the standard deviation:
   if(is.null(sigest)){
@@ -944,12 +1835,12 @@ bart_star_ispline = function(y,
   }
 
   # Initialize the sampling object, which includes the prior specs:
-  sampler = dbarts(z_star ~ X, test = X_test,
-                   control = control,
-                   tree.prior = cgm(power, base),
-                   node.prior = normal(k),
-                   resid.prior = chisq(sigdf, sigquant),
-                   sigma = sigest)
+  sampler = dbarts::dbarts(z_star ~ X, test = X_test,
+                           control = control,
+                           tree.prior = cgm(power, base),
+                           node.prior = normal(k),
+                           resid.prior = chisq(sigdf, sigquant),
+                           sigma = sigest)
   samp = sampler$run(updateState = TRUE)
 
   # Initialize and store the parameters:
@@ -975,8 +1866,8 @@ bart_star_ispline = function(y,
   knots_g = knots_g[knots_g > 0]; knots_g = knots_g[knots_g < max(t_g)]; knots_g = sort(unique(knots_g))
 
   # I-spline basis:
-  B_I_grid = iSpline(t_grid, knots = knots_g, degree = 2)
-  B_I = iSpline(t_g, knots = knots_g, degree = 2)   #B_I = B_I_grid[match(t_g, t_grid),]
+  B_I_grid = splines2::iSpline(t_grid, knots = knots_g, degree = 2)
+  B_I = splines2::iSpline(t_g, knots = knots_g, degree = 2)   #B_I = B_I_grid[match(t_g, t_grid),]
 
   # Number of columns:
   L = ncol(B_I)
@@ -1030,12 +1921,12 @@ bart_star_ispline = function(y,
   post.pred = array(NA, c(nsave, n))
   post.mu = array(NA, c(nsave, n))
   post.sigma = post.sigma.gamma = numeric(nsave)
-  post.g = array(NA, c(nsave, length(t_g)))
+  post.g = array(NA, c(nsave, length(1:max(y))))
   post.log.like.point = array(NA, c(nsave, n)) # Pointwise log-likelihood
   # Test data: fitted values and posterior predictive distribution
   if(include_test){
-    post.pred.test = post.fitted.values.test = post.mu.test = array(NA, c(nsave, n0))
-    if(!is.null(y_test)) {post.log.pred.test = array(NA, c(nsave, n0))} else post.log.pred.test = NULL
+    post.pred.test = post.fitted.values.test = post.mu.test = array(NA, c(nsave, n_test))
+    if(!is.null(y_test)) {post.log.pred.test = array(NA, c(nsave, n_test))} else post.log.pred.test = NULL
   } else {
     post.pred.test = post.fitted.values.test = post.mu.test = post.log.pred.test = NULL
   }
@@ -1045,7 +1936,7 @@ bart_star_ispline = function(y,
   skipcount = 0; isave = 0 # For counting
 
   # Run the MCMC:
-  if(verbose) timer0 = proc.time()[3] # For timing the sampler
+  if(verbose) timer0 = proc.time()[3] # for estimating the time remaining
   for(nsi in 1:nstot){
 
     #----------------------------------------------------------------------------
@@ -1164,7 +2055,7 @@ bart_star_ispline = function(y,
           post.mu.test[isave,] = samp$test
 
           # Posterior predictive distribution at test points:
-          u = rnorm(n = n0, mean = samp$test, sd = params$sigma);
+          u = rnorm(n = n_test, mean = samp$test, sd = params$sigma);
           post.pred.test[isave,] = round_floor(sapply(u, function(ui) t_grid[which.min(abs(ui - g_grid))]))
 
           # Conditional expectation at test points:
@@ -1176,7 +2067,7 @@ bart_star_ispline = function(y,
           g_a_j_1Jp1 = g_grid[match(a_j(1:(Jmaxmax + 1)), t_grid)]; g_a_j_1Jp1[length(g_a_j_1Jp1)] = Inf
           post.fitted.values.test[isave,] = expectation_gRcpp(g_a_j = g_a_j_0J,
                                                               g_a_jp1 = g_a_j_1Jp1,
-                                                              mu = samp$test, sigma = rep(params$sigma, n0),
+                                                              mu = samp$test, sigma = rep(params$sigma, n_test),
                                                               Jmax = Jmax)
 
           # Test points for log-predictive score:
@@ -1194,12 +2085,12 @@ bart_star_ispline = function(y,
             post.log.pred.test[isave,] = logLikePointRcpp(g_a_j = g_test_a_y,
                                                           g_a_jp1 = g_test_ayp1,
                                                           mu = samp$test,
-                                                          sigma = rep(params$sigma, n0))
+                                                          sigma = rep(params$sigma, n_test))
           }
         }
 
         # Monotone transformation:
-        post.g[isave,] = g_eval;
+        post.g[isave,] = g_eval[match(1:max(y), t_g)]
 
         # SD parameter:
         post.sigma[isave] = params$sigma
@@ -1220,21 +2111,15 @@ bart_star_ispline = function(y,
         skipcount = 0
       }
     }
-    if(verbose){
-      if(nsi==1){
-        print("Burn-In Period")
-      } else if (nsi < nburn){
-        computeTimeRemaining(nsi, timer0, nstot, nrep = 4000)
-      } else if (nsi==nburn){
-        print("Starting sampling")
-        timer1 = proc.time()[3]
-      } else {
-        computeTimeRemaining(nsi-nburn, timer1, nstot-nburn, nrep = 4000)
-      }
-    }
+    if(verbose) computeTimeRemaining(nsi, timer0, nstot)
   }
-  if(verbose) print(paste('Total time: ', round((proc.time()[3] - timer0)), 'seconds'))
-
+  # Summarize computing time:
+  if(verbose){
+    tfinal = proc.time()[3] - timer00
+    if(tfinal > 60){
+      print(paste('Total time:', round(tfinal/60,1), 'minutes'))
+    } else print(paste('Total time:', round(tfinal), 'seconds'))
+  }
   # Compute WAIC:
   lppd = sum(log(colMeans(exp(post.log.like.point))))
   p_waic = sum(apply(post.log.like.point, 2, function(x) sd(x)^2))
@@ -1298,7 +2183,8 @@ bart_star_ispline = function(y,
 #' \item \code{post.log.like.point}: draws of the log-likelihood for each of the \code{n} observations
 #' \item \code{WAIC}: Widely-Applicable/Watanabe-Akaike Information Criterion
 #' \item \code{p_waic}: Effective number of parameters based on WAIC
-#' \item \code{post.g}: draws from the posterior distribution of the transformation \code{g}
+#' \item \code{post.g}: \code{nsave} posterior samples of the transformation
+#' evaluated at \code{1:max(y)}
 #' \item \code{post.sigma.gamma}: draws from the posterior distribution of \code{sigma.gamma},
 #' the prior standard deviation of the transformation g() coefficients
 #' \item \code{fitted.values}: the posterior mean of the conditional expectation of the counts \code{y}
@@ -1326,22 +2212,29 @@ bart_star_ispline = function(y,
 #' Additionally, if \code{init_params} and \code{sample_params} have output \code{mu_test}, then the sampler will output
 #' \code{post.predtest}, which contains draws from the posterior predictive distribution at test points.
 #'
-#' @importFrom splines2 iSpline
-#' @importFrom Matrix Matrix chol
+# #' @importFrom splines2 iSpline
+# #' @importFrom Matrix Matrix chol
 #' @keywords internal
 genMCMC_star_ispline = function(y,
-                             sample_params,
-                             init_params,
-                             lambda_prior = 1/2,
-                             y_max = Inf,
-                             nsave = 1000,
-                             nburn = 1000,
-                             nskip = 0,
-                             save_y_hat = FALSE,
-                             target_acc_rate = 0.3,
-                             adapt_rate = 0.75,
-                             stop_adapt_perc = 0.5,
-                             verbose = TRUE){
+                                sample_params,
+                                init_params,
+                                lambda_prior = 1/2,
+                                y_max = Inf,
+                                nsave = 1000,
+                                nburn = 1000,
+                                nskip = 0,
+                                save_y_hat = FALSE,
+                                target_acc_rate = 0.3,
+                                adapt_rate = 0.75,
+                                stop_adapt_perc = 0.5,
+                                verbose = TRUE){
+  # Libraries required here:
+  if (!requireNamespace("splines2", quietly = TRUE)) stop("Package \"splines2\" must be installed to use this function.", call. = FALSE)
+  if (!requireNamespace("Matrix", quietly = TRUE)) stop("Package \"Matrix\" must be installed to use this function.", call. = FALSE)
+  #----------------------------------------------------------------------------
+
+  # To report the full computing time:
+  if(verbose) timer00 = proc.time()[3]
 
   # Check: currently implemented for nonnegative integers
   if(any(y < 0) || any(y != floor(y)))
@@ -1404,7 +2297,7 @@ genMCMC_star_ispline = function(y,
 
   #Does the sampler return mu_test
   testpoints = !is.null(params$mu_test)
-  if(testpoints) n0 <- length(params$mu_test)
+  if(testpoints) n_test <- length(params$mu_test)
 
   # Length of parameters:
   if(beta_sampled){
@@ -1433,8 +2326,8 @@ genMCMC_star_ispline = function(y,
   knots_g = knots_g[knots_g > 0]; knots_g = knots_g[knots_g < max(t_g)]; knots_g = sort(unique(knots_g))
 
   # I-spline basis:
-  B_I_grid = iSpline(t_grid, knots = knots_g, degree = 2)
-  B_I = iSpline(t_g, knots = knots_g, degree = 2)   #B_I = B_I_grid[match(t_g, t_grid),]
+  B_I_grid = splines2::iSpline(t_grid, knots = knots_g, degree = 2)
+  B_I = splines2::iSpline(t_g, knots = knots_g, degree = 2)   #B_I = B_I_grid[match(t_g, t_grid),]
 
   # Derivative:
   #D_I = deriv(B_I_grid, derivs = 1L)[match(t_g, t_grid),]
@@ -1506,10 +2399,10 @@ genMCMC_star_ispline = function(y,
                               dimnames = list(NULL, names(unlist((params$coefficients)))))
   }
   post.pred = array(NA, c(nsave, n))
-  if(testpoints) post.predtest = array(NA, c(nsave, n0))
+  if(testpoints) post.predtest = array(NA, c(nsave, n_test))
   post.mu = array(NA, c(nsave, n))
   post.sigma = post.sigma.gamma = numeric(nsave)
-  post.g = array(NA, c(nsave, length(t_g)))
+  post.g = array(NA, c(nsave, length(1:max(y))))
   post.log.like.point = array(NA, c(nsave, n)) # Pointwise log-likelihood
 
   # Total number of MCMC simulations:
@@ -1517,7 +2410,7 @@ genMCMC_star_ispline = function(y,
   skipcount = 0; isave = 0 # For counting
 
   # Run the MCMC:
-  if(verbose) timer0 = proc.time()[3] # For timing the sampler
+  if(verbose) timer0 = proc.time()[3] # for estimating the time remaining
   for(nsi in 1:nstot){
 
     #----------------------------------------------------------------------------
@@ -1625,8 +2518,8 @@ genMCMC_star_ispline = function(y,
 
         #Posterior predictive at test points
         if(testpoints){
-          u = rnorm(n = n, mean = params$mu_test, sd = params$sigma); g_grid = B_I_grid%*%gamma
-          post.pred[isave,] = round_floor(sapply(u, function(ui) t_grid[which.min(abs(ui - g_grid))]))
+          u = rnorm(n = n_test, mean = params$mu_test, sd = params$sigma); g_grid = B_I_grid%*%gamma
+          post.predtest[isave,] = round_floor(sapply(u, function(ui) t_grid[which.min(abs(ui - g_grid))]))
         }
 
         # Conditional expectation:
@@ -1644,7 +2537,7 @@ genMCMC_star_ispline = function(y,
         }
 
         # Monotone transformation:
-        post.g[isave,] = g_eval;
+        post.g[isave,] = g_eval[match(1:max(y), t_g)]
 
         # SD parameter:
         post.sigma[isave] = params$sigma
@@ -1665,20 +2558,16 @@ genMCMC_star_ispline = function(y,
         skipcount = 0
       }
     }
-    if(verbose){
-      if(nsi==1){
-        print("Burn-In Period")
-      } else if (nsi < nburn){
-        computeTimeRemaining(nsi, timer0, nstot, nrep = 4000)
-      } else if (nsi==nburn){
-        print("Starting sampling")
-        timer1 = proc.time()[3]
-      } else {
-        computeTimeRemaining(nsi-nburn, timer1, nstot-nburn, nrep = 4000)
-      }
-    }
+    if(verbose) computeTimeRemaining(nsi, timer0, nstot)
   }
-  if(verbose) print(paste('Total time: ', round((proc.time()[3] - timer0)), 'seconds'))
+
+  # Summarize computing time:
+  if(verbose){
+    tfinal = proc.time()[3] - timer00
+    if(tfinal > 60){
+      print(paste('Total time:', round(tfinal/60,1), 'minutes'))
+    } else print(paste('Total time:', round(tfinal), 'seconds'))
+  }
 
   #Compute fitted values if necessary
   if(save_y_hat) fitted.values = colMeans(post.fitted.values) else fitted.values=NULL
@@ -1717,7 +2606,146 @@ genMCMC_star_ispline = function(y,
   return(result)
 }
 
+#' Initialize linear regression parameters assuming a g-prior
+#'
+#' Initialize the parameters for a linear regression model assuming a
+#' g-prior for the coefficients.
+#'
+#' @param y \code{n x 1} vector of data
+#' @param X \code{n x p} matrix of predictors
+#' @param X_test \code{n_test x p} matrix of predictors at test points (default is NULL)
+#'
+#' @return a named list \code{params} containing at least
+#' \enumerate{
+#' \item \code{mu}: vector of conditional means (fitted values)
+#' \item \code{sigma}: the conditional standard deviation
+#' \item \code{coefficients}: a named list of parameters that determine \code{mu}
+#' }
+#' Additionally, if X_test is not NULL, then the list includes an element
+#' \code{mu_test}, the vector of conditional means at the test points
+#'
+#' @note The parameters in \code{coefficients} are:
+#' \itemize{
+#' \item \code{beta}: the \code{p x 1} vector of regression coefficients
+#' components of \code{beta}
+#' }
+#'
+#' @examples
+#' # Simulate data for illustration:
+#' sim_dat = simulate_nb_lm(n = 100, p = 5)
+#' y = sim_dat$y; X = sim_dat$X
+#'
+#' # Initialize:
+#' params = init_lm_gprior(y = y, X = X)
+#' names(params)
+#' names(params$coefficients)
+#'
+#' @export
+init_lm_gprior = function(y, X, X_test=NULL){
 
+  # Initialize the linear model:
+  n = nrow(X); p = ncol(X)
+
+  # Regression coefficients: depending on p >= n or p < n
+  if(p >= n){
+    beta = sampleFastGaussian(Phi = X, Ddiag = rep(1, p), alpha = y)
+  } else beta = lm(y ~ X - 1)$coef
+
+  # Fitted values:
+  mu = X%*%beta
+
+  #Mean at the test points (if passed in)
+  if(!is.null(X_test)) mu_test = X_test%*%beta
+
+  # Observation SD:
+  sigma = sd(y - mu)
+
+  # Named list of coefficients:
+  coefficients = list(beta = beta)
+
+  result = list(mu = mu, sigma = sigma, coefficients = coefficients)
+  if(!is.null(X_test)){
+    result = c(result, list(mu_test = mu_test))
+  }
+  return(result)
+}
+#' Sample the linear regression parameters assuming a g-prior
+#'
+#' Sample the parameters for a linear regression model assuming a
+#' g-prior for the  coefficients. The coefficients and error standard
+#' deviation are sampled jointly.
+#'
+#' @param y \code{n x 1} vector of data
+#' @param X \code{n x p} matrix of predictors
+#' @param params the named list of parameters containing
+#' \enumerate{
+#' \item \code{mu}: vector of conditional means (fitted values)
+#' \item \code{sigma}: the conditional standard deviation
+#' \item \code{coefficients}: a named list of parameters that determine \code{mu}
+#' }
+#' @param psi the prior variance for the g-prior
+#' @param chXtX the \code{p x p} matrix of \code{chol(crossprod(X))} (one-time cost);
+#' if NULL, compute within the function
+#' @param X_test matrix of predictors at test points (default is NULL)
+#'
+#' @return The updated named list \code{params} with draws from the full conditional distributions
+#' of \code{sigma} and \code{coefficients} (along with updated \code{mu} and \code{mu_test} if applicable).
+#'
+#' @note The parameters in \code{coefficients} are:
+#' \itemize{
+#' \item \code{beta}: the \code{p x 1} vector of regression coefficients
+#' components of \code{beta}
+#' }
+#'
+#' @examples
+#' # Simulate data for illustration:
+#' sim_dat = simulate_nb_lm(n = 100, p = 5)
+#' y = sim_dat$y; X = sim_dat$X
+#' # Initialize:
+#' params = init_lm_gprior(y = y, X = X)
+#' # Sample:
+#' params = sample_lm_gprior(y = y, X = X, params = params)
+#' names(params)
+#' names(params$coefficients)
+#'
+#' @export
+sample_lm_gprior = function(y, X, params, psi = length(y), chXtX = NULL, X_test=NULL){
+
+  # Dimensions:
+  n = nrow(X); p = ncol(X)
+
+  # Access elements of the named list:
+  sigma = params$sigma  # Observation SD
+  coefficients = params$coefficients # Coefficients to access below:
+  beta = coefficients$beta; # Regression coefficients (including intercept)
+
+  # Key recurring terms:
+  Xty = crossprod(X, y)
+  if(is.null(chXtX)) chXtX = chol(crossprod(X)) # can be stored for faster computing
+  chXtX_psi = sqrt((1+psi)/(psi))*chXtX # update for psi
+  fsolve_beta = forwardsolve(t(chXtX_psi), Xty) # recurring
+
+  # Sample the SD:
+  SSR_psi = sum(y^2) - crossprod(Xty, backsolve(chXtX_psi, fsolve_beta)) # SSR_psi = sum(y^2) - psi/(psi+1)*crossprod(Xty, XtXinv%*%Xty)
+  sigma =  1/sqrt(rgamma(n = 1,
+                         shape = .001 + n/2,
+                         rate = .001 + SSR_psi/2))
+
+  # Sample the regression coefficients:
+  beta = backsolve(chXtX_psi/sigma,
+                   fsolve_beta/sigma + rnorm(p))
+
+  # Update the coefficients:
+  coefficients$beta = beta
+
+  result = list(mu = X%*%beta,  # conditional mean
+                sigma = sigma,
+                coefficients = coefficients)
+  if(!is.null(X_test)){
+    result = c(result, list(mu_test = X_test%*%beta)) # conditional mean at test points
+  }
+  return(result)
+}
 #' Initialize the parameters for an additive model
 #'
 #' Initialize the parameters for an additive model, which may contain
@@ -1746,12 +2774,17 @@ genMCMC_star_ispline = function(y,
 #' \item \code{sigma_theta_j}: \code{pNL x 1} vector of nonlinear coefficient standard deviations
 #' }
 #'
-#' @importFrom spikeSlabGAM sm
+# #' @importFrom spikeSlabGAM sm
 #' @keywords internal
 init_bam_orthog = function(y,
                            X_lin,
                            X_nonlin,
                            B_all = NULL){
+
+  # Library required here:
+  if (!requireNamespace("spikeSlabGAM", quietly = TRUE)) stop("Package \"spikeSlabGAM\" must be installed to use this function.", call. = FALSE)
+  #----------------------------------------------------------------------------
+
   # Dimension:
   n = length(y)
 
@@ -1781,7 +2814,7 @@ init_bam_orthog = function(y,
   mu_lin = fitted(fit_lm)
 
   # Basis matrices for all nonlinear predictors:
-  if(is.null(B_all)) B_all = lapply(1:pNL, function(j) {B0 = sm(X_nonlin[,j]); B0/sqrt(sum(diag(crossprod(B0))))})
+  if(is.null(B_all)) B_all = lapply(1:pNL, function(j) {B0 = spikeSlabGAM::sm(X_nonlin[,j]); B0/sqrt(sum(diag(crossprod(B0))))})
 
   # Nonlinear components: initialize to correct dimension, then iterate
   theta_j = lapply(B_all, function(b_j) colSums(b_j*0))
@@ -1899,7 +2932,7 @@ sample_bam_orthog = function(y,
   X[,1:pL] = X_lin; X[, (pL+1):p] = X_nonlin
 
   # Basis matrices for all nonlinear predictors:
-  if(is.null(B_all)) B_all = lapply(1:pNL, function(j) {B0 = sm(X_nonlin[,j]); B0/sqrt(sum(diag(crossprod(B0))))})
+  if(is.null(B_all)) B_all = lapply(1:pNL, function(j) {B0 = spikeSlabGAM::sm(X_nonlin[,j]); B0/sqrt(sum(diag(crossprod(B0))))})
 
   # And the crossproduct for the quadratic term, which is diagonal:
   if(is.null(diagBtB_all)) diagBtB_all = lapply(1:pNL, function(j) colSums(B_all[[j]]^2))
@@ -1978,7 +3011,7 @@ sample_bam_orthog = function(y,
 
   # Sample the prior SD for the (non-intercept) regression coefficients
   sigma_beta = c(10^3,  # Flat prior for the intercept
-                 rep(1/sqrt(rtrunc(n = 1,
+                 rep(1/sqrt(truncdist::rtrunc(n = 1,
                                    'gamma',   # Family of distribution
                                    a = 1/A^2, # Lower interval
                                    b = Inf,   # Upper interval
@@ -2257,7 +3290,7 @@ sample_bam_thin = function(y,
 
   # Sample the prior SD for the (non-intercept) regression coefficients
   sigma_beta = c(10^3,  # Flat prior for the intercept
-                 rep(1/sqrt(rtrunc(n = 1,
+                 rep(1/sqrt(truncdist::rtrunc(n = 1,
                                    'gamma',   # Family of distribution
                                    a = 1/A^2, # Lower interval
                                    b = Inf,   # Upper interval
@@ -2474,17 +3507,20 @@ splineBasis = function(tau, sumToZero = TRUE, rescale01 = TRUE){
 }
 
 #----------------------------------------------------------------------------
-#' Estimate the remaining time in the MCMC based on previous samples
-#' @param nsi Current iteration
-#' @param timer0 Initial timer value, returned from \code{proc.time()[3]}
-#' @param nsims Total number of simulations
-#' @param nrep Print the estimated time remaining every \code{nrep} iterations
-#' @return Table of summary statistics using the function \code{summary}
-#'
+#' Estimate the remaining time in the algorithm
+#' @param nsi current iteration
+#' @param timer0 initial timer value from \code{proc.time()[3]}
+#' @param nsims total number of simulations
+#' @param nprints total number of printed updates
+#' @return estimate of remaining time
 #' @keywords internal
-computeTimeRemaining = function(nsi, timer0, nsims, nrep=1000){
+computeTimeRemaining = function(nsi, timer0, nsims, nprints = 1){
+
+  # Print every nrep:
+  nrep = ceiling(nsims/(nprints +1)) + 1
+
   # Only print occasionally:
-  if(nsi%%nrep == 0 || nsi==1000) {
+  if(nsi%%nrep == 0){ # || nsi==ninit) {
     # Current time:
     timer = proc.time()[3]
 
@@ -2496,15 +3532,14 @@ computeTimeRemaining = function(nsi, timer0, nsims, nrep=1000){
 
     # Print the results:
     if(secRemaining > 3600) {
-      print(paste(round(secRemaining/3600, 1), "hours remaining"))
+      print(paste(round(secRemaining/3600, 1), "hr remaining"))
     } else {
       if(secRemaining > 60) {
-        print(paste(round(secRemaining/60, 2), "minutes remaining"))
-      } else print(paste(round(secRemaining, 2), "seconds remaining"))
+        print(paste(ceiling(secRemaining/60), "min remaining"))
+      } else print(paste(ceiling(secRemaining), "sec remaining"))
     }
   }
 }
-
 #----------------------------------------------------------------------------
 #' Compute the log-odds
 #' @param x scalar or vector in (0,1) for which to compute the (componentwise) log-odds
@@ -2840,7 +3875,7 @@ truncnorm_mom = function(a, b, mu, sig){
 #'
 #' @param y \code{n x 1} vector of data
 #' @param X \code{n x p} matrix of predictors
-#' @param X_test \code{n0 x p} matrix of predictors at test points (default is NULL)
+#' @param X_test \code{n_test x p} matrix of predictors at test points (default is NULL)
 #'
 #' @return a named list \code{params} containing at least
 #' \enumerate{
@@ -2922,8 +3957,15 @@ init_lm_ridge = function(y, X, X_test=NULL){
 #' }
 #'
 #' @keywords internal
-#' @import truncdist
+# #' @import truncdist
 sample_lm_ridge = function(y, X, params, A = 10^4, XtX = NULL, X_test=NULL){
+
+  if (!requireNamespace("truncdist", quietly = TRUE)) {
+    stop(
+      "Package \"truncdist\" must be installed to use this function.",
+      call. = FALSE
+    )
+  }
 
   # Dimensions:
   n = nrow(X); p = ncol(X)
@@ -2965,7 +4007,7 @@ sample_lm_ridge = function(y, X, params, A = 10^4, XtX = NULL, X_test=NULL){
 
   # Sample the prior SD for the (non-intercept) regression coefficients
   sigma_beta = c(10^3,  # Flat prior for the intercept
-                 rep(1/sqrt(rtrunc(n = 1,
+                 rep(1/sqrt(truncdist::rtrunc(n = 1,
                                    'gamma',   # Family of distribution
                                    a = 1/A^2, # Lower interval
                                    b = Inf,   # Upper interval
@@ -2992,7 +4034,7 @@ sample_lm_ridge = function(y, X, params, A = 10^4, XtX = NULL, X_test=NULL){
 #'
 #' @param y \code{n x 1} vector of data
 #' @param X \code{n x p} matrix of predictors
-#' @param X_test \code{n0 x p} matrix of predictors at test points (default is NULL)
+#' @param X_test \code{n_test x p} matrix of predictors at test points (default is NULL)
 #'
 #' @return a named list \code{params} containing at least
 #' \enumerate{

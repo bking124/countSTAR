@@ -11,7 +11,7 @@ init_lm_hs(y, X, X_test = NULL)
 
 \item{X}{\code{n x p} matrix of predictors}
 
-\item{X_test}{\code{n0 x p} matrix of predictors at test points (default is NULL)}
+\item{X_test}{\code{n_test x p} matrix of predictors at test points (default is NULL)}
 }
 \value{
 a named list \code{params} containing at least

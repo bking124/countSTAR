@@ -69,7 +69,8 @@ A list with at least the following elements:
 \item \code{post.log.like.point}: draws of the log-likelihood for each of the \code{n} observations
 \item \code{WAIC}: Widely-Applicable/Watanabe-Akaike Information Criterion
 \item \code{p_waic}: Effective number of parameters based on WAIC
-\item \code{post.g}: draws from the posterior distribution of the transformation \code{g}
+\item \code{post.g}: \code{nsave} posterior samples of the transformation
+evaluated at \code{1:max(y)}
 \item \code{post.sigma.gamma}: draws from the posterior distribution of \code{sigma.gamma},
 the prior standard deviation of the transformation g() coefficients
 \item \code{fitted.values}: the posterior mean of the conditional expectation of the counts \code{y}
