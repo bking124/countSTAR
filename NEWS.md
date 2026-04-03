@@ -1,4 +1,4 @@
-# countSTAR (development version)
+# countSTAR 1.1.0
 
 # countSTAR 1.1.0
 * Reduced package dependencies
