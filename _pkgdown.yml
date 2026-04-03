@@ -38,6 +38,8 @@ reference:
   - a_j
   - round_floor
   - starts_with("g_")
+  - HPDregion
+  - rdir
 - subtitle: Simulation and Visualization
 - contents:
   - starts_with("simulate")
