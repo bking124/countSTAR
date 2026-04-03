@@ -1,3 +1,5 @@
+# countSTAR 1.2.0
+
 # countSTAR 1.1.0
 
 # countSTAR 1.1.0
