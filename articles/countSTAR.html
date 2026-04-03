@@ -5,61 +5,43 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="description" content="countSTAR">
 <title>Getting Started with countSTAR • countSTAR</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.2.2/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.2.2/bootstrap.bundle.min.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
-<!-- bootstrap-toc --><script src="https://cdn.jsdelivr.net/gh/afeld/bootstrap-toc@v1.0.1/dist/bootstrap-toc.min.js" integrity="sha256-4veVQbu7//Lk5TSmc7YV48MxtMy98e26cf5MrgZYnwo=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Getting Started with countSTAR">
-<meta property="og:description" content="countSTAR">
-<!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
-<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
-<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-<![endif]-->
+<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Getting Started with countSTAR">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
-    
 
-    <nav class="navbar fixed-top navbar-light navbar-expand-lg bg-light"><div class="container">
-    
+
+    <nav class="navbar navbar-expand-lg fixed-top bg-light" data-bs-theme="light" aria-label="Site navigation"><div class="container">
+
     <a class="navbar-brand me-2" href="../index.html">countSTAR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.2.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
 
-    
+
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
-<li class="active nav-item">
-  <a class="nav-link" href="../articles/countSTAR.html">Get started</a>
-</li>
-<li class="nav-item">
-  <a class="nav-link" href="../reference/index.html">Reference</a>
-</li>
-<li class="nav-item">
-  <a class="nav-link" href="../news/index.html">Changelog</a>
-</li>
+<li class="active nav-item"><a class="nav-link" href="../articles/countSTAR.html">Get started</a></li>
+<li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul>
-<form class="form-inline my-2 my-lg-0" role="search">
-        <input type="search" class="form-control me-sm-2" aria-label="Toggle navigation" name="search-input" data-search-index="../search.json" id="search-input" placeholder="Search for" autocomplete="off">
-</form>
-
-      <ul class="navbar-nav">
-<li class="nav-item">
-  <a class="external-link nav-link" href="https://github.com/bking124/countSTAR/" aria-label="github">
-    <span class="fab fa fab fa-github fa-lg"></span>
-     
-  </a>
-</li>
+<ul class="navbar-nav">
+<li class="nav-item"><form class="form-inline" role="search">
+ <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json">
+</form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/bking124/countSTAR/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul>
 </div>
 
-    
+
   </div>
 </nav><div class="container template-article">
 
@@ -68,10 +50,11 @@
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-      <img src="" class="logo" alt=""><h1>Getting Started with countSTAR</h1>
+
+      <h1>Getting Started with countSTAR</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/bking124/countSTAR/blob/HEAD/vignettes/countSTAR.Rmd" class="external-link"><code>vignettes/countSTAR.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/bking124/countSTAR/blob/master/vignettes/countSTAR.Rmd" class="external-link"><code>vignettes/countSTAR.Rmd</code></a></small>
       <div class="d-none name"><code>countSTAR.Rmd</code></div>
     </div>
 
@@ -81,13 +64,13 @@
 <h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
 <p>The <code>countSTAR</code> package implements a variety of methods to
-analyze diverse count-valued data, all based on the idea of Simultaneous
-Transformation and Rounding (STAR) models. The package functionality is
-broadly split into three categories: Bayesian estimation of STAR models
-(<span class="citation">Kowal and Canale (<a href="#ref-Kowal2020a" role="doc-biblioref">2020</a>)</span>, <span class="citation">Kowal and
-Wu (<a href="#ref-kowalSTARconjugate" role="doc-biblioref">2022</a>)</span>), frequentist/classical estimation
-(<span class="citation">Kowal and Wu (<a href="#ref-kowal2021semiparametric" role="doc-biblioref">2021</a>)</span>), and time series analysis using
-warped Dynamic Linear Models (<span class="citation">King and Kowal (<a href="#ref-king2023warped" role="doc-biblioref">2023</a>)</span>).</p>
+analyze count data, all based on Simultaneous Transformation and
+Rounding (STAR) models. The package functionality is broadly split into
+three categories: frequentist/classical estimation (<span class="citation">Kowal and Wu (<a href="#ref-kowal2021semiparametric">2021</a>)</span>), Bayesian modeling
+and prediction (<span class="citation">Kowal and Canale (<a href="#ref-Kowal2020a">2020</a>)</span>; <span class="citation">Kowal
+and Wu (<a href="#ref-kowalSTARconjugate">2022</a>)</span>), and time
+series analysis and forecasting (<span class="citation">King and Kowal
+(<a href="#ref-king2023warped">2023</a>)</span>).</p>
 <p>We give a brief description of the STAR framework, before diving into
 specific examples that show the <code>countSTAR</code>
 functionality.</p>
@@ -96,131 +79,189 @@ functionality.</p>
 <h2 id="star-model-overview">STAR Model Overview<a class="anchor" aria-label="anchor" href="#star-model-overview"></a>
 </h2>
 <p>STAR models build upon continuous data models to provide a <em>valid
-count-valued data-generating process</em>. An example STAR model for
-linear regression is as follows: <span class="math display">\[\begin{align*}
+count-valued data-generating process</em>. As a motivating example,
+consider the common practice of taking log- or square-root
+transformations of count data and then applying continuous data models
+(e.g., Gaussian or OLS regressions). This approach is widely popular
+because it addresses the skewness often found in count data and enables
+use of familiar models, but it does not provide a valid count data
+distribution. STAR models retain the core components—the transformation
+and the continuous data model—but add in a rounding layer to ensure a
+coherent, count-valued data-generating process. For example:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right"><msub><mi>y</mi><mi>i</mi></msub></mtd><mtd columnalign="left" style="text-align: left"><mo>=</mo><mtext mathvariant="normal">floor</mtext><mrow><mo stretchy="true" form="prefix">(</mo><msubsup><mi>y</mi><mi>i</mi><mo>*</mo></msubsup><mo stretchy="true" form="postfix">)</mo></mrow></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right"><msub><mi>z</mi><mi>i</mi></msub></mtd><mtd columnalign="left" style="text-align: left"><mo>=</mo><mo>log</mo><mrow><mo stretchy="true" form="prefix">(</mo><msubsup><mi>y</mi><mi>i</mi><mo>*</mo></msubsup><mo stretchy="true" form="postfix">)</mo></mrow></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right"><msub><mi>z</mi><mi>i</mi></msub></mtd><mtd columnalign="left" style="text-align: left"><mo>=</mo><msub><mi>x</mi><mi>i</mi></msub><mi>′</mi><mi>θ</mi><mo>+</mo><msub><mi>ϵ</mi><mi>i</mi></msub><mo>,</mo><mspace width="1.0em"></mspace><msub><mi>ϵ</mi><mi>i</mi></msub><mo>∼</mo><mi>N</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><msup><mi>σ</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow></mtd></mtr></mtable><annotation encoding="application/x-tex">\begin{align*}
 y_i &amp;= \mbox{floor}(y_i^*) \\
-z_i^* &amp;= \log(y_i^*) \\
-z_i^* &amp;= x_i'\beta + \epsilon_i, \quad \epsilon_i
-\stackrel{iid}{\sim}N(0, \sigma^2)
-\end{align*}\]</span> The latent data <span class="math inline">\(y_i^*\)</span> act as a <em>continuous proxy</em>
-for the count data <span class="math inline">\(y_i\)</span>, which is
-easier to model yet has a simple mapping via the floor function to the
-observed data. The latent data <span class="math inline">\(y_i^*\)</span> are transformed to <span class="math inline">\(z_i^*\)</span>, as in common practice, and modeled
-using Gaussian linear regression. This model inherits the same structure
-as before, but the data-generating process is now count-valued.</p>
+z_i &amp;= \log(y_i^*) \\
+z_i &amp;= x_i'\theta + \epsilon_i, \quad \epsilon_i \sim N(0, \sigma^2)
+\end{align*}</annotation></semantics></math> The transformation and
+continuous data model are not applied directly to the observed counts
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>y</mi><mi>i</mi></msub><annotation encoding="application/x-tex">y_i</annotation></semantics></math>,
+but rather to a latent “continuous proxy”
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>y</mi><mi>i</mi><mo>*</mo></msubsup><annotation encoding="application/x-tex">y_i^*</annotation></semantics></math>.
+The (latent) continuous data model is linked to the (observed) count
+data via a coarsening operation. This is <em>not</em> the same as
+rounding the outputs from a fitted continuous data model: the discrete
+nature of the data is built into the model itself, and thus is central
+in estimation, inference, and prediction.</p>
 <p>More generally, STAR models are defined via a <em>rounding
-operator</em> <span class="math inline">\(h\)</span>, a (known or
-unknown) <em>transformation</em> <span class="math inline">\(g\)</span>,
-and a <em>continuous data model</em> <span class="math inline">\(\Pi_\theta\)</span> with unknown parameters <span class="math inline">\(\theta\)</span>: <span class="math display">\[\begin{align*}
-y &amp;= h(y^*) \quad \mbox{(rounding)}\\
-z^* &amp;= g(y^*) \quad \mbox{(transformation)}\\
-z^* &amp; \sim \Pi_\theta \quad \mbox{(model)}\\
-\end{align*}\]</span> Importantly, STAR models are highly flexible
-count-valued processes, and provide the capability to model (i) discrete
-data, (ii) zero-inflation, (iii) over- or under-dispersion, and (iv)
-bounded or censored data.</p>
-<p>We focus on conditionally Gaussian models of the form <span class="math display">\[
-z^*(x) = \mu_\theta(x) + \epsilon(x), \quad \epsilon(x)
-\stackrel{iid}{\sim}N(0, \sigma^2)
-\]</span> where <span class="math inline">\(\mu_\theta(x)\)</span> is
-the conditional expectation of the transformed latent data with unknown
-parameters <span class="math inline">\(\theta\)</span>. Examples include
-linear, additive, and tree-based regression models.</p>
+operator</em>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>h</mi><annotation encoding="application/x-tex">h</annotation></semantics></math>,
+a (known or unknown) <em>transformation</em>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>g</mi><annotation encoding="application/x-tex">g</annotation></semantics></math>,
+and a <em>continuous data model</em> with unknown parameters
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right"><msub><mi>y</mi><mi>i</mi></msub></mtd><mtd columnalign="left" style="text-align: left"><mo>=</mo><mi>h</mi><mrow><mo stretchy="true" form="prefix">(</mo><msubsup><mi>y</mi><mi>i</mi><mo>*</mo></msubsup><mo stretchy="true" form="postfix">)</mo></mrow><mspace width="1.0em"></mspace><mtext mathvariant="normal">(rounding)</mtext></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right"><msub><mi>z</mi><mi>i</mi></msub></mtd><mtd columnalign="left" style="text-align: left"><mo>=</mo><mi>g</mi><mrow><mo stretchy="true" form="prefix">(</mo><msubsup><mi>y</mi><mi>i</mi><mo>*</mo></msubsup><mo stretchy="true" form="postfix">)</mo></mrow><mspace width="1.0em"></mspace><mtext mathvariant="normal">(transformation)</mtext></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right"><msub><mi>z</mi><mi>i</mi></msub></mtd><mtd columnalign="left" style="text-align: left"><mo>=</mo><msub><mi>μ</mi><mi>θ</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><msub><mi>ϵ</mi><mi>i</mi></msub><mspace width="1.0em"></mspace><mtext mathvariant="normal">(model)</mtext></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right"></mtd></mtr></mtable><annotation encoding="application/x-tex">\begin{align*}
+y_i &amp;= h(y_i^*) \quad \mbox{(rounding)}\\
+z_i &amp;= g(y_i^*) \quad \mbox{(transformation)}\\
+z_i &amp;= \mu_\theta(x_i) + \epsilon_i  \quad \mbox{(model)}\\
+\end{align*}</annotation></semantics></math> usually with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ϵ</mi><mi>i</mi></msub><mo>∼</mo><mi>N</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><msup><mi>σ</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\epsilon_i \sim N(0, \sigma^2)</annotation></semantics></math>.
+Examples of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mi>θ</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mu_\theta(x)</annotation></semantics></math>
+include linear, additive, and tree-based regression models. The
+regression model may be replaced with a time series model (see
+<code><a href="../reference/warpDLM.html">warpDLM()</a></code>, discussed below) or other continuous data
+models.</p>
+<p>STAR models are highly flexible models and provide the capability to
+model count (or rounded) data with challenging features such as</p>
+<ul>
+<li>zero-inflation</li>
+<li>over- or under-dispersion</li>
+<li>bounded or censored data</li>
+<li>heaping or multi-modality</li>
+</ul>
+<p>all with minimal user inputs and within a regression (or time series)
+context.</p>
 <div class="section level3">
 <h3 id="the-rounding-operator">The Rounding Operator<a class="anchor" aria-label="anchor" href="#the-rounding-operator"></a>
 </h3>
-<p>The rounding operator <span class="math inline">\(h\)</span> is a
-many-to-one function that sets <span class="math inline">\(y =
-j\)</span> whenever <span class="math inline">\(y^*\in
-\mathcal{A}_j\)</span> or equivalently when <span class="math inline">\(z^*=g(y^*) \in g(\mathcal{A}_j)\)</span> . It
-could take many different forms, but generally the floor function, i.e
-where <span class="math inline">\(\mathcal{A}_j := [j, j+1)\)</span>
-works well as a default, with the modification <span class="math inline">\(g(\mathcal{A}_0) := (-\infty, 0)\)</span> so that
-<span class="math inline">\(y = 0\)</span> whenever <span class="math inline">\(z^* &lt; 0\)</span>. This latter modification
-ensures that much of the latent space is mapped to zero, and therefore
-STAR models can easily account for zero-inflation. Furthermore, when
-there is a known upper bound <code>y_max</code><span class="math inline">\(=K\)</span> for the data, there is an additional
-change to incorporate this structure, namely we let <span class="math inline">\(g(\mathcal{A}_K) := [g(a_K), \infty)\)</span>.</p>
-<p>The rounding operator and its inverse are implemented in
-<code>countSTAR</code> with the functions <code><a href="../reference/a_j.html">a_j()</a></code> and
-<code>round_fun()</code>, although these rarely need to be employed by
-the end user. Instead, the only thing that might need to be specified by
-the user would be whether an upper bound for the data exists, in which
-case there is a simple option of setting <code>y_max</code> in each of
-the modeling functions that will then be passed to the rounding
-function.</p>
+<p>The rounding operator
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>h</mi><annotation encoding="application/x-tex">h</annotation></semantics></math>
+is a many-to-one function (or coarsening) that sets
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><mi>j</mi></mrow><annotation encoding="application/x-tex">y = j</annotation></semantics></math>
+whenever
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>y</mi><mo>*</mo></msup><mo>∈</mo><msub><mi>A</mi><mi>j</mi></msub></mrow><annotation encoding="application/x-tex">y^*\in A_j</annotation></semantics></math>
+or equivalently when
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>z</mi><mo>∈</mo><mi>g</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>A</mi><mi>j</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">z \in g(A_j)</annotation></semantics></math>.
+The floor function
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>A</mi><mi>j</mi></msub><mo>:=</mo><mo stretchy="false" form="prefix">[</mo><mi>j</mi><mo>,</mo><mi>j</mi><mo>+</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">A_j := [j, j+1)</annotation></semantics></math>
+works well as a default, with modifications for lower and upper
+endpoints. First,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>g</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>A</mi><mn>0</mn></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>:=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mo>−</mo><mi>∞</mi><mo>,</mo><mn>0</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">g(A_0) := (-\infty, 0)</annotation></semantics></math>
+ensures that
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">y = 0</annotation></semantics></math>
+whenever
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>z</mi><mo>&lt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">z &lt; 0</annotation></semantics></math>.
+Much of the latent space is mapped to zero, which enables STAR models to
+account for zero-inflation. Similarly, when there is a known (finite)
+upper bound <code>y_max</code> for the data, we fix
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>g</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>A</mi><mi>K</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>:=</mo><mo stretchy="false" form="prefix">[</mo><mi>g</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>a</mi><mi>K</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mi>∞</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">g(A_K) := [g(a_K), \infty)</annotation></semantics></math>,
+so STAR models can capture endpoint inflation. In fact, because of the
+coarsening nature of STAR models, they equivalently can be applied for
+count data that are bounded <em>or</em> censored at <code>y_max</code>
+without any modifications (<span class="citation">Kowal and Canale (<a href="#ref-Kowal2020a">2020</a>)</span>). From the user’s perspective,
+only <code>y_max</code> needs to be specified (if finite).</p>
 </div>
 <div class="section level3">
 <h3 id="the-transformation-function">The Transformation Function<a class="anchor" aria-label="anchor" href="#the-transformation-function"></a>
 </h3>
-<p>There are a variety of options for the transformation function <span class="math inline">\(g\)</span>, ranging from fixed functions to
-a-priori data-driven transformations to transformations learned along
-with the rest of the model. All models in <code>countSTAR</code> support
-three common fixed transformations: log, square root (‘sqrt’), and the
-identity transformation (essentially a rounding-only model).
-Furthermore, all functions support a set of transformations which are
-learned by matching marginal moments of the data <span class="math inline">\(y\)</span> to the latent <span class="math inline">\(z\)</span>:</p>
+<p>There are a variety of options for the transformation function
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>g</mi><annotation encoding="application/x-tex">g</annotation></semantics></math>,
+ranging from fixed functions to data-driven estimates to fully Bayesian
+(nonparametric) models for the transformation.</p>
+<p>First, all models in <code>countSTAR</code> support three fixed
+transformations: <code>log</code>, <code>sqrt</code>, and
+<code>identity</code> (essentially a rounding-only model). In these
+cases, the STAR model has exactly the same number of unknown parameters
+as the (latent) continuous data model. Thus, it gives a parsimonious
+adaptation of continuous data models to the count data setting.</p>
+<p>Second, most functions support a set of transformations that are
+estimated by matching marginal moments of the data
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math>
+to the latent
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>z</mi><annotation encoding="application/x-tex">z</annotation></semantics></math>:</p>
 <ul>
+<li>
+<code>transformation='np'</code> is a nonparametric transformation
+estimated from the empirical CDF of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math>
+</li>
 <li>
 <code>transformation='pois'</code> uses a moment-matched marginal
 Poisson CDF</li>
 <li>
 <code>transformation='neg-bin'</code> uses a moment-matched marginal
-Negative Binomial CDF</li>
-<li>
-<code>transformation='np'</code> is a nonparametric transformation
-estimated from the empirical CDF of <span class="math inline">\(y\)</span>.</li>
+Negative Binomial CDF.</li>
 </ul>
 <p>Details on the estimation of these transformations can be found in
-<span class="citation">Kowal and Wu (<a href="#ref-kowal2021semiparametric" role="doc-biblioref">2021</a>)</span>. In particular the “np”
-transformation has proven very effective, especially for heaped data,
-and is the default across all functions.</p>
-<p>Some STAR methods also support ways of learning the transformation
-alongside the model:</p>
+<span class="citation">Kowal and Wu (<a href="#ref-kowal2021semiparametric">2021</a>)</span>. The nonparametric
+transformation <code>np</code> is effective across a variety of
+empirical examples, so it is the default for frequentist STAR methods.
+The main drawback of this group of transformations is that, after being
+estimated, they are treated as fixed and known for estimation and
+inference of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>.
+Of course, this drawback is limited when
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>
+is large.</p>
+<p>Finally, Bayesian STAR methods enable joint learning of the
+transformation
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>g</mi><annotation encoding="application/x-tex">g</annotation></semantics></math>
+along with the model parameters
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>.
+Thus, uncertainty about the transformation is incorporated into all
+downstream estimation, inference, and prediction. These include both
+nonparametric and parametric transformations:</p>
 <ul>
 <li>
+<code>transformation='bnp'</code>: the transformation is modeled
+using Bayesian nonparametrics, and specifically via a Dirichlet process
+for the marginal outcome distribution, which incorporates uncertainty
+about the transformation into posterior and predictive inference.</li>
+<li>
 <code>transformation='box-cox'</code>: the transformation is assumed
-to belong to the Box-Cox family; the sampler samples the <span class="math inline">\(\lambda\)</span> parameter</li>
+to belong to the Box-Cox family; the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math>
+parameter can be fixed or learned.</li>
 <li>
 <code>transformation='ispline'</code>: the transformation is modeled
 as an unknown, monotone function using I-splines. The Robust Adaptive
-Metropolis (RAM) sampler is used for drawing the parameter of the
-transformation function.</li>
-<li>
-<code>transformation='bnp'</code>: the transformation is modeled
-using the Bayesian bootstrap, a Bayesian nonparametric model that
-incorporates the uncertainty about the transformation into posterior and
-predictive inference.</li>
+Metropolis (RAM) sampler is used for the unknown transformation
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>g</mi><annotation encoding="application/x-tex">g</annotation></semantics></math>.</li>
 </ul>
-<p>These learned transformations are not always available in every
-function; check the appropriate help page to see what options are
-supported.</p>
+<p>The transformation <code>bnp</code> is the default for all applicable
+Bayesian models. It is nonparametric, which provides substantial
+distributional flexible for STAR regression, and is remarkably
+computationally efficient—even compared to parametric alternatives. This
+approach is inspired by <span class="citation">Kowal and Wu (<a href="#ref-Kowal03042025">2025</a>)</span>.</p>
+<p>For any <code>countSTAR</code> function, the user can see which
+transformations are supported by checking the appropriate help page,
+e.g., <code>?blm_star()</code>.</p>
 </div>
 </div>
 <div class="section level2">
 <h2 id="count-valued-data-the-roaches-dataset">Count-Valued Data: The Roaches Dataset<a class="anchor" aria-label="anchor" href="#count-valued-data-the-roaches-dataset"></a>
 </h2>
-<p>As an example of complex count-valued data, consider the
+<p>As an example of challenging count-valued data, consider the
 <code>roaches</code> data from <span class="citation">Gelman and Hill
-(<a href="#ref-Gelman_Hill_2006" role="doc-biblioref">2006</a>)</span>.
-The response variable, <span class="math inline">\(y_i\)</span>, is the
-number of roaches caught in traps in apartment <span class="math inline">\(i\)</span>, with <span class="math inline">\(i=1,\ldots, n = 262\)</span>.</p>
+(<a href="#ref-Gelman_Hill_2006">2006</a>)</span>. The response
+variable,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>y</mi><mi>i</mi></msub><annotation encoding="application/x-tex">y_i</annotation></semantics></math>,
+is the number of roaches caught in traps in apartment
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>,
+with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi><mo>=</mo><mn>1</mn><mo>,</mo><mi>…</mi><mo>,</mo><mi>n</mi><mo>=</mo><mn>262</mn></mrow><annotation encoding="application/x-tex">i=1,\ldots, n = 262</annotation></semantics></math>.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">roaches</span>, package<span class="op">=</span><span class="st">"countSTAR"</span><span class="op">)</span> </span>
 <span></span>
 <span><span class="co"># Roaches:</span></span>
 <span><span class="va">y</span> <span class="op">=</span> <span class="va">roaches</span><span class="op">$</span><span class="va">y</span></span>
 <span></span>
-<span><span class="co"># Function to plot the point mass function:</span></span>
-<span><span class="va">stickplot</span> <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">y</span>, <span class="va">...</span><span class="op">)</span><span class="op">{</span></span>
-<span>  <span class="va">js</span> <span class="op">=</span> <span class="fl">0</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span>; </span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">js</span>, </span>
-<span>       <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">js</span>, <span class="kw">function</span><span class="op">(</span><span class="va">js</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">js</span> <span class="op">==</span> <span class="va">y</span><span class="op">)</span><span class="op">)</span>, </span>
-<span>       type<span class="op">=</span><span class="st">'h'</span>, lwd<span class="op">=</span><span class="fl">2</span>, <span class="va">...</span><span class="op">)</span></span>
-<span><span class="op">}</span></span>
-<span><span class="fu">stickplot</span><span class="op">(</span><span class="va">y</span>, main <span class="op">=</span> <span class="st">'PMF: Roaches Data'</span>,</span>
-<span>          xlab <span class="op">=</span> <span class="st">'Roaches'</span>, ylab <span class="op">=</span> <span class="st">'Probability mass'</span><span class="op">)</span></span></code></pre></div>
-<p><img src="countSTAR_files/figure-html/roaches-1.png" width="700"></p>
+<span><span class="co"># Plot the PMF:</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span>, </span>
+<span>     <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">js</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">js</span> <span class="op">==</span> <span class="va">y</span><span class="op">)</span><span class="op">)</span>, </span>
+<span>     type<span class="op">=</span><span class="st">'h'</span>, lwd<span class="op">=</span><span class="fl">2</span>, main <span class="op">=</span> <span class="st">'PMF: Roaches Data'</span>,</span>
+<span>     xlab <span class="op">=</span> <span class="st">'Roaches'</span>, ylab <span class="op">=</span> <span class="st">'Probability mass'</span><span class="op">)</span></span></code></pre></div>
+<p><img src="countSTAR_files/figure-html/roaches-1.png" class="r-plt" alt="" width="700"></p>
 <p>There are several notable features in the data:</p>
 <ol style="list-style-type: decimal">
 <li>Zero-inflation: 36% of the observations are zeros.</li>
@@ -235,6 +276,19 @@ Additional data are available on the pre-treatment number of roaches,
 whether the apartment building is restricted to elderly residents, and
 the number of days for which the traps were exposed. We are interested
 in modeling how the roach incidence varies with these predictors.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Design matrix:</span></span>
+<span><span class="va">X</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">model.matrix</a></span><span class="op">(</span> <span class="op">~</span> <span class="va">roach1</span> <span class="op">+</span> <span class="va">treatment</span> <span class="op">+</span> <span class="va">senior</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">exposure2</span><span class="op">)</span>,</span>
+<span>                 data <span class="op">=</span> <span class="va">roaches</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   (Intercept) roach1 treatment senior log(exposure2)</span></span>
+<span><span class="co">#&gt; 1           1 308.00         1      0     -0.2231436</span></span>
+<span><span class="co">#&gt; 2           1 331.25         1      0     -0.5108256</span></span>
+<span><span class="co">#&gt; 3           1   1.67         1      0      0.0000000</span></span>
+<span><span class="co">#&gt; 4           1   3.00         1      0      0.0000000</span></span>
+<span><span class="co">#&gt; 5           1   2.00         1      0      0.1335314</span></span>
+<span><span class="co">#&gt; 6           1   0.00         1      0      0.0000000</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="frequentist-inference-for-star-models">Frequentist inference for STAR models<a class="anchor" aria-label="anchor" href="#frequentist-inference-for-star-models"></a>
@@ -242,170 +296,179 @@ in modeling how the roach incidence varies with these predictors.</p>
 <p>Frequentist (or classical) estimation and inference for STAR models
 is provided by an EM algorithm. Sufficient for estimation is an
 <code>estimator</code> function which solves the least squares (or
-Gaussian maximum likelihood) problem associated with <span class="math inline">\(\mu_\theta\)</span>—or in other words, the
-estimator that <em>would</em> be used for Gaussian or continuous data.
-Specifically, <code>estimator</code> inputs data and outputs a list with
-two elements: the estimated <code>coefficients</code> <span class="math inline">\(\hat \theta\)</span> and the
-<code>fitted.values</code> <span class="math inline">\(\hat
-\mu_\theta(x_i) = \mu_{\hat \theta}(x_i)\)</span>.</p>
+Gaussian maximum likelihood) problem associated with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mi>θ</mi></msub><annotation encoding="application/x-tex">\mu_\theta</annotation></semantics></math>—or
+in other words, the estimator that <em>would</em> be used for Gaussian
+or continuous data. Specifically, <code>estimator</code> inputs data and
+outputs a list with two elements: the estimated
+<code>coefficients</code>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>θ</mi><mo accent="true">̂</mo></mover><annotation encoding="application/x-tex">\hat \theta</annotation></semantics></math>
+and the <code>fitted.values</code>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>μ</mi><mo accent="true">̂</mo></mover><mi>θ</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><msub><mi>μ</mi><mover><mi>θ</mi><mo accent="true">̂</mo></mover></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\hat \mu_\theta(x_i) = \mu_{\hat \theta}(x_i)</annotation></semantics></math>.
+<code>countSTAR</code> includes implementations for linear, random
+forest, and generalized boosting regression models (see below), but it
+is straightforward to incorporate other models via the generic
+<code><a href="../reference/genEM_star.html">genEM_star()</a></code> function.</p>
 <div class="section level3">
 <h3 id="the-star-linear-model">The STAR Linear Model<a class="anchor" aria-label="anchor" href="#the-star-linear-model"></a>
 </h3>
-<p>For many applications, the STAR linear model is often the first
-method to try. In <code>countSTAR</code>, the linear model is
-implemented with the <code>lm_star</code> function, which aims to mimic
-the functionality of <code>lm</code> by allowing users to input a
-formula. Standard functions like <code>coef</code> and
-<code>fitted</code> can be used on the output to extract coefficients
-and fitted values, respectively.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<p>For many cases, the STAR linear model is the first method to try: it
+combines a rounding operator
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>h</mi><annotation encoding="application/x-tex">h</annotation></semantics></math>,
+a transformation
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>g</mi><annotation encoding="application/x-tex">g</annotation></semantics></math>,
+and the latent linear regression model
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right"><msub><mi>z</mi><mi>i</mi></msub></mtd><mtd columnalign="left" style="text-align: left"><mo>=</mo><msub><mi>x</mi><mi>i</mi></msub><mi>′</mi><mi>θ</mi><mo>+</mo><msub><mi>ϵ</mi><mi>i</mi></msub><mo>,</mo><mspace width="1.0em"></mspace><msub><mi>ϵ</mi><mi>i</mi></msub><mo>∼</mo><mi>N</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><msup><mi>σ</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow></mtd></mtr></mtable><annotation encoding="application/x-tex">\begin{align*}
+z_i &amp;= x_i'\theta + \epsilon_i, \quad \epsilon_i \sim N(0, \sigma^2)
+\end{align*}</annotation></semantics></math> In <code>countSTAR</code>,
+the (frequentist) STAR linear model is implemented with
+<code><a href="../reference/lm_star.html">lm_star()</a></code> (see <code><a href="../reference/blm_star.html">blm_star()</a></code> for a Bayesian
+version). <code><a href="../reference/lm_star.html">lm_star()</a></code> aims to mimic the functionality of
+<code>lm</code> by allowing users to input a formula. Standard functions
+like <code>coef</code> and <code>fitted</code> can be used on the output
+to extract coefficients and fitted values, respectively.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bking124.github.io/countSTAR/">countSTAR</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Select a transformation:</span></span>
-<span><span class="va">transformation</span> <span class="op">=</span> <span class="st">'np'</span> <span class="co"># Estimated transformation using empirical CDF</span></span>
-<span></span>
-<span><span class="co"># EM algorithm for STAR</span></span>
+<span><span class="co"># EM algorithm for STAR linear regression</span></span>
 <span><span class="va">fit</span> <span class="op">=</span> <span class="fu"><a href="../reference/lm_star.html">lm_star</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">roach1</span> <span class="op">+</span> <span class="va">treatment</span> <span class="op">+</span> <span class="va">senior</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">exposure2</span><span class="op">)</span>,</span>
 <span>              data <span class="op">=</span> <span class="va">roaches</span>, </span>
-<span>              transformation <span class="op">=</span> <span class="va">transformation</span><span class="op">)</span></span>
-<span></span>
-<span></span>
-<span><span class="co"># Dimensions:</span></span>
-<span><span class="va">n</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">X</span><span class="op">)</span>; <span class="va">p</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">X</span><span class="op">)</span></span>
+<span>              transformation <span class="op">=</span> <span class="st">'np'</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Fitted coefficients:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    (Intercept)         roach1      treatment         senior log(exposure2) </span></span>
 <span><span class="co">#&gt;          0.035          0.006         -0.285         -0.321          0.216</span></span></code></pre></div>
-<p>Here the <code>np</code> transformation was used, but other options
-are available; see <code><a href="../reference/lm_star.html">?lm_star</a></code> for details.</p>
+<p>Here the frequentist nonparametric transformation was used, but other
+options are available; see <code>?lm_star()</code> for details.</p>
 <p>Based on the fitted STAR linear model, we may further obtain
 <em>confidence intervals</em> for the estimated coefficients using
-<code>confint</code>:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code>:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Confidence interval for all coefficients</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                       2.5 %       97.5 %</span></span>
-<span><span class="co">#&gt; (Intercept)    -0.141422049  0.202055725</span></span>
-<span><span class="co">#&gt; roach1          0.004898197  0.007466265</span></span>
-<span><span class="co">#&gt; treatment      -0.486526183 -0.084393965</span></span>
-<span><span class="co">#&gt; senior         -0.548147166 -0.102149034</span></span>
-<span><span class="co">#&gt; log(exposure2) -0.197811283  0.637275996</span></span></code></pre></div>
+<span><span class="co">#&gt; (Intercept)    -0.139711518  0.199942615</span></span>
+<span><span class="co">#&gt; roach1          0.004898573  0.007468304</span></span>
+<span><span class="co">#&gt; treatment      -0.488199761 -0.085641963</span></span>
+<span><span class="co">#&gt; senior         -0.548729134 -0.102510551</span></span>
+<span><span class="co">#&gt; log(exposure2) -0.197843036  0.636935236</span></span></code></pre></div>
 <p>Similarly, <em>p-values</em> are available using likelihood ratio
 tests, which can be applied for individual coefficients,</p>
-<p><span class="math display">\[
-H_0: \beta_j= 0 \quad \mbox{vs} \quad H_1: \beta_j \ne 0
-\]</span></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mn>0</mn></msub><mo>:</mo><msub><mi>θ</mi><mi>j</mi></msub><mo>=</mo><mn>0</mn><mspace width="1.0em"></mspace><mtext mathvariant="normal">vs.</mtext><mspace width="1.0em"></mspace><msub><mi>H</mi><mn>1</mn></msub><mo>:</mo><msub><mi>θ</mi><mi>j</mi></msub><mo>≠</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">
+H_0: \theta_j= 0 \quad \mbox{vs.} \quad H_1: \theta_j \ne 0
+</annotation></semantics></math></p>
 <p>or for joint sets of variables, analogous to a (partial) F-test:</p>
-<p><span class="math display">\[
-H_0: \beta_1=\ldots=\beta_p = 0, \quad \mbox{vs.} \quad H_1: \beta_j \ne
-0 \mbox{ for some } j=1,\ldots,p
-\]</span> P-values for all individual coefficients as well as the
-p-value for <em>any</em> effects are computed with the
-<code>pvals</code> function.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># P-values:</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="../reference/pvals.html">pvals</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt;        (Intercept)             roach1          treatment             senior </span></span>
-<span><span class="co">#&gt;       6.973311e-01       1.887411e-18       5.600904e-03       4.862496e-03 </span></span>
-<span><span class="co">#&gt;     log(exposure2) Any linear effects </span></span>
-<span><span class="co">#&gt;       3.072376e-01       9.271134e-20</span></span></code></pre></div>
-<p>Finally, we can get predictions at new data points (or the training
-data) using <code>predict</code>.</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mn>0</mn></msub><mo>:</mo><msub><mi>θ</mi><mn>1</mn></msub><mo>=</mo><mi>…</mi><mo>=</mo><msub><mi>θ</mi><mi>p</mi></msub><mo>=</mo><mn>0</mn><mspace width="1.0em"></mspace><mtext mathvariant="normal">vs.</mtext><mspace width="1.0em"></mspace><msub><mi>H</mi><mn>1</mn></msub><mo>:</mo><msub><mi>θ</mi><mi>j</mi></msub><mo>≠</mo><mn>0</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> for some </mtext><mspace width="0.333em"></mspace></mrow><mi>j</mi><mo>=</mo><mn>1</mn><mo>,</mo><mi>…</mi><mo>,</mo><mi>p</mi></mrow><annotation encoding="application/x-tex">
+H_0: \theta_1=\ldots=\theta_p = 0 \quad \mbox{vs.} \quad H_1: \theta_j \ne 0 \mbox{ for some } j=1,\ldots,p
+</annotation></semantics></math> P-values for all individual
+coefficients as well as the p-value for <em>any</em> effects are
+computed with the <code><a href="../reference/pvals.html">pvals()</a></code> function.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># P-values:</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="../reference/pvals.html">pvals</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span>, <span class="fl">4</span><span class="op">)</span></span>
+<span><span class="co">#&gt;        (Intercept)             roach1          treatment             senior </span></span>
+<span><span class="co">#&gt;             0.6973             0.0000             0.0056             0.0049 </span></span>
+<span><span class="co">#&gt;     log(exposure2) Any linear effects </span></span>
+<span><span class="co">#&gt;             0.3072             0.0000</span></span></code></pre></div>
+<p>Finally, we can get predictions at new data points (or the training
+data) using <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code>.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#Compute the predictive draws (just using observed points here)</span></span>
 <span><span class="va">y_pred</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></code></pre></div>
-<p>Optionally, prediction intervals can be estimated using the (plug-in)
-predictive distribution at the MLEs (see <code><a href="../reference/predict.lmstar.html">?predict.lmstar</a></code>
-for details). Note that the “plug-in” predictive distribution is a crude
-approximation, and better approaches for uncertainty quantification are
-available using the Bayesian models.</p>
+<p>For predictive distributions, <code><a href="../reference/blm_star.html">blm_star()</a></code> and other
+Bayesian models are recommended.</p>
 </div>
 <div class="section level3">
 <h3 id="star-machine-learning-models">STAR Machine Learning Models<a class="anchor" aria-label="anchor" href="#star-machine-learning-models"></a>
 </h3>
-<p>In addition to the linear model, <code>countSTAR</code> also has
-implementations for STAR models paired with more flexible regression
-methods, in particular random forests (<code><a href="../reference/randomForest_star.html">randomForest_star()</a></code>)
-and generalized boosted machines (<code><a href="../reference/gbm_star.html">gbm_star()</a></code>). In these
-functions, the user directly inputs the set of predictors <span class="math inline">\(X\)</span> alongside any test points in <span class="math inline">\(X_{test}\)</span>, as can be seen in the example
-below:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Select a transformation:</span></span>
-<span><span class="va">transformation</span> <span class="op">=</span> <span class="st">'np'</span> <span class="co"># Estimated transformation using empirical CDF</span></span>
-<span></span>
-<span><span class="co"># Construct data matrix</span></span>
-<span><span class="va">y</span> <span class="op">=</span> <span class="va">roaches</span><span class="op">$</span><span class="va">y</span></span>
-<span><span class="va">X</span> <span class="op">=</span> <span class="va">roaches</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"roach1"</span>, <span class="st">"treatment"</span>, <span class="st">"senior"</span>, <span class="st">"exposure2"</span><span class="op">)</span><span class="op">]</span></span>
-<span></span>
-<span><span class="co">#Fit STAR with random forests</span></span>
-<span><span class="va">fit_rf</span> <span class="op">=</span> <span class="fu"><a href="../reference/randomForest_star.html">randomForest_star</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">y</span>, X <span class="op">=</span> <span class="va">X</span>, </span>
-<span>                           transformation <span class="op">=</span> <span class="va">transformation</span><span class="op">)</span></span>
+<p><code>countSTAR</code> also includes STAR versions of machine
+learning models: random forests (<code><a href="../reference/randomForest_star.html">randomForest_star()</a></code>) and
+generalized boosted machines (<code><a href="../reference/gbm_star.html">gbm_star()</a></code>). These refer to
+the specification of the latent regression function
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mi>θ</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mu_\theta(x)</annotation></semantics></math>
+along with the accompanying estimation algorithm for continuous data.
+Here, the user directly inputs the set of predictors
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math>
+alongside any test points in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mrow><mi>t</mi><mi>e</mi><mi>s</mi><mi>t</mi></mrow></msub><annotation encoding="application/x-tex">X_{test}</annotation></semantics></math>,
+excluding the intercept:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">#Fit STAR with random forests</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressMessages</a></span><span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://www.stat.berkeley.edu/~breiman/RandomForests/" class="external-link">randomForest</a></span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">fit_rf</span> <span class="op">=</span> <span class="fu"><a href="../reference/randomForest_star.html">randomForest_star</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">y</span>, X <span class="op">=</span> <span class="va">X</span><span class="op">[</span>,<span class="op">-</span><span class="fl">1</span><span class="op">]</span>, <span class="co"># no intercept </span></span>
+<span>                           transformation <span class="op">=</span> <span class="st">'np'</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">#Fit STAR with GBM</span></span>
-<span><span class="va">fit_gbm</span> <span class="op">=</span> <span class="fu"><a href="../reference/gbm_star.html">gbm_star</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">y</span>, X <span class="op">=</span> <span class="va">X</span>, </span>
-<span>                   transformation <span class="op">=</span> <span class="va">transformation</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressMessages</a></span><span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/gbm-developers/gbm" class="external-link">gbm</a></span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">fit_gbm</span> <span class="op">=</span> <span class="fu"><a href="../reference/gbm_star.html">gbm_star</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">y</span>, X <span class="op">=</span> <span class="va">X</span><span class="op">[</span>,<span class="op">-</span><span class="fl">1</span><span class="op">]</span>, <span class="co"># no intercept </span></span>
+<span>                   transformation <span class="op">=</span> <span class="st">'np'</span><span class="op">)</span></span></code></pre></div>
 <p>For all frequentist models, the functions output log-likelihood
 values at the MLEs, which allows for a quick comparison of model
 fit.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#Look at -2*log-likelihood</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="op">-</span><span class="fl">2</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">fit_rf</span><span class="op">$</span><span class="va">logLik</span>, <span class="va">fit_gbm</span><span class="op">$</span><span class="va">logLik</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 1665.662 1594.125</span></span></code></pre></div>
+<span><span class="op">-</span><span class="fl">2</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">fit_rf</span><span class="op">$</span><span class="va">logLik</span>, <span class="va">fit_gbm</span><span class="op">$</span><span class="va">logLik</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 1666.783 1593.495</span></span></code></pre></div>
 <p>In general, it is preferable to compare these fits using
-out-of-sample predictive performance.</p>
+out-of-sample predictive performance. Point predictions are available
+via the named components <code>fitted.values</code> or
+<code>fitted.values.test</code> for in-sample predictions at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math>
+or out-of-sample predictions at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mrow><mi>t</mi><mi>e</mi><mi>s</mi><mi>t</mi></mrow></msub><annotation encoding="application/x-tex">X_{test}</annotation></semantics></math>,
+respectively.</p>
 </div>
 </div>
 <div class="section level2">
 <h2 id="bayesian-inference-for-star-models">Bayesian inference for STAR models<a class="anchor" aria-label="anchor" href="#bayesian-inference-for-star-models"></a>
 </h2>
-<p>For a Bayesian model, STAR requires only an algorithm for
-<em>initializing and sampling</em> from the posterior distribution under
-a <em>continuous data model</em>. More specifically, posterior inference
-under STAR is based on a Gibbs sampler, which augments the
-aforementioned continuous sampler with a draw from <span class="math inline">\([z^* | y, \theta]\)</span>. When <span class="math inline">\(\Pi_\theta\)</span> is conditionally Gaussian,
-<span class="math inline">\([z^* | y, \theta]\)</span> is a truncated
-Gaussian distribution.</p>
+<p>Bayesian STAR models only require an algorithm for (initializing and)
+sampling from the posterior distribution under a <em>continuous data
+model</em>. In particular, the most convenient strategy for posterior
+inference with STAR is to use a data-augmentation Gibbs sampler, which
+combines that continuous data model sampler with a draw from the latent
+data posterior,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">[</mo><mi>z</mi><mo stretchy="false" form="prefix">|</mo><mi>y</mi><mo>,</mo><mi>θ</mi><mo stretchy="true" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">[z | y, \theta]</annotation></semantics></math>,
+which is a truncated (Gaussian) distribution. For special cases of
+Bayesian STAR models, direct Monte Carlo (not MCMC) sampling is
+available.</p>
+<p>Efficient algorithms are implemented for several popular Bayesian
+regression and time series models (see below). The user may also adapt
+their own continuous data models and algorithms to the count data
+setting via the generic function <code><a href="../reference/genMCMC_star.html">genMCMC_star()</a></code>.</p>
 <div class="section level3">
-<h3 id="linear-model">Linear Model<a class="anchor" aria-label="anchor" href="#linear-model"></a>
+<h3 id="bayesian-star-linear-model">Bayesian STAR Linear Model<a class="anchor" aria-label="anchor" href="#bayesian-star-linear-model"></a>
 </h3>
-<p>As an illustration, consider the Bayesian linear regression model
-<span class="math display">\[\begin{align*}
-z_i^* &amp;= x_i'\beta + \epsilon_i, \quad \epsilon_i
-\stackrel{iid}{\sim}N(0, \sigma^2) \\
-1/\sigma^2 &amp;\sim \mbox{Gamma}(\alpha=0.001, \beta=0.001) \;.
-\end{align*}\]</span> The model is completed by assigning a prior
-structure for <span class="math inline">\(\beta\)</span>. The default in
-<code>countSTAR</code> is Zellner’s g-prior, which has the most
-functionality, but other options are available (namely, horseshoe and
-ridge priors). The model is estimated using <code><a href="../reference/blm_star.html">blm_star()</a></code>.
-Note that for the Bayesian models in <code>countSTAR</code>, the user
-must supply the design matrix <span class="math inline">\(X\)</span>
+<p>Revisiting the STAR linear model, the Bayesian version places a prior
+on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>.
+The default in <code>countSTAR</code> is Zellner’s g-prior, which has
+the most functionality, but other options are available (namely,
+horseshoe and ridge priors). The model is estimated using
+<code><a href="../reference/blm_star.html">blm_star()</a></code>. Note that for the Bayesian models in
+<code>countSTAR</code>, the user must supply the design matrix
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math>
 (and if predictions are desired, a matrix of predictors at the test
 points). We apply this to the roaches data, now using the default
-nonparametric transformation.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">X</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">model.matrix</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">roach1</span> <span class="op">+</span> <span class="va">treatment</span> <span class="op">+</span> <span class="va">senior</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">exposure2</span><span class="op">)</span>,</span>
-<span>                 data <span class="op">=</span> <span class="va">roaches</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Dimensions:</span></span>
-<span><span class="va">n</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span>; <span class="va">p</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">fit_blm</span> <span class="op">=</span> <span class="fu"><a href="../reference/blm_star.html">blm_star</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">y</span>, X <span class="op">=</span> <span class="va">X</span>, </span>
-<span>                   transformation <span class="op">=</span> <span class="st">'np'</span><span class="op">)</span></span></code></pre></div>
-<p>By default, the function uses a Gibbs sampler to draw from the
-posterior, but in some settings exact inference can be performed (see
-<span class="citation">Kowal and Wu (<a href="#ref-kowalSTARconjugate" role="doc-biblioref">2022</a>)</span> for details). To enable this, one
-can simply set <code>use_MCMC=FALSE</code>. In either case, the output
-of the function should be much the same, with the exception that <span class="math inline">\(\sigma\)</span> is estimated a priori and thus has
-no posterior draws.</p>
+Bayesian nonparametric transformation:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fit_blm</span> <span class="op">=</span> <span class="fu"><a href="../reference/blm_star.html">blm_star</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">y</span>, X <span class="op">=</span> <span class="va">X</span>, </span>
+<span>                   transformation <span class="op">=</span> <span class="st">'bnp'</span><span class="op">)</span></span></code></pre></div>
+<p>In some cases, direct Monte Carlo (not MCMC) sampling can be
+performed (see <span class="citation">Kowal and Wu (<a href="#ref-kowalSTARconjugate">2022</a>)</span> for details): simply set
+<code>use_MCMC=FALSE</code>. Although it is appealing to avoid MCMC, the
+output is typically similar and the Monte Carlo sampler requires
+truncated <em>multivariate</em> normal draws, which become slow for
+large
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>.</p>
 <p>Posterior expectations and posterior credible intervals from the
 model are available as follows:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Posterior mean of each coefficient:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit_blm</span><span class="op">)</span>,<span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    (Intercept)         roach1      treatment         senior log(exposure2) </span></span>
-<span><span class="co">#&gt;          0.031          0.006         -0.291         -0.333          0.220</span></span>
+<span><span class="co">#&gt;          0.316          0.008         -0.388         -0.420          0.284</span></span>
 <span></span>
 <span><span class="co"># Credible intervals for regression coefficients</span></span>
 <span><span class="va">ci_all_bayes</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">fit_blm</span><span class="op">$</span><span class="va">post.beta</span>,</span>
@@ -415,135 +478,150 @@ model are available as follows:</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">ci_all_bayes</span><span class="op">)</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'Lower'</span>, <span class="st">'Upper'</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">ci_all_bayes</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                 Lower  Upper</span></span>
-<span><span class="co">#&gt; (Intercept)    -0.148  0.204</span></span>
-<span><span class="co">#&gt; roach1          0.005  0.007</span></span>
-<span><span class="co">#&gt; treatment      -0.503 -0.087</span></span>
-<span><span class="co">#&gt; senior         -0.552 -0.113</span></span>
-<span><span class="co">#&gt; log(exposure2) -0.171  0.660</span></span></code></pre></div>
+<span><span class="co">#&gt; (Intercept)     0.020  0.605</span></span>
+<span><span class="co">#&gt; roach1          0.006  0.010</span></span>
+<span><span class="co">#&gt; treatment      -0.648 -0.122</span></span>
+<span><span class="co">#&gt; senior         -0.717 -0.127</span></span>
+<span><span class="co">#&gt; log(exposure2) -0.220  0.831</span></span></code></pre></div>
+<p>We can check standard MCMC diagnostics:</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># MCMC diagnostics for posterior draws of the regression coefficients (excluding intercept)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/ts.html" class="external-link">as.ts</a></span><span class="op">(</span><span class="va">fit_blm</span><span class="op">$</span><span class="va">post.beta</span><span class="op">[</span>,<span class="op">-</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span>, </span>
+<span>     main <span class="op">=</span> <span class="st">'Trace plots'</span>, cex.lab <span class="op">=</span> <span class="fl">.75</span><span class="op">)</span></span></code></pre></div>
+<p><img src="countSTAR_files/figure-html/mcmcdiag-1.png" class="r-plt" alt="" width="700"></p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span><span class="co"># (Summary of) effective sample sizes (excluding intercept)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressMessages</a></span><span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">coda</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/getEffSize.html">getEffSize</a></span><span class="op">(</span><span class="va">fit_blm</span><span class="op">$</span><span class="va">post.beta</span><span class="op">[</span>,<span class="op">-</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span></span>
+<span><span class="co">#&gt;   676.2   736.1   759.6   798.8   822.3  1000.0</span></span></code></pre></div>
 <p>We may further evaluate the model based on posterior diagnostics and
 posterior predictive checks on the simulated versus observed proportion
 of zeros. Posterior predictive checks are easily visualized using the <a href="https://mc-stan.org/bayesplot/index.html" class="external-link">bayesplot</a>
 package.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># MCMC diagnostics for posterior draws of the regression coefficients</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/ts.html" class="external-link">as.ts</a></span><span class="op">(</span><span class="va">fit_blm</span><span class="op">$</span><span class="va">post.beta</span><span class="op">)</span>, main <span class="op">=</span> <span class="st">'Trace plots'</span>, cex.lab <span class="op">=</span> <span class="fl">.75</span><span class="op">)</span></span></code></pre></div>
-<p><img src="countSTAR_files/figure-html/diag-1.png" width="700"></p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
-<span><span class="co"># (Summary of) effective sample sizes across coefficients:</span></span>
-<span><span class="fu"><a href="../reference/getEffSize.html">getEffSize</a></span><span class="op">(</span><span class="va">fit_blm</span><span class="op">$</span><span class="va">post.beta</span><span class="op">)</span></span>
-<span><span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span></span>
-<span><span class="co">#&gt;   629.9   677.4   781.2   750.4   791.9   871.7</span></span>
-<span></span>
-<span><span class="co"># Posterior predictive check using bayesplot</span></span>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Posterior predictive check using bayesplot</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressMessages</a></span><span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mc-stan.org/bayesplot/" class="external-link">bayesplot</a></span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">prop_zero</span> <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">y</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">y</span> <span class="op">==</span> <span class="fl">0</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://mc-stan.org/bayesplot/reference/PPC-test-statistics.html" class="external-link">ppc_stat</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">roaches</span><span class="op">$</span><span class="va">y</span>, </span>
+<span><span class="fu"><a href="https://mc-stan.org/bayesplot/reference/PPC-test-statistics.html" class="external-link">ppc_stat</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">y</span>, </span>
 <span>          yrep <span class="op">=</span> <span class="va">fit_blm</span><span class="op">$</span><span class="va">post.pred</span>, </span>
 <span>          stat <span class="op">=</span> <span class="st">"prop_zero"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="countSTAR_files/figure-html/diag-2.png" width="700"></p>
+<p><img src="countSTAR_files/figure-html/modeldiag-1.png" class="r-plt" alt="" width="700"></p>
 </div>
 <div class="section level3">
 <h3 id="bart-star">BART STAR<a class="anchor" aria-label="anchor" href="#bart-star"></a>
 </h3>
 <p>One of the most flexible model options is to use Bayesian Additive
 Regression Trees (BART; <span class="citation">Chipman, George, and
-McCulloch (<a href="#ref-chipman2010bart" role="doc-biblioref">2012</a>)</span>) as the latent regression
-model:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">#Get the model matrix of predictors (no intercept necessary)</span></span>
-<span><span class="va">X</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">model.matrix</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span> <span class="op">+</span> <span class="va">roach1</span> <span class="op">+</span> <span class="va">treatment</span> <span class="op">+</span> <span class="va">senior</span> <span class="op">+</span> <span class="va">exposure2</span>,</span>
-<span>                 data <span class="op">=</span> <span class="va">roaches</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">fit_bart</span> <span class="op">=</span> <span class="fu"><a href="../reference/bart_star.html">bart_star</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">y</span>, X <span class="op">=</span> <span class="va">X</span>, </span>
-<span>                     transformation <span class="op">=</span> <span class="st">'np'</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "Burn-In Period"</span></span>
-<span><span class="co">#&gt; [1] "Starting sampling"</span></span>
-<span><span class="co">#&gt; [1] "0 seconds remaining"</span></span>
-<span><span class="co">#&gt; [1] "Total time:  3 seconds"</span></span></code></pre></div>
-<p>Once again, we can perform posterior predictive checks. This time we
-plot the densities.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://mc-stan.org/bayesplot/reference/PPC-distributions.html" class="external-link">ppc_dens_overlay</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">roaches</span><span class="op">$</span><span class="va">y</span>, </span>
-<span>                 yrep <span class="op">=</span> <span class="va">fit_bart</span><span class="op">$</span><span class="va">post.pred</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">50</span>,<span class="op">]</span><span class="op">)</span></span></code></pre></div>
-<p><img src="countSTAR_files/figure-html/bartppc-1.png" width="700"></p>
-<p>With all Bayesian models, pointwise log-likelihoods and WAIC values
-are outputted for model comparison. Using this information, we can see
-the BART STAR model seems to have a better fit than the linear
-model.</p>
+McCulloch (<a href="#ref-chipman2010bart">2012</a>)</span>) as the
+latent regression model. Here,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mi>θ</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mu_\theta(x)</annotation></semantics></math>
+is a sum of many shallow trees with small (absolute) terminal node
+values. BART-STAR enables application of BART models and algorithms for
+count data, thus combining the <em>regression</em> flexibility of BART
+with the (marginal) <em>distributional</em> flexibility of STAR:</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fit_bart</span> <span class="op">=</span> <span class="fu"><a href="../reference/bart_star.html">bart_star</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">y</span>, X <span class="op">=</span> <span class="va">X</span>, </span>
+<span>                     transformation <span class="op">=</span> <span class="st">'np'</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "1 sec remaining"</span></span>
+<span><span class="co">#&gt; [1] "Total time: 2 seconds"</span></span></code></pre></div>
+<p>Since <code>bnp</code> is not yet implemented for
+<code><a href="../reference/bart_star.html">bart_star()</a></code>, we use <code>np</code> here. The
+transformation is still estimated nonparametrically, but then is treated
+as fixed and known (see <code>'ispline'</code> for a fully Bayesian and
+nonparametric version, albeit slower).</p>
+<p>Once again, we can perform posterior predictive checks. This time we
+plot the densities:</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://mc-stan.org/bayesplot/reference/PPC-distributions.html" class="external-link">ppc_dens_overlay</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">y</span>, </span>
+<span>                 yrep <span class="op">=</span> <span class="va">fit_bart</span><span class="op">$</span><span class="va">post.pred</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">50</span>,<span class="op">]</span><span class="op">)</span></span></code></pre></div>
+<p><img src="countSTAR_files/figure-html/bartppc-1.png" class="r-plt" alt="" width="700"></p>
+<p>Pointwise log-likelihoods and WAIC values are outputted for model
+comparison. Using this information, we can see the BART STAR model seems
+to have a better fit than the linear model:</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">waic</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">fit_blm</span><span class="op">$</span><span class="va">WAIC</span>, <span class="va">fit_bart</span><span class="op">$</span><span class="va">WAIC</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">waic</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"STAR Linear Model"</span>, <span class="st">"BART-STAR"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">waic</span><span class="op">)</span></span>
 <span><span class="co">#&gt; STAR Linear Model         BART-STAR </span></span>
-<span><span class="co">#&gt;          1687.548          1639.219</span></span></code></pre></div>
+<span><span class="co">#&gt;          1762.281          1639.514</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="other-models">Other Models<a class="anchor" aria-label="anchor" href="#other-models"></a>
+<h3 id="other-bayesian-models">Other Bayesian Models<a class="anchor" aria-label="anchor" href="#other-bayesian-models"></a>
 </h3>
-<p><code>countSTAR</code> also implements Bayesian additive models. With
-the function <code><a href="../reference/bam_star.html">bam_star()</a></code>, we can specify covariates to be
-modeled linearly and others to be modeled non-linearly using spline
-bases. As a word of warning, the additive models can take much longer to
-fit. For exploring the relationship between one predictor and count
-outcome <span class="math inline">\(y\)</span>, one can also use spline
-regression as implemented in <code><a href="../reference/spline_star.html">spline_star()</a></code>. See the
-appropriate help pages for examples on how to run the models.</p>
+<p>To estimate a nonlinear relationship between a (univariate) covariate
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math>
+and count-valued
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math>,
+<code><a href="../reference/spline_star.html">spline_star()</a></code> implements a highly efficient, fully Bayesian
+spline regression model.</p>
+<p>For multiple nonlinear effects, <code><a href="../reference/bam_star.html">bam_star()</a></code> implements a
+Bayesian additive model with STAR. The user specifies which covariates
+should be modeled linearly and which should be modeled nonlinearly via
+splines. Note that <code><a href="../reference/bam_star.html">bam_star()</a></code> can be slower than
+<code><a href="../reference/blm_star.html">blm_star()</a></code> or <code><a href="../reference/bart_star.html">bart_star()</a></code>.</p>
 </div>
 </div>
 <div class="section level2">
 <h2 id="count-time-series-modeling-warpdlm">Count Time Series Modeling: warpDLM<a class="anchor" aria-label="anchor" href="#count-time-series-modeling-warpdlm"></a>
 </h2>
-<p>Up to this point, all of the attention has focused on static
-regression where the data does not depend on time. However, the ideas of
-simultaneous transformation and rounding were extended to the time
-series domain in <span class="citation">King and Kowal (<a href="#ref-king2023warped" role="doc-biblioref">2023</a>)</span>. In
-that work, we proposed linking time-dependent count data <span class="math inline">\(y_t\)</span> to a powerful time series framework
+<p>Up to this point, we have focused on static regression where the data
+does not depend on time. Notably, <span class="citation">King and Kowal
+(<a href="#ref-king2023warped">2023</a>)</span> extended STAR to the
+time series setting by incorporating a powerful time series framework
 known as Dynamic Linear Models (DLMs). A DLM is defined by two
 equations: (i) the observation equation, which specifies how the
 observations are related to the latent state vector and (ii) the state
 evolution equation, which describes how the states are updated in a
-Markovian fashion. More concretely, we represent it in the following
-form: <span class="math display">\[\begin{align*}
+Markovian fashion. More concretely, and using
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>
+subscripts for time:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right"><msub><mi>z</mi><mi>t</mi></msub></mtd><mtd columnalign="left" style="text-align: left"><mo>=</mo><msub><mi>F</mi><mi>t</mi></msub><msub><mi>θ</mi><mi>t</mi></msub><mo>+</mo><msub><mi>v</mi><mi>t</mi></msub><mo>,</mo><mspace width="1.0em"></mspace><msub><mi>v</mi><mi>t</mi></msub><mo>∼</mo><msub><mi>N</mi><mi>n</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><msub><mi>V</mi><mi>t</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right"><msub><mi>θ</mi><mi>t</mi></msub></mtd><mtd columnalign="left" style="text-align: left"><mo>=</mo><msub><mi>G</mi><mi>t</mi></msub><msub><mi>θ</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><msub><mi>w</mi><mi>t</mi></msub><mo>,</mo><mspace width="1.0em"></mspace><msub><mi>w</mi><mi>t</mi></msub><mo>∼</mo><msub><mi>N</mi><mi>p</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><msub><mi>W</mi><mi>t</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mtd></mtr></mtable><annotation encoding="application/x-tex">\begin{align*}
     z_t &amp;= F_t \theta_t + v_t, \quad v_t \sim N_n(0, V_t) \\
     \theta_t &amp;= G_t \theta_{t-1} +  w_t, \quad w_t \sim N_p( 0, W_t)
-\end{align*}\]</span> for <span class="math inline">\(t=1,\ldots,
-T\)</span>, where <span class="math inline">\(\{ v_t,
-w_t\}_{t=1}^T\)</span> are mutually independent and <span class="math inline">\(\theta_0 \sim N_p(a_0, R_0)\)</span>.</p>
+\end{align*}</annotation></semantics></math> for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>1</mn><mo>,</mo><mi>…</mi><mo>,</mo><mi>T</mi></mrow><annotation encoding="application/x-tex">t=1,\ldots, T</annotation></semantics></math>,
+where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><msub><mi>v</mi><mi>t</mi></msub><mo>,</mo><msub><mi>w</mi><mi>t</mi></msub><msubsup><mo stretchy="false" form="postfix">}</mo><mrow><mi>t</mi><mo>=</mo><mn>1</mn></mrow><mi>T</mi></msubsup></mrow><annotation encoding="application/x-tex">\{ v_t, w_t\}_{t=1}^T</annotation></semantics></math>
+are mutually independent and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>θ</mi><mn>0</mn></msub><mo>∼</mo><msub><mi>N</mi><mi>p</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>a</mi><mn>0</mn></msub><mo>,</mo><msub><mi>R</mi><mn>0</mn></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\theta_0 \sim N_p(a_0, R_0)</annotation></semantics></math>.</p>
 <p>Of course, given the Gaussian assumptions of the model, a DLM alone
-is not appropriate for count data. Thus, a warping operation (the
-simultaneous transformation and rounding) is applied to the DLM,
-resulting in the count time series framework known as a warped DLM
-(warpDLM). More explicitly, it can be written as: <span class="math display">\[\begin{align*}
+is not appropriate for count data. Thus, a warping operation—combining
+the transformation and rounding—is merged with the DLM, resulting in a
+<em>warped DLM</em> (warpDLM):
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right"><msub><mi>y</mi><mi>t</mi></msub></mtd><mtd columnalign="left" style="text-align: left"><mo>=</mo><mi>h</mi><mo>∘</mo><msup><mi>g</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>z</mi><mi>t</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right"><mo stretchy="false" form="prefix">{</mo><msub><mi>z</mi><mi>t</mi></msub><msubsup><mo stretchy="false" form="postfix">}</mo><mrow><mi>t</mi><mo>=</mo><mn>1</mn></mrow><mi>T</mi></msubsup></mtd><mtd columnalign="left" style="text-align: left"><mo>∼</mo><mtext mathvariant="normal">DLM</mtext></mtd></mtr></mtable><annotation encoding="application/x-tex">\begin{align*}
          y_t &amp;= h \circ g^{-1}(z_t) \\
-        \{z_t\}_{t=1}^T &amp;\sim \text{DLM}
-\end{align*}\]</span></p>
+        \{z_t\}_{t=1}^T &amp;\sim \text{DLM} 
+\end{align*}</annotation></semantics></math></p>
 <p>The DLM form shown earlier is very general. Among these DLMs,
 <code>countSTAR</code> currently implements the local level model and
 the local linear trend model. A local level model (also known as a
-random walk with noise model) has a univariate state <span class="math inline">\(\theta_t:=\mu_t\)</span>, and the DLM equations
-are simply <span class="math display">\[\begin{align*}
+random walk with noise model) has a univariate state
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>θ</mi><mi>t</mi></msub><mo>:=</mo><msub><mi>μ</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">\theta_t:=\mu_t</annotation></semantics></math>
+with
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right"><msub><mi>z</mi><mi>t</mi></msub></mtd><mtd columnalign="left" style="text-align: left"><mo>=</mo><msub><mi>μ</mi><mi>t</mi></msub><mo>+</mo><msub><mi>v</mi><mi>t</mi></msub><mo>,</mo><mspace width="1.0em"></mspace><msub><mi>v</mi><mi>t</mi></msub><mo>∼</mo><mi>N</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mi>V</mi><mo stretchy="true" form="postfix">)</mo></mrow></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right"><msub><mi>μ</mi><mi>t</mi></msub></mtd><mtd columnalign="left" style="text-align: left"><mo>=</mo><msub><mi>μ</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><msub><mi>w</mi><mi>t</mi></msub><mo>,</mo><mspace width="1.0em"></mspace><msub><mi>w</mi><mi>t</mi></msub><mo>∼</mo><mi>N</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mi>W</mi><mo stretchy="true" form="postfix">)</mo></mrow></mtd></mtr></mtable><annotation encoding="application/x-tex">\begin{align*}
     z_t &amp;= \mu_t + v_t, \quad v_t \sim N(0, V) \\
     \mu_t &amp;= \mu_{t-1} +  w_t, \quad w_t \sim N(0, W)
-\end{align*}\]</span> The local linear trend model extends the local
-level model by incorporating a time varying drift <span class="math inline">\(\nu_t\)</span> in the dynamics: <span class="math display">\[\begin{align*}
+\end{align*}</annotation></semantics></math> The local linear trend
+model extends the local level model by incorporating a time varying
+drift
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ν</mi><mi>t</mi></msub><annotation encoding="application/x-tex">\nu_t</annotation></semantics></math>
+in the dynamics:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right"><msub><mi>z</mi><mi>t</mi></msub></mtd><mtd columnalign="left" style="text-align: left"><mo>=</mo><msub><mi>μ</mi><mi>t</mi></msub><mo>+</mo><msub><mi>v</mi><mi>t</mi></msub><mo>,</mo><mspace width="1.0em"></mspace><msub><mi>v</mi><mi>t</mi></msub><mo>∼</mo><mi>N</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mi>V</mi><mo stretchy="true" form="postfix">)</mo></mrow></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right"><msub><mi>μ</mi><mi>t</mi></msub></mtd><mtd columnalign="left" style="text-align: left"><mo>=</mo><msub><mi>μ</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><msub><mi>ν</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><msub><mi>w</mi><mrow><mi>μ</mi><mo>,</mo><mi>t</mi></mrow></msub><mo>,</mo><mspace width="1.0em"></mspace><msub><mi>w</mi><mrow><mi>μ</mi><mo>,</mo><mi>t</mi></mrow></msub><mo>∼</mo><mi>N</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><msub><mi>W</mi><mi>μ</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right"><msub><mi>ν</mi><mi>t</mi></msub></mtd><mtd columnalign="left" style="text-align: left"><mo>=</mo><msub><mi>ν</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><msub><mi>w</mi><mrow><mi>ν</mi><mo>,</mo><mi>t</mi></mrow></msub><mo>,</mo><mspace width="1.0em"></mspace><msub><mi>w</mi><mrow><mi>ν</mi><mo>,</mo><mi>t</mi></mrow></msub><mo>∼</mo><mi>N</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><msub><mi>W</mi><mi>ν</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mtd></mtr></mtable><annotation encoding="application/x-tex">\begin{align*}
     z_t &amp;= \mu_t + v_t, \quad v_t \sim N(0, V) \\
-    \mu_t &amp;= \mu_{t-1} + \nu_{t-1} +  w_{\mu,t}, \quad w_{\mu,t}
-\sim N( 0, W_
+    \mu_t &amp;= \mu_{t-1} + \nu_{t-1} +  w_{\mu,t}, \quad w_{\mu,t} \sim N( 0, W_
     \mu) \\
-    \nu_t &amp;= \nu_{t-1} +  w_{\nu,t}, \quad w_{\nu,t} \sim N( 0,
-W_\nu)
-\end{align*}\]</span> This can in turn be recast into the general
-two-equation DLM form. Namely, if we let <span class="math inline">\(\theta_t:=(\mu_t, \nu_t)\)</span>, the local
-linear trend is written as <span class="math display">\[\begin{align*}
-z_t &amp; = \begin{pmatrix} 1 &amp; 0 \end{pmatrix} \begin{pmatrix}
-\mu_t \\ \nu_t \end{pmatrix} + v_t, \quad v_t \sim N(0, V) \\
-\begin{pmatrix} \mu_t \\ \nu_t \end{pmatrix} &amp; = \begin{bmatrix} 1
-&amp; 1 \\ 0 &amp; 1 \end{bmatrix} \begin{pmatrix} \mu_{t-1} \\
-\nu_{t-1} \end{pmatrix}  + \boldsymbol{w_t}, \quad \boldsymbol{w_t} \sim
-N\begin{pmatrix} \boldsymbol{0}, \begin{bmatrix} W_
+    \nu_t &amp;= \nu_{t-1} +  w_{\nu,t}, \quad w_{\nu,t} \sim N( 0, W_\nu)
+\end{align*}</annotation></semantics></math> This can in turn be recast
+into the general two-equation DLM form. Namely, if we let
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>θ</mi><mi>t</mi></msub><mo>:=</mo><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>μ</mi><mi>t</mi></msub><mo>,</mo><msub><mi>ν</mi><mi>t</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\theta_t:=(\mu_t, \nu_t)</annotation></semantics></math>,
+the local linear trend is written as
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right"><msub><mi>z</mi><mi>t</mi></msub></mtd><mtd columnalign="left" style="text-align: left"><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mn>1</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>0</mn></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><msub><mi>μ</mi><mi>t</mi></msub></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><msub><mi>ν</mi><mi>t</mi></msub></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><msub><mi>v</mi><mi>t</mi></msub><mo>,</mo><mspace width="1.0em"></mspace><msub><mi>v</mi><mi>t</mi></msub><mo>∼</mo><mi>N</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mi>V</mi><mo stretchy="true" form="postfix">)</mo></mrow></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right"><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><msub><mi>μ</mi><mi>t</mi></msub></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><msub><mi>ν</mi><mi>t</mi></msub></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow></mtd><mtd columnalign="left" style="text-align: left"><mo>=</mo><mrow><mo stretchy="true" form="prefix">[</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mn>1</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>1</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mn>0</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>1</mn></mtd></mtr></mtable><mo stretchy="true" form="postfix">]</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><msub><mi>μ</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><msub><mi>ν</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><msub><mi>𝐰</mi><mi>𝐭</mi></msub><mo>,</mo><mspace width="1.0em"></mspace><msub><mi>𝐰</mi><mi>𝐭</mi></msub><mo>∼</mo><mi>N</mi><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mn>𝟎</mn><mo>,</mo><mrow><mo stretchy="true" form="prefix">[</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><msub><mi>W</mi><mi>μ</mi></msub></mtd><mtd columnalign="center" style="text-align: center"><mn>0</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mn>0</mn></mtd><mtd columnalign="center" style="text-align: center"><msub><mi>W</mi><mi>ν</mi></msub></mtd></mtr></mtable><mo stretchy="true" form="postfix">]</mo></mrow></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow></mtd></mtr></mtable><annotation encoding="application/x-tex">\begin{align*}
+z_t &amp; = \begin{pmatrix} 1 &amp; 0 \end{pmatrix} \begin{pmatrix} \mu_t \\ \nu_t \end{pmatrix} + v_t, \quad v_t \sim N(0, V) \\
+\begin{pmatrix} \mu_t \\ \nu_t \end{pmatrix} &amp; = \begin{bmatrix} 1 &amp; 1 \\ 0 &amp; 1 \end{bmatrix} \begin{pmatrix} \mu_{t-1} \\ \nu_{t-1} \end{pmatrix}  + \boldsymbol{w_t}, \quad \boldsymbol{w_t} \sim N\begin{pmatrix} \boldsymbol{0}, \begin{bmatrix} W_
     \mu &amp; 0 \\ 0 &amp; W_\nu \end{bmatrix} \end{pmatrix}
-\end{align*}\]</span></p>
+\end{align*}</annotation></semantics></math></p>
 <p>These two common forms have a long history and are also referred to
 as structural time series models (implemented in base R via
 <code><a href="https://rdrr.io/r/stats/StructTS.html" class="external-link">StructTS()</a></code>). With <code>countSTAR</code>, warpDLM time
@@ -551,27 +629,33 @@ series modeling is accomplished via the <code><a href="../reference/warpDLM.html
 In the below, we apply the model to a time series dataset included in
 base R concerning yearly numbers of important discoveries from 1860 to
 1959 (<code><a href="https://rdrr.io/r/datasets/discoveries.html" class="external-link">?discoveries</a></code> for more information).</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#Visualize the data</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">discoveries</span><span class="op">)</span></span></code></pre></div>
-<p><img src="countSTAR_files/figure-html/warpDLM-1.png" width="700"></p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<p><img src="countSTAR_files/figure-html/warpDLM-1.png" class="r-plt" alt="" width="700"></p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
+<span><span class="co"># Required package:</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/helske/KFAS" class="external-link">KFAS</a></span><span class="op">)</span></span>
+<span><span class="co">#&gt; Please cite KFAS in publications by using: </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   Jouni Helske (2017). KFAS: Exponential Family State Space Models in R. Journal of Statistical Software, 78(10), 1-39. doi:10.18637/jss.v078.i10.</span></span>
+<span></span>
 <span><span class="co">#Fit the model</span></span>
-<span><span class="va">warpfit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/warpDLM.html">warpDLM</a></span><span class="op">(</span>y<span class="op">=</span><span class="va">discoveries</span>, type<span class="op">=</span><span class="st">"trend"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "Time taken:  67.026  seconds"</span></span></code></pre></div>
+<span><span class="va">warpfit</span> <span class="op">=</span> <span class="fu"><a href="../reference/warpDLM.html">warpDLM</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">discoveries</span>, type <span class="op">=</span> <span class="st">"trend"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "Time taken:  31.846  seconds"</span></span></code></pre></div>
 <p>Once again, we can check fit using posterior predictive checks. The
 median of the posterior predictive draws can act as a sort of
 count-valued smoother of the time series.</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://mc-stan.org/bayesplot/reference/PPC-intervals.html" class="external-link">ppc_ribbon</a></span><span class="op">(</span>y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/vector.html" class="external-link">as.vector</a></span><span class="op">(</span><span class="va">discoveries</span><span class="op">)</span>, </span>
 <span>           yrep <span class="op">=</span> <span class="va">warpfit</span><span class="op">$</span><span class="va">post_pred</span><span class="op">)</span></span></code></pre></div>
-<p><img src="countSTAR_files/figure-html/warpPPC-1.png" width="700"></p>
+<p><img src="countSTAR_files/figure-html/warpPPC-1.png" class="r-plt" alt="" width="700"></p>
 </div>
-<div class="section level2">
+<div class="section level2 unnumbered">
 <h2 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
-<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
 <div id="ref-chipman2010bart" class="csl-entry">
 Chipman, Hugh A., Edward I. George, and Robert E. McCulloch. 2012.
 <span>“<span class="nocase">BART: Bayesian additive regression
@@ -601,30 +685,33 @@ Regression for Self-Reported Mental Health.”</span> <em>Biometrics</em>.
 ———. 2022. <span>“Semiparametric Discrete Data Regression with Monte
 Carlo Inference and Prediction.”</span> <a href="https://arxiv.org/abs/2110.12316" class="external-link">https://arxiv.org/abs/2110.12316</a>.
 </div>
+<div id="ref-Kowal03042025" class="csl-entry">
+———. 2025. <span>“Monte Carlo Inference for Semiparametric Bayesian
+Regression.”</span> <em>Journal of the American Statistical
+Association</em> 120 (550): 1063–76. <a href="https://doi.org/10.1080/01621459.2024.2395586" class="external-link">https://doi.org/10.1080/01621459.2024.2395586</a>.
 </div>
 </div>
-  </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
+</div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
 </div>
 
 
 
     <footer><div class="pkgdown-footer-left">
-  <p></p>
-<p>Developed by <a href="https://bking124.github.io/" class="external-link">Brian King</a>, <a href="http://www.danielrkowal.com/" class="external-link">Dan Kowal</a>.</p>
+  <p>Developed by <a href="https://bking124.github.io/" class="external-link">Brian King</a>, <a href="http://www.danielrkowal.com/" class="external-link">Dan Kowal</a>.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>
 </div>
 
-  
 
-  
+
+
 
   </body>
 </html>

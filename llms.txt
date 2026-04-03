@@ -1,0 +1,178 @@
+# countSTAR: Flexible Modeling for Count Data
+
+### Overview
+
+Count-valued data are common in many fields. Frequently, count data are
+observed jointly with predictors, over time intervals, or across spatial
+locations. Furthermore, they often exhibit a variety of complex
+distributional features, including zero-inflation, skewness, over- and
+underdispersion, and in some cases may be bounded or censored. Flexible
+and interpretable models for *count-valued processes* are therefore
+highly useful in practice.
+
+`countSTAR` implements a variety of methods for modeling such processes,
+based on the idea of Simultaneous Transformation and Rounding (STAR).
+Estimation, inference, and prediction for STAR are available for both
+*Bayesian* and *frequentist* models. The bulk of methods serve for
+static regression problems, but the package also supports time series
+analysis via the warped Dynamic Linear Model (DLM) framework.
+
+Broadly, STAR defines an count-valued probability model by (1)
+specifying a (conditionally) Gaussian model for continuous *latent* data
+and (2) connecting the latent data to the observed data via a
+*transformation and rounding* operation.
+
+Importantly, STAR models are highly flexible count-valued processes, and
+provide the capability to model (i) discrete data, (ii) zero-inflation,
+(iii) over- or under-dispersion, (iv) heaping, and (v) bounded or
+censored data. The modularity of the STAR framework allows for the
+ability to utilize a wide variety of different latent data models, which
+can range from simple forms like linear regression to more advanced
+machine learning methods such as random forests or gradient boosting
+machines.
+
+`countSTAR` can be installed and loaded as follows:
+
+``` r
+#CRAN version
+install.packages("countSTAR")
+
+#Development version
+remotes::install_github("bking124/countSTAR")
+
+library("countSTAR")
+```
+
+Detailed information on the different options for STAR models and how
+they are implemented in `countSTAR` can be found in the vignette,
+accessible on the
+[website](https://bking124.github.io/countSTAR/articles/countSTAR.html)
+or by running the command
+[`vignette("countSTAR")`](https://bking124.github.io/countSTAR/articles/countSTAR.md).
+A basic breakdown of the available modeling functions is shown below:
+
+| Analysis Type                   | Method (`function`)                                                                                               | Dependent Package |
+|---------------------------------|-------------------------------------------------------------------------------------------------------------------|-------------------|
+| **Static Classical Regression** | Linear regression ([`lm_star()`](https://bking124.github.io/countSTAR/reference/lm_star.md))                      | \-                |
+| \-                              | Generalized boosted modeling ([`gbm_star()`](https://bking124.github.io/countSTAR/reference/gbm_star.md))         | `gbm`             |
+| \-                              | Random Forests ([`randomForest_star()`](https://bking124.github.io/countSTAR/reference/randomForest_star.md))     | `randomForest`    |
+| **Static Bayesian Regression**  | Linear regression ([`blm_star()`](https://bking124.github.io/countSTAR/reference/blm_star.md))                    | \-                |
+| \-                              | Additive modeling ([`bam_star()`](https://bking124.github.io/countSTAR/reference/bam_star.md))                    | `spikeSlabGAM`    |
+| \-                              | Spline regression ([`spline_star()`](https://bking124.github.io/countSTAR/reference/spline_star.md))              | `spikeSlabGAM`    |
+| \-                              | Bayesian additive regression trees ([`bart_star()`](https://bking124.github.io/countSTAR/reference/bart_star.md)) | `dbarts`          |
+| **Time Series Modeling**        | Warped Dynamic Linear Models ([`warpDLM()`](https://bking124.github.io/countSTAR/reference/warpDLM.md))           | `KFAS`            |
+
+In addition to these ready to use functions, users can also implement
+STAR methods with custom latent regression models using the
+[`genEM_star()`](https://bking124.github.io/countSTAR/reference/genEM_star.md)
+and
+[`genMCMC_star()`](https://bking124.github.io/countSTAR/reference/genMCMC_star.md)
+functions.
+
+Please submit any issues or feature requests to
+<https://github.com/bking124/countSTAR/issues>.
+
+# Package index
+
+## Classical STAR Regression
+
+Methods for STAR models estimated using EM algorithm
+
+- [`lm_star()`](https://bking124.github.io/countSTAR/reference/lm_star.md)
+  : Fitting frequentist STAR linear model via EM algorithm
+- [`confint(`*`<lmstar>`*`)`](https://bking124.github.io/countSTAR/reference/confint.lmstar.md)
+  : Compute asymptotic confidence intervals for STAR linear regression
+- [`predict(`*`<lmstar>`*`)`](https://bking124.github.io/countSTAR/reference/predict.lmstar.md)
+  : Predict method for response in STAR linear model
+- [`pvals()`](https://bking124.github.io/countSTAR/reference/pvals.md) :
+  Compute coefficient p-values for STAR linear regression using
+  likelihood ratio test
+- [`randomForest_star()`](https://bking124.github.io/countSTAR/reference/randomForest_star.md)
+  : Fit Random Forest STAR with EM algorithm
+- [`gbm_star()`](https://bking124.github.io/countSTAR/reference/gbm_star.md)
+  : Fitting STAR Gradient Boosting Machines via EM algorithm
+- [`genEM_star()`](https://bking124.github.io/countSTAR/reference/genEM_star.md)
+  : Generalized EM estimation for STAR
+
+## Bayesian STAR Regression
+
+Methods for STAR models estimated using Bayesian methods (either Gibbs
+sampling or exact Monte Carlo estimation in certain scenarios)
+
+- [`blm_star()`](https://bking124.github.io/countSTAR/reference/blm_star.md)
+  : STAR Bayesian Linear Regression
+- [`bam_star()`](https://bking124.github.io/countSTAR/reference/bam_star.md)
+  : Fit Bayesian Additive STAR Model with MCMC
+- [`bart_star()`](https://bking124.github.io/countSTAR/reference/bart_star.md)
+  : MCMC Algorithm for BART-STAR
+- [`spline_star()`](https://bking124.github.io/countSTAR/reference/spline_star.md)
+  : Posterior and predictive inference for Bayesian STAR splines
+- [`genMCMC_star()`](https://bking124.github.io/countSTAR/reference/genMCMC_star.md)
+  : Generalized MCMC Algorithm for STAR
+- [`init_lm_gprior()`](https://bking124.github.io/countSTAR/reference/init_lm_gprior.md)
+  : Initialize linear regression parameters assuming a g-prior
+- [`sample_lm_gprior()`](https://bking124.github.io/countSTAR/reference/sample_lm_gprior.md)
+  : Sample the linear regression parameters assuming a g-prior
+
+## WarpDLMs (Count Time Series Modeling)
+
+Methods for warped Dynamic Linear Models to perform Bayesian inference
+and forecasting for count-valued time series
+
+- [`warpDLM()`](https://bking124.github.io/countSTAR/reference/warpDLM.md)
+  : Posterior Inference for warpDLM model with latent structural DLM
+
+## Helper Functions
+
+### Transformation and Rounding Functions
+
+- [`a_j()`](https://bking124.github.io/countSTAR/reference/a_j.md) :
+  Inverse rounding function
+- [`round_floor()`](https://bking124.github.io/countSTAR/reference/round_floor.md)
+  : Rounding function
+- [`g_bc()`](https://bking124.github.io/countSTAR/reference/g_bc.md) :
+  Box-Cox transformation
+- [`g_cdf()`](https://bking124.github.io/countSTAR/reference/g_cdf.md) :
+  Cumulative distribution function (CDF)-based transformation
+- [`g_inv()`](https://bking124.github.io/countSTAR/reference/g_inv.md) :
+  Inverse transformation
+- [`g_inv_approx()`](https://bking124.github.io/countSTAR/reference/g_inv_approx.md)
+  : Approximate inverse transformation
+- [`g_inv_bc()`](https://bking124.github.io/countSTAR/reference/g_inv_bc.md)
+  : Inverse Box-Cox transformation
+- [`HPDregion()`](https://bking124.github.io/countSTAR/reference/HPDregion.md)
+  : Compute highest posterior density (HPD) regions
+- [`rdir()`](https://bking124.github.io/countSTAR/reference/rdir.md) :
+  Dirichlet sampler
+
+### Simulation and Visualization
+
+- [`simulate_nb_friedman()`](https://bking124.github.io/countSTAR/reference/simulate_nb_friedman.md)
+  : Simulate count data from Friedman's nonlinear regression
+- [`simulate_nb_lm()`](https://bking124.github.io/countSTAR/reference/simulate_nb_lm.md)
+  : Simulate count data from a linear regression
+- [`plot_coef()`](https://bking124.github.io/countSTAR/reference/plot_coef.md)
+  : Plot the estimated regression coefficients and credible intervals
+- [`plot_fitted()`](https://bking124.github.io/countSTAR/reference/plot_fitted.md)
+  : Plot the fitted values and the data
+- [`plot_pmf()`](https://bking124.github.io/countSTAR/reference/plot_pmf.md)
+  : Plot the empirical and model-based probability mass functions
+- [`simBaS()`](https://bking124.github.io/countSTAR/reference/simBaS.md)
+  : Compute Simultaneous Band Scores (SimBaS)
+- [`credBands()`](https://bking124.github.io/countSTAR/reference/credBands.md)
+  : Compute Simultaneous Credible Bands
+- [`getEffSize()`](https://bking124.github.io/countSTAR/reference/getEffSize.md)
+  : Summarize of effective sample size
+- [`ergMean()`](https://bking124.github.io/countSTAR/reference/ergMean.md)
+  : Compute the ergodic (running) mean.
+
+- [`roaches`](https://bking124.github.io/countSTAR/reference/roaches.md)
+  : Data on the efficacy of a pest management system at reducing the
+  number of roaches in urban apartments.
+
+# Articles
+
+### All vignettes
+
+- [Getting Started with
+  countSTAR](https://bking124.github.io/countSTAR/articles/countSTAR.md):
