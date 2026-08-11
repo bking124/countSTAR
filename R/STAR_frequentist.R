@@ -1123,26 +1123,25 @@ randomForest_star = function(y, X, X.test = NULL,
 #' sim_dat = simulate_nb_friedman(n = 100, p = 5)
 #' y = sim_dat$y; X = sim_dat$X
 #'
-#' # EM algorithm for STAR (using the log-link)
-#' library(gbm)
-#' fit_em = gbm_star(y = y, X = X,
-#'                  transformation = 'log')
+#' if (requireNamespace("gbm", quietly = TRUE)) {
+#'   # EM algorithm for STAR (using the log-link)
+#'   fit_em = gbm_star(y = y, X = X,
+#'                    transformation = 'log')
 #'
-#' # Evaluate convergence:
-#' plot(fit_em$logLik_all, type='l', main = 'GBM-STAR-log', xlab = 'Iteration', ylab = 'log-lik')
+#'   # Evaluate convergence:
+#'   plot(fit_em$logLik_all, type='l', main = 'GBM-STAR-log', xlab = 'Iteration', ylab = 'log-lik')
 #'
-#' # Fitted values:
-#' y_hat = fitted(fit_em)
-#' plot(y_hat, y);
+#'   # Fitted values:
+#'   y_hat = fitted(fit_em)
+#'   plot(y_hat, y)
 #'
-#' # Residuals:
-#' plot(residuals(fit_em))
-#' qqnorm(residuals(fit_em)); qqline(residuals(fit_em))
+#'   # Residuals:
+#'   plot(residuals(fit_em))
+#'   qqnorm(residuals(fit_em)); qqline(residuals(fit_em))
 #'
-#' # Log-likelihood at MLEs:
-#' fit_em$logLik
-#'
-# #' @import gbm
+#'   # Log-likelihood at MLEs:
+#'   fit_em$logLik
+#' }
 #' @export
 gbm_star = function(y, X, X.test = NULL,
                     transformation = 'np',
@@ -1502,12 +1501,11 @@ gbm_star = function(y, X, X.test = NULL,
 #' transformation = 'np'
 #'
 #' # Example using GAM as underlying estimator (for illustration purposes only)
-#' if(require("mgcv")){
+#' if(requireNamespace("mgcv", quietly = TRUE)){
 #'   fit_em = genEM_star(y = y,
-#'                       estimator = function(y) gam(y ~ s(X1)+s(X2),
+#'                       estimator = function(y) mgcv::gam(y ~ s(X1)+s(X2),
 #'                       data=data.frame(y,X)),
 #'                       transformation = transformation)
-#' }
 #'
 #' # Fitted coefficients:
 #' coef(fit_em)
@@ -1518,7 +1516,7 @@ gbm_star = function(y, X, X.test = NULL,
 #'
 #' # Log-likelihood at MLEs:
 #' fit_em$logLik
-#'
+#' }
 #' @export
 genEM_star = function(y,
                       estimator,

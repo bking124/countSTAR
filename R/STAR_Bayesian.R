@@ -838,48 +838,49 @@ bam_star = function(y, X_lin, X_nonlin, splinetype="orthogonal",
 #' sim_dat = simulate_nb_friedman(n = 100, p = 5)
 #' y = sim_dat$y; X = sim_dat$X
 #'
-#' # BART-STAR with log-transformation:
-#' fit_log = bart_star(y = y, X = X, transformation = 'log',
-#'                     save_y_hat = TRUE, nburn=1000, nskip=0)
+#' if (requireNamespace("dbarts", quietly = TRUE)) {
+#'   # BART-STAR with log-transformation:
+#'   fit_log = bart_star(y = y, X = X, transformation = 'log',
+#'                       save_y_hat = TRUE, nburn=1000, nskip=0)
 #'
-#' # Fitted values
-#' plot_fitted(y = sim_dat$Ey,
-#'             post_y = fit_log$post.fitted.values,
-#'             main = 'Fitted Values: BART-STAR-log')
+#'   # Fitted values
+#'   plot_fitted(y = sim_dat$Ey,
+#'               post_y = fit_log$post.fitted.values,
+#'               main = 'Fitted Values: BART-STAR-log')
 #'
-#' # WAIC for BART-STAR-log:
-#' fit_log$WAIC
+#'   # WAIC for BART-STAR-log:
+#'   fit_log$WAIC
 #'
-#' # MCMC diagnostics:
-#' plot(as.ts(fit_log$post.fitted.values[,1:10]))
+#'   # MCMC diagnostics:
+#'   plot(as.ts(fit_log$post.fitted.values[,1:10]))
 #'
-#' # Posterior predictive check:
-#' hist(apply(fit_log$post.pred, 1,
-#'            function(x) mean(x==0)), main = 'Proportion of Zeros', xlab='');
-#' abline(v = mean(y==0), lwd=4, col ='blue')
+#'   # Posterior predictive check:
+#'   hist(apply(fit_log$post.pred, 1,
+#'              function(x) mean(x==0)), main = 'Proportion of Zeros', xlab='');
+#'   abline(v = mean(y==0), lwd=4, col ='blue')
 #'
-#' # BART-STAR with nonparametric transformation:
-#' fit = bart_star(y = y, X = X,
-#'                      transformation = 'np', save_y_hat = TRUE)
+#'   # BART-STAR with nonparametric transformation:
+#'   fit = bart_star(y = y, X = X,
+#'                        transformation = 'np', save_y_hat = TRUE)
 #'
-#' # Fitted values
-#' plot_fitted(y = sim_dat$Ey,
-#'             post_y = fit$post.fitted.values,
-#'             main = 'Fitted Values: BART-STAR-np')
+#'   # Fitted values
+#'   plot_fitted(y = sim_dat$Ey,
+#'               post_y = fit$post.fitted.values,
+#'               main = 'Fitted Values: BART-STAR-np')
 #'
-#' # WAIC for BART-STAR-np:
-#' fit$WAIC
+#'   # WAIC for BART-STAR-np:
+#'   fit$WAIC
 #'
-#' # MCMC diagnostics:
-#' plot(as.ts(fit$post.fitted.values[,1:10]))
+#'   # MCMC diagnostics:
+#'   plot(as.ts(fit$post.fitted.values[,1:10]))
 #'
-#' # Posterior predictive check:
-#' hist(apply(fit$post.pred, 1,
-#'            function(x) mean(x==0)), main = 'Proportion of Zeros', xlab='');
-#' abline(v = mean(y==0), lwd=4, col ='blue')
-#'}
+#'   # Posterior predictive check:
+#'   hist(apply(fit$post.pred, 1,
+#'              function(x) mean(x==0)), main = 'Proportion of Zeros', xlab='');
+#'   abline(v = mean(y==0), lwd=4, col ='blue')
+#' }
+#' }
 #'
-# #' @import dbarts
 #' @export
 bart_star = function(y,
                     X,
@@ -1243,25 +1244,26 @@ bart_star = function(y,
 #' moderate to large, MCMC sampling (\code{use_MCMC=TRUE}) is much faster and more convenient.
 #'
 #' @examples
-#' # Simulate some data:
-#' n = 100
-#' x = seq(0,1, length.out = n)
-#' y = round_floor(exp(1 + rnorm(n)/4 + poly(x, 4)%*%rnorm(n=4, sd = 4:1)))
+#' if (requireNamespace("spikeSlabGAM", quietly = TRUE)) {
+#'   # Simulate some data:
+#'   n = 100
+#'   x = seq(0,1, length.out = n)
+#'   y = round_floor(exp(1 + rnorm(n)/4 + poly(x, 4)%*%rnorm(n=4, sd = 4:1)))
 #'
-#' # Sample from the predictive distribution of a STAR spline model:
-#' fit = spline_star(y = y, x = x)
+#'   # Sample from the predictive distribution of a STAR spline model
+#'   # Using less iterations than default for testing purposes
+#'   fit = spline_star(y = y, x = x, nsave=200, nburn=200)
 #'
-#' # Compute 90% prediction intervals:
-#' pi_y = t(apply(fit$post.pred, 2, quantile, c(0.05, .95)))
+#'   # Compute 90% prediction intervals:
+#'   pi_y = t(apply(fit$post.pred, 2, quantile, c(0.05, .95)))
 #'
-#'# Plot the results: intervals, median, and smoothed mean
-#' plot(x, y, ylim = range(pi_y, y))
-#' polygon(c(x, rev(x)),c(pi_y[,2], rev(pi_y[,1])),col='gray', border=NA)
-#' lines(x, apply(fit$post.pred, 2, median), lwd=5, col ='black')
-#' lines(x, smooth.spline(x, apply(fit$post.pred, 2, mean))$y, lwd=5, col='blue')
-#' lines(x, y, type='p')
-#'
-# #' @importFrom spikeSlabGAM sm
+#'   # Plot the results: intervals, median, and smoothed mean
+#'   plot(x, y, ylim = range(pi_y, y))
+#'   polygon(c(x, rev(x)),c(pi_y[,2], rev(pi_y[,1])),col='gray', border=NA)
+#'   lines(x, apply(fit$post.pred, 2, median), lwd=5, col ='black')
+#'   lines(x, smooth.spline(x, apply(fit$post.pred, 2, mean))$y, lwd=5, col='blue')
+#'   lines(x, y, type='p')
+#' }
 #' @export
 spline_star = function(y,
                        x = NULL,

@@ -108,22 +108,23 @@ from the posterior predictive distribution. When \code{n} is
 moderate to large, MCMC sampling (\code{use_MCMC=TRUE}) is much faster and more convenient.
 }
 \examples{
-# Simulate some data:
-n = 100
-x = seq(0,1, length.out = n)
-y = round_floor(exp(1 + rnorm(n)/4 + poly(x, 4)\%*\%rnorm(n=4, sd = 4:1)))
+if (requireNamespace("spikeSlabGAM", quietly = TRUE)) {
+  # Simulate some data:
+  n = 100
+  x = seq(0,1, length.out = n)
+  y = round_floor(exp(1 + rnorm(n)/4 + poly(x, 4)\%*\%rnorm(n=4, sd = 4:1)))
 
-# Sample from the predictive distribution of a STAR spline model:
-fit = spline_star(y = y, x = x)
+  # Sample from the predictive distribution of a STAR spline model:
+  fit = spline_star(y = y, x = x)
 
-# Compute 90\% prediction intervals:
-pi_y = t(apply(fit$post.pred, 2, quantile, c(0.05, .95)))
+  # Compute 90\% prediction intervals:
+  pi_y = t(apply(fit$post.pred, 2, quantile, c(0.05, .95)))
 
-# Plot the results: intervals, median, and smoothed mean
-plot(x, y, ylim = range(pi_y, y))
-polygon(c(x, rev(x)),c(pi_y[,2], rev(pi_y[,1])),col='gray', border=NA)
-lines(x, apply(fit$post.pred, 2, median), lwd=5, col ='black')
-lines(x, smooth.spline(x, apply(fit$post.pred, 2, mean))$y, lwd=5, col='blue')
-lines(x, y, type='p')
-
+  # Plot the results: intervals, median, and smoothed mean
+  plot(x, y, ylim = range(pi_y, y))
+  polygon(c(x, rev(x)),c(pi_y[,2], rev(pi_y[,1])),col='gray', border=NA)
+  lines(x, apply(fit$post.pred, 2, median), lwd=5, col ='black')
+  lines(x, smooth.spline(x, apply(fit$post.pred, 2, mean))$y, lwd=5, col='blue')
+  lines(x, y, type='p')
+}
 }

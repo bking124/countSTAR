@@ -116,12 +116,11 @@ y = sim_dat$y; X = sim_dat$X
 transformation = 'np'
 
 # Example using GAM as underlying estimator (for illustration purposes only)
-if(require("mgcv")){
+if(requireNamespace("mgcv", quietly = TRUE)){
   fit_em = genEM_star(y = y,
-                      estimator = function(y) gam(y ~ s(X1)+s(X2),
+                      estimator = function(y) mgcv::gam(y ~ s(X1)+s(X2),
                       data=data.frame(y,X)),
                       transformation = transformation)
-}
 
 # Fitted coefficients:
 coef(fit_em)
@@ -132,7 +131,7 @@ plot(y_hat, y);
 
 # Log-likelihood at MLEs:
 fit_em$logLik
-
+}
 }
 \references{
 Kowal, D. R., & Wu, B. (2021).

@@ -1,7 +1,7 @@
 Package: countSTAR
 Type: Package
 Title: Flexible Modeling of Count Data 
-Version: 1.2.0
+Version: 1.2.1
 Authors@R: c(
     person(given="Brian", family="King", email = "brianking387@gmail.com", role = c("aut", "cre")),
     person(given="Dan", family = "Kowal", email = "daniel.r.kowal@gmail.com", role = "aut"))
@@ -28,7 +28,6 @@ License: GPL (>=2)
 Encoding: UTF-8
 LinkingTo: Rcpp, RcppArmadillo
 Imports: stats, utils, graphics, Rcpp
-RoxygenNote: 7.3.3
 Suggests: bayesplot, coda, dbarts, FastGP, gbm, KFAS, knitr, Matrix, mgcv, randomForest, rmarkdown, spikeSlabGAM, splines2, TruncatedNormal, truncdist
 VignetteBuilder: knitr
 URL: https://bking124.github.io/countSTAR/
@@ -37,3 +36,4 @@ BugReports: https://github.com/bking124/countSTAR/issues
 Depends: 
     R (>= 2.10)
 LazyData: true
+Config/roxygen2/version: 8.1.0

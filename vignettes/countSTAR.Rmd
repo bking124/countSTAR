@@ -17,6 +17,19 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 ```
+
+```{r setup, include = FALSE}
+# Check if dbarts is installed AND functional
+dbarts_works <- FALSE
+if (requireNamespace("dbarts", quietly = TRUE)) {
+  dbarts_works <- tryCatch({
+    # Run a microscopic test to ensure dbartsControl doesn't crash
+    dbarts::dbartsControl()
+    TRUE
+  }, error = function(e) FALSE)
+}
+```
+
 ## Introduction
 The `countSTAR` package implements a variety of methods to analyze count data, all based on Simultaneous Transformation and Rounding (STAR) models. The package functionality is broadly split into three categories: frequentist/classical estimation (@kowal2021semiparametric), Bayesian modeling and prediction (@Kowal2020a; @kowalSTARconjugate), and time series analysis and forecasting (@king2023warped).
 
@@ -24,14 +37,14 @@ We give a brief description of the STAR framework, before diving into specific e
 
 ## STAR Model Overview
 
-STAR models build upon continuous data models to provide a *valid count-valued data-generating process*. As a motivating example, consider the common practice of taking log- or square-root transformations of count data and then applying continuous data models (e.g., Gaussian or OLS regressions). This approach is widely popular because it addresses the skewness often found in count data and enables use of familiar models, but it does not provide a valid count data distribution. STAR models retain the core components---the transformation and the continuous data model---but add in a rounding layer to ensure a coherent, count-valued data-generating process. 
+STAR models build upon continuous data models to provide a *valid count-valued data-generating process*. As a motivating example, consider the common practice of taking log- or square-root transformations of count data and then applying continuous data models (e.g., Gaussian or OLS regressions). This approach is widely popular because it addresses the skewness often found in count data and enables use of familiar models, but it does not provide a valid count data distribution. STAR models retain the core components---the transformation and the continuous data model---but add in a rounding layer to ensure a coherent, count-valued data-generating process.
 For example:
 \begin{align*}
 y_i &= \mbox{floor}(y_i^*) \\
 z_i &= \log(y_i^*) \\
 z_i &= x_i'\theta + \epsilon_i, \quad \epsilon_i \sim N(0, \sigma^2)
 \end{align*}
-The transformation and continuous data model are not applied directly to the observed counts $y_i$, but rather to a latent "continuous proxy" $y_i^*$. The (latent) continuous data model is linked to the (observed) count data via a coarsening operation. This is *not* the same as rounding the outputs from a fitted continuous data model: the discrete nature of the data is built into the model itself, and thus is central in estimation, inference, and prediction.   
+The transformation and continuous data model are not applied directly to the observed counts $y_i$, but rather to a latent "continuous proxy" $y_i^*$. The (latent) continuous data model is linked to the (observed) count data via a coarsening operation. This is *not* the same as rounding the outputs from a fitted continuous data model: the discrete nature of the data is built into the model itself, and thus is central in estimation, inference, and prediction.
 
 More generally, STAR models are defined via a *rounding operator* $h$, a (known or unknown) *transformation* $g$, and a *continuous data model* with unknown parameters $\theta$:
 \begin{align*}
@@ -39,24 +52,24 @@ y_i &= h(y_i^*) \quad \mbox{(rounding)}\\
 z_i &= g(y_i^*) \quad \mbox{(transformation)}\\
 z_i &= \mu_\theta(x_i) + \epsilon_i  \quad \mbox{(model)}\\
 \end{align*}
-usually with $\epsilon_i \sim N(0, \sigma^2)$.  Examples of $\mu_\theta(x)$ include linear, additive, and tree-based regression models. The regression model may be replaced with a time series model (see `warpDLM()`, discussed below) or other continuous data models. 
+usually with $\epsilon_i \sim N(0, \sigma^2)$.  Examples of $\mu_\theta(x)$ include linear, additive, and tree-based regression models. The regression model may be replaced with a time series model (see `warpDLM()`, discussed below) or other continuous data models.
 
-STAR models are highly flexible models and provide the capability to model count (or rounded) data with challenging features such as 
+STAR models are highly flexible models and provide the capability to model count (or rounded) data with challenging features such as
 
 * zero-inflation
 * over- or under-dispersion
 * bounded or censored data
 * heaping or multi-modality
 
-all with minimal user inputs and within a regression (or time series) context. 
+all with minimal user inputs and within a regression (or time series) context.
 
 ### The Rounding Operator
-The rounding operator $h$ is a many-to-one function (or coarsening) that sets $y = j$ whenever $y^*\in A_j$ or equivalently when $z \in g(A_j)$. The floor function $A_j := [j, j+1)$ works well as a default, with modifications for lower and upper endpoints. First, $g(A_0) := (-\infty, 0)$ ensures that $y = 0$ whenever $z < 0$. Much of the latent space is mapped to zero, which enables STAR models to account for zero-inflation. Similarly, when there is a known (finite) upper bound `y_max` for the data, we fix $g(A_K) := [g(a_K), \infty)$, so STAR models can capture endpoint inflation. In fact, because of the coarsening nature of STAR models, they equivalently can be applied for count data that are bounded *or* censored at `y_max` without any modifications (@Kowal2020a). From the user's perspective, only `y_max` needs to be specified (if finite). 
+The rounding operator $h$ is a many-to-one function (or coarsening) that sets $y = j$ whenever $y^*\in A_j$ or equivalently when $z \in g(A_j)$. The floor function $A_j := [j, j+1)$ works well as a default, with modifications for lower and upper endpoints. First, $g(A_0) := (-\infty, 0)$ ensures that $y = 0$ whenever $z < 0$. Much of the latent space is mapped to zero, which enables STAR models to account for zero-inflation. Similarly, when there is a known (finite) upper bound `y_max` for the data, we fix $g(A_K) := [g(a_K), \infty)$, so STAR models can capture endpoint inflation. In fact, because of the coarsening nature of STAR models, they equivalently can be applied for count data that are bounded *or* censored at `y_max` without any modifications (@Kowal2020a). From the user's perspective, only `y_max` needs to be specified (if finite).
 
 ### The Transformation Function
 There are a variety of options for the transformation function $g$, ranging from fixed functions to data-driven estimates to fully Bayesian (nonparametric) models for the transformation.
 
-First, all models in `countSTAR` support three fixed transformations: `log`, `sqrt`, and  `identity` (essentially a rounding-only model). In these cases, the STAR model has exactly the same number of unknown parameters as the (latent) continuous data model. Thus, it gives a parsimonious adaptation of continuous data models to the count data setting. 
+First, all models in `countSTAR` support three fixed transformations: `log`, `sqrt`, and  `identity` (essentially a rounding-only model). In these cases, the STAR model has exactly the same number of unknown parameters as the (latent) continuous data model. Thus, it gives a parsimonious adaptation of continuous data models to the count data setting.
 
 
 Second, most functions support a set of transformations that are estimated by matching marginal moments of the data $y$ to the latent $z$:
@@ -65,40 +78,40 @@ Second, most functions support a set of transformations that are estimated by ma
 * `transformation='pois'` uses a moment-matched marginal Poisson CDF
 * `transformation='neg-bin'` uses a moment-matched marginal Negative Binomial CDF.
 
-Details on the estimation of these transformations can be found in @kowal2021semiparametric.  The nonparametric transformation `np` is  effective across a variety of empirical examples, so it is the default for frequentist STAR methods. The main drawback of this group of transformations is that, after being estimated, they are treated as fixed and known for estimation and inference of $\theta$. Of course, this drawback is limited when $n$ is large. 
+Details on the estimation of these transformations can be found in @kowal2021semiparametric.  The nonparametric transformation `np` is  effective across a variety of empirical examples, so it is the default for frequentist STAR methods. The main drawback of this group of transformations is that, after being estimated, they are treated as fixed and known for estimation and inference of $\theta$. Of course, this drawback is limited when $n$ is large.
 
 Finally, Bayesian STAR methods enable joint learning of the transformation $g$ along with the model parameters $\theta$. Thus, uncertainty about the transformation is incorporated into all downstream estimation, inference, and prediction. These include both nonparametric and parametric transformations:
 
 * `transformation='bnp'`: the transformation is modeled using Bayesian nonparametrics, and specifically via a Dirichlet process for the marginal outcome distribution, which incorporates  uncertainty about the transformation into posterior and predictive inference.
 * `transformation='box-cox'`: the transformation is assumed to belong to the Box-Cox family; the $\lambda$ parameter can be fixed or learned.
-* `transformation='ispline'`: the transformation is modeled as an unknown, monotone function using I-splines. The Robust Adaptive Metropolis (RAM) sampler is used for the unknown transformation $g$. 
+* `transformation='ispline'`: the transformation is modeled as an unknown, monotone function using I-splines. The Robust Adaptive Metropolis (RAM) sampler is used for the unknown transformation $g$.
 
-The transformation `bnp` is the default for all applicable Bayesian models. It is nonparametric, which provides substantial distributional flexible for STAR regression, and is remarkably computationally efficient---even compared to parametric alternatives. This approach is inspired by @Kowal03042025. 
+The transformation `bnp` is the default for all applicable Bayesian models. It is nonparametric, which provides substantial distributional flexible for STAR regression, and is remarkably computationally efficient---even compared to parametric alternatives. This approach is inspired by @Kowal03042025.
 
-For any `countSTAR` function, the user can see which transformations are supported by checking the appropriate help page, e.g., `?blm_star()`. 
+For any `countSTAR` function, the user can see which transformations are supported by checking the appropriate help page, e.g., `?blm_star()`.
 
 ## Count-Valued Data: The Roaches Dataset
 As an example of challenging count-valued data, consider the `roaches` data from @Gelman_Hill_2006.
-The response variable, $y_i$, is the number of roaches caught in traps in apartment $i$, with $i=1,\ldots, n = 262$. 
+The response variable, $y_i$, is the number of roaches caught in traps in apartment $i$, with $i=1,\ldots, n = 262$.
 
 ```{r roaches}
-data(roaches, package="countSTAR") 
+data(roaches, package="countSTAR")
 
 # Roaches:
 y = roaches$y
 
 # Plot the PMF:
-plot(0:max(y), 
-     sapply(0:max(y), function(js) mean(js == y)), 
+plot(0:max(y),
+     sapply(0:max(y), function(js) mean(js == y)),
      type='h', lwd=2, main = 'PMF: Roaches Data',
      xlab = 'Roaches', ylab = 'Probability mass')
 ```
 
 There are several notable features in the data:
 
-1. Zero-inflation: `r round(100*mean(y==0), 0)`\% of the observations are zeros. 
+1. Zero-inflation: `r round(100*mean(y==0), 0)`\% of the observations are zeros.
 2. (Right-) Skewness, which is clear from the histogram and common for (zero-inflated) count data.
-3. Overdispersion: the sample mean is `r round(mean(y),0)` and the sample variance is `r round(var(y),0)`. 
+3. Overdispersion: the sample mean is `r round(mean(y),0)` and the sample variance is `r round(var(y),0)`.
 
 A pest management treatment was applied to a subset of 158 apartments, with the remaining 104 apartments receiving a control. Additional data are available on the pre-treatment number of roaches, whether the apartment building is restricted to elderly residents, and the number of days for which the traps were exposed. We are interested in modeling how the roach incidence varies with these predictors.
 ```{r roaches-covar}
@@ -109,7 +122,7 @@ X = model.matrix( ~ roach1 + treatment + senior + log(exposure2),
 head(X)
 ```
 ## Frequentist inference for STAR models
-Frequentist (or classical) estimation and inference for STAR models is provided by an EM algorithm. Sufficient for estimation is an `estimator` function which solves the least squares (or Gaussian maximum likelihood) problem associated with $\mu_\theta$---or in other words, the estimator that *would* be used for Gaussian or continuous data. Specifically, `estimator` inputs data and outputs a list with two elements: the estimated `coefficients` $\hat \theta$ and the `fitted.values` $\hat \mu_\theta(x_i) = \mu_{\hat \theta}(x_i)$. `countSTAR` includes implementations for linear, random forest, and generalized boosting regression models (see below), but it is straightforward to incorporate other models via the generic `genEM_star()` function. 
+Frequentist (or classical) estimation and inference for STAR models is provided by an EM algorithm. Sufficient for estimation is an `estimator` function which solves the least squares (or Gaussian maximum likelihood) problem associated with $\mu_\theta$---or in other words, the estimator that *would* be used for Gaussian or continuous data. Specifically, `estimator` inputs data and outputs a list with two elements: the estimated `coefficients` $\hat \theta$ and the `fitted.values` $\hat \mu_\theta(x_i) = \mu_{\hat \theta}(x_i)$. `countSTAR` includes implementations for linear, random forest, and generalized boosting regression models (see below), but it is straightforward to incorporate other models via the generic `genEM_star()` function.
 
 ### The STAR Linear Model
 For many cases, the STAR linear model is the first method to try: it combines a rounding operator $h$, a transformation $g$, and the latent linear regression model
@@ -123,14 +136,14 @@ library(countSTAR)
 
 # EM algorithm for STAR linear regression
 fit = lm_star(y ~ roach1 + treatment + senior + log(exposure2),
-              data = roaches, 
+              data = roaches,
               transformation = 'np')
 
 # Fitted coefficients:
 round(coef(fit), 3)
 ```
 
-Here the frequentist nonparametric transformation was used, but other options are available; see `?lm_star()` for details. 
+Here the frequentist nonparametric transformation was used, but other options are available; see `?lm_star()` for details.
 
 Based on the fitted STAR linear model, we may further obtain *confidence intervals* for the estimated coefficients using `confint()`:
 
@@ -157,7 +170,7 @@ P-values for all individual coefficients as well as the p-value for *any* effect
 round(pvals(fit), 4)
 ```
 
-Finally, we can get predictions at new data points (or the training data) using `predict()`. 
+Finally, we can get predictions at new data points (or the training data) using `predict()`.
 
 ```{r predict-lm}
 #Compute the predictive draws (just using observed points here)
@@ -172,12 +185,12 @@ For predictive distributions, `blm_star()` and other Bayesian models are recomme
 ```{r freq-ml}
 #Fit STAR with random forests
 suppressMessages(library(randomForest))
-fit_rf = randomForest_star(y = y, X = X[,-1], # no intercept 
+fit_rf = randomForest_star(y = y, X = X[,-1], # no intercept
                            transformation = 'np')
 
 #Fit STAR with GBM
 suppressMessages(library(gbm))
-fit_gbm = gbm_star(y = y, X = X[,-1], # no intercept 
+fit_gbm = gbm_star(y = y, X = X[,-1], # no intercept
                    transformation = 'np')
 ```
 
@@ -188,24 +201,24 @@ For all frequentist models, the functions output log-likelihood values at the ML
 -2*c(fit_rf$logLik, fit_gbm$logLik)
 ```
 
-In general, it is preferable to compare these fits using out-of-sample predictive performance. Point predictions are available via the named components `fitted.values` or `fitted.values.test` for in-sample predictions at $X$ or out-of-sample predictions at $X_{test}$, respectively. 
+In general, it is preferable to compare these fits using out-of-sample predictive performance. Point predictions are available via the named components `fitted.values` or `fitted.values.test` for in-sample predictions at $X$ or out-of-sample predictions at $X_{test}$, respectively.
 
 ## Bayesian inference for STAR models
 
 Bayesian STAR models only require an algorithm for (initializing and) sampling from the posterior distribution under a *continuous data model*. In particular, the most convenient strategy for posterior inference with STAR is to use a data-augmentation Gibbs sampler, which combines that continuous data model sampler with a draw from the latent data posterior, $[z | y, \theta]$, which is a truncated (Gaussian) distribution. For special cases of Bayesian STAR models, direct Monte Carlo (not MCMC) sampling is available.
 
-Efficient algorithms are implemented for several popular Bayesian regression and time series models (see below). The user may also adapt their own continuous data models and algorithms to the count data setting via the generic function `genMCMC_star()`. 
+Efficient algorithms are implemented for several popular Bayesian regression and time series models (see below). The user may also adapt their own continuous data models and algorithms to the count data setting via the generic function `genMCMC_star()`.
 
 ### Bayesian STAR Linear Model
 
 Revisiting the STAR linear model, the Bayesian version places a prior on $\theta$. The default in `countSTAR` is Zellner's g-prior, which has the most functionality, but other options are available (namely, horseshoe and ridge priors). The model is estimated using `blm_star()`. Note that for the Bayesian models in `countSTAR`, the user must supply the design matrix $X$ (and if predictions are desired, a matrix of predictors at the test points). We apply this to the roaches data, now using the default Bayesian nonparametric transformation:
 
 ```{r bayes-lm, results='hide', message=FALSE, warning = FALSE}
-fit_blm = blm_star(y = y, X = X, 
+fit_blm = blm_star(y = y, X = X,
                    transformation = 'bnp')
 ```
 
-In some cases, direct Monte Carlo (not MCMC) sampling can be performed (see @kowalSTARconjugate for details): simply set `use_MCMC=FALSE`. Although it is appealing to avoid MCMC, the output is typically similar and the Monte Carlo sampler requires truncated *multivariate* normal draws, which become slow for large $n$. 
+In some cases, direct Monte Carlo (not MCMC) sampling can be performed (see @kowalSTARconjugate for details): simply set `use_MCMC=FALSE`. Although it is appealing to avoid MCMC, the output is typically similar and the Monte Carlo sampler requires truncated *multivariate* normal draws, which become slow for large $n$.
 
 Posterior expectations and posterior credible intervals from the model are available as follows:
 
@@ -226,7 +239,7 @@ We can check standard MCMC diagnostics:
 
 ```{r mcmcdiag, warning=FALSE, message=FALSE}
 # MCMC diagnostics for posterior draws of the regression coefficients (excluding intercept)
-plot(as.ts(fit_blm$post.beta[,-1]), 
+plot(as.ts(fit_blm$post.beta[,-1]),
      main = 'Trace plots', cex.lab = .75)
 
 # (Summary of) effective sample sizes (excluding intercept)
@@ -240,31 +253,32 @@ We may further evaluate the model based on posterior diagnostics and posterior p
 # Posterior predictive check using bayesplot
 suppressMessages(library(bayesplot))
 prop_zero = function(y) mean(y == 0)
-ppc_stat(y = y, 
-          yrep = fit_blm$post.pred, 
+ppc_stat(y = y,
+          yrep = fit_blm$post.pred,
           stat = "prop_zero")
 ```
 
 ### BART STAR
 
 One of the most flexible model options is to use Bayesian Additive Regression Trees (BART; @chipman2010bart) as the latent regression model. Here, $\mu_\theta(x)$ is a sum of many shallow trees with small (absolute) terminal node values. BART-STAR enables application of BART models and algorithms for count data, thus combining the *regression* flexibility of BART with the (marginal) *distributional* flexibility of STAR:
-```{r bart}
-fit_bart = bart_star(y = y, X = X, 
-                     transformation = 'np')
+```{r bart, eval = dbarts_works}
+fit_bart <- bart_star(y = y, X = X, transformation = "np")
 ```
 
-Since `bnp` is not yet implemented for `bart_star()`,  we use `np` here. The transformation is still estimated nonparametrically, but then is treated as fixed and known (see `'ispline'` for a fully Bayesian and nonparametric version, albeit slower). 
+`r if(!dbarts_works) "*Note: The output for this BART example is hidden because the 'dbarts' dependency is unavailable or failing platform checks on this system.*"`
+
+Since `bnp` is not yet implemented for `bart_star()`,  we use `np` here. The transformation is still estimated nonparametrically, but then is treated as fixed and known (see `'ispline'` for a fully Bayesian and nonparametric version, albeit slower).
 
 Once again, we can perform posterior predictive checks. This time we plot the densities:
 
-```{r bartppc}
-ppc_dens_overlay(y = y, 
+```{r bartppc, eval = dbarts_works}
+ppc_dens_overlay(y = y,
                  yrep = fit_bart$post.pred[1:50,])
 ```
 
 Pointwise log-likelihoods and WAIC values are outputted for model comparison. Using this information, we can see the BART STAR model seems to have a better fit than the linear model:
 
-```{r waic}
+```{r waic, eval = dbarts_works}
 waic <- c(fit_blm$WAIC, fit_bart$WAIC)
 names(waic) <- c("STAR Linear Model", "BART-STAR")
 print(waic)
@@ -272,9 +286,9 @@ print(waic)
 
 ### Other Bayesian Models
 
-To estimate a nonlinear relationship between a  (univariate) covariate $x$ and count-valued $y$, `spline_star()` implements a highly efficient, fully Bayesian spline regression model. 
+To estimate a nonlinear relationship between a  (univariate) covariate $x$ and count-valued $y$, `spline_star()` implements a highly efficient, fully Bayesian spline regression model.
 
-For multiple nonlinear effects, `bam_star()` implements a Bayesian additive model with STAR. The user specifies which covariates should be modeled linearly and which should be modeled nonlinearly via splines. Note that `bam_star()` can be slower than `blm_star()` or `bart_star()`. 
+For multiple nonlinear effects, `bam_star()` implements a Bayesian additive model with STAR. The user specifies which covariates should be modeled linearly and which should be modeled nonlinearly via splines. Note that `bam_star()` can be slower than `blm_star()` or `bart_star()`.
 
 ## Count Time Series Modeling: warpDLM
 Up to this point, we have focused on static regression where the data does not depend on time. Notably, @king2023warped extended STAR to the time series setting by incorporating a powerful time series framework known as Dynamic Linear Models (DLMs). A DLM is defined by two equations: (i) the observation equation, which specifies how the observations are related to the latent state vector and (ii) the state evolution equation, which describes how the states are updated in a Markovian fashion. More concretely, and using $t$ subscripts for time:
@@ -287,7 +301,7 @@ for $t=1,\ldots, T$, where $\{ v_t, w_t\}_{t=1}^T$ are mutually independent and 
 Of course, given the Gaussian assumptions of the model, a DLM alone is not appropriate for count data. Thus, a warping operation---combining the transformation and rounding---is merged with the DLM, resulting in a *warped DLM* (warpDLM):
 \begin{align*}
          y_t &= h \circ g^{-1}(z_t) \\
-        \{z_t\}_{t=1}^T &\sim \text{DLM} 
+        \{z_t\}_{t=1}^T &\sim \text{DLM}
 \end{align*}
 
 The DLM form shown earlier is very general. Among these DLMs, `countSTAR` currently implements the local level model and the local linear trend model. A local level model (also known as a random walk with noise model) has a univariate state $\theta_t:=\mu_t$ with
@@ -324,8 +338,8 @@ warpfit = warpDLM(y = discoveries, type = "trend")
 Once again, we can check fit using posterior predictive checks. The median of the posterior predictive draws can act as a sort of count-valued smoother of the time series.
 
 ```{r warpPPC}
-ppc_ribbon(y = as.vector(discoveries), 
+ppc_ribbon(y = as.vector(discoveries),
            yrep = warpfit$post_pred)
 ```
 
-## References 
+## References
