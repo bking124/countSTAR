@@ -28,6 +28,7 @@ The count-valued output(s) from the rounding function.
 ## Examples
 
 ``` r
+
 # Floor function:
 round_floor(1.5)
 #> [1] 1

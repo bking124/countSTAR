@@ -168,8 +168,8 @@ X_nonlin = as.matrix(X[,(1:3)])
 # STAR: nonparametric transformation
 library(spikeSlabGAM)
 fit = bam_star(y = y, X_lin = X_lin, X_nonlin = X_nonlin)
-#> [1] "16 sec remaining"
-#> [1] "Total time: 31 seconds"
+#> [1] "15 sec remaining"
+#> [1] "Total time: 29 seconds"
 
 # What is included:
 names(fit)

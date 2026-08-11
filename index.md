@@ -34,6 +34,7 @@ machines.
 `countSTAR` can be installed and loaded as follows:
 
 ``` r
+
 #CRAN version
 install.packages("countSTAR")
 
@@ -51,16 +52,16 @@ or by running the command
 [`vignette("countSTAR")`](https://bking124.github.io/countSTAR/articles/countSTAR.md).
 A basic breakdown of the available modeling functions is shown below:
 
-| Analysis Type                   | Method (`function`)                                                                                               | Dependent Package |
-|---------------------------------|-------------------------------------------------------------------------------------------------------------------|-------------------|
-| **Static Classical Regression** | Linear regression ([`lm_star()`](https://bking124.github.io/countSTAR/reference/lm_star.md))                      | \-                |
-| \-                              | Generalized boosted modeling ([`gbm_star()`](https://bking124.github.io/countSTAR/reference/gbm_star.md))         | `gbm`             |
-| \-                              | Random Forests ([`randomForest_star()`](https://bking124.github.io/countSTAR/reference/randomForest_star.md))     | `randomForest`    |
-| **Static Bayesian Regression**  | Linear regression ([`blm_star()`](https://bking124.github.io/countSTAR/reference/blm_star.md))                    | \-                |
-| \-                              | Additive modeling ([`bam_star()`](https://bking124.github.io/countSTAR/reference/bam_star.md))                    | `spikeSlabGAM`    |
-| \-                              | Spline regression ([`spline_star()`](https://bking124.github.io/countSTAR/reference/spline_star.md))              | `spikeSlabGAM`    |
-| \-                              | Bayesian additive regression trees ([`bart_star()`](https://bking124.github.io/countSTAR/reference/bart_star.md)) | `dbarts`          |
-| **Time Series Modeling**        | Warped Dynamic Linear Models ([`warpDLM()`](https://bking124.github.io/countSTAR/reference/warpDLM.md))           | `KFAS`            |
+| Analysis Type | Method (`function`) | Dependent Package |
+|----|----|----|
+| **Static Classical Regression** | Linear regression ([`lm_star()`](https://bking124.github.io/countSTAR/reference/lm_star.md)) | \- |
+| \- | Generalized boosted modeling ([`gbm_star()`](https://bking124.github.io/countSTAR/reference/gbm_star.md)) | `gbm` |
+| \- | Random Forests ([`randomForest_star()`](https://bking124.github.io/countSTAR/reference/randomForest_star.md)) | `randomForest` |
+| **Static Bayesian Regression** | Linear regression ([`blm_star()`](https://bking124.github.io/countSTAR/reference/blm_star.md)) | \- |
+| \- | Additive modeling ([`bam_star()`](https://bking124.github.io/countSTAR/reference/bam_star.md)) | `spikeSlabGAM` |
+| \- | Spline regression ([`spline_star()`](https://bking124.github.io/countSTAR/reference/spline_star.md)) | `spikeSlabGAM` |
+| \- | Bayesian additive regression trees ([`bart_star()`](https://bking124.github.io/countSTAR/reference/bart_star.md)) | `dbarts` |
+| **Time Series Modeling** | Warped Dynamic Linear Models ([`warpDLM()`](https://bking124.github.io/countSTAR/reference/warpDLM.md)) | `KFAS` |
 
 In addition to these ready to use functions, users can also implement
 STAR methods with custom latent regression models using the

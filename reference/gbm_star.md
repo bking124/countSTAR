@@ -170,29 +170,28 @@ self‐reported mental health. *Biometrics*.
 sim_dat = simulate_nb_friedman(n = 100, p = 5)
 y = sim_dat$y; X = sim_dat$X
 
-# EM algorithm for STAR (using the log-link)
-library(gbm)
-#> Loaded gbm 2.2.3
-#> This version of gbm is no longer under development. Consider transitioning to gbm3, https://github.com/gbm-developers/gbm3
-fit_em = gbm_star(y = y, X = X,
-                 transformation = 'log')
+if (requireNamespace("gbm", quietly = TRUE)) {
+  # EM algorithm for STAR (using the log-link)
+  fit_em = gbm_star(y = y, X = X,
+                   transformation = 'log')
 
-# Evaluate convergence:
-plot(fit_em$logLik_all, type='l', main = 'GBM-STAR-log', xlab = 'Iteration', ylab = 'log-lik')
+  # Evaluate convergence:
+  plot(fit_em$logLik_all, type='l', main = 'GBM-STAR-log', xlab = 'Iteration', ylab = 'log-lik')
+
+  # Fitted values:
+  y_hat = fitted(fit_em)
+  plot(y_hat, y)
+
+  # Residuals:
+  plot(residuals(fit_em))
+  qqnorm(residuals(fit_em)); qqline(residuals(fit_em))
+
+  # Log-likelihood at MLEs:
+  fit_em$logLik
+}
 
 
-# Fitted values:
-y_hat = fitted(fit_em)
-plot(y_hat, y);
 
 
-# Residuals:
-plot(residuals(fit_em))
-
-qqnorm(residuals(fit_em)); qqline(residuals(fit_em))
-
-
-# Log-likelihood at MLEs:
-fit_em$logLik
 #> [1] -174.5514
 ```

@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Flexible Modeling of Count Data • countSTAR</title>
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Flexible Modeling of Count Data">
 <meta name="description" content="For Bayesian and classical inference and prediction with count-valued data, Simultaneous Transformation and Rounding (STAR) Models provide a flexible, interpretable, and easy-to-use approach. STAR models the observed count data using a rounded continuous data model and incorporates a transformation for greater flexibility. Implicitly, STAR formalizes the commonly-applied yet incoherent procedure of (i) transforming count-valued data and subsequently (ii) modeling the transformed data using Gaussian models. STAR is well-defined for count-valued data, which is reflected in predictive accuracy, and is designed to account for zero-inflation, bounded or censored data, and over- or underdispersion. Importantly, STAR is easy to combine with existing MCMC or point estimation methods for continuous data, which allows seamless adaptation of continuous data models (such as linear regressions, additive models, BART, random forests, and gradient boosting machines) for count-valued data. The package also includes several methods for modeling count time series data, namely via warped Dynamic Linear Models. For more details and background on these methodologies, see the works of Kowal and Canale (2020) &lt;doi:10.1214/20-EJS1707&gt;, Kowal and Wu (2022) &lt;doi:10.1111/biom.13617&gt;, King and Kowal (2023) &lt;doi:10.1214/23-BA1394&gt;, and Kowal and Wu (2023) &lt;doi:10.48550/arXiv.2110.12316&gt;.">
@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">countSTAR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -73,48 +73,48 @@
 <col width="33%">
 <col width="33%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th>Analysis Type</th>
 <th>Method (<code>function</code>)</th>
 <th>Dependent Package</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>Static Classical Regression</strong></td>
 <td>Linear regression (<code><a href="reference/lm_star.html">lm_star()</a></code>)</td>
 <td>-</td>
 </tr>
-<tr class="even">
+<tr>
 <td>-</td>
 <td>Generalized boosted modeling (<code><a href="reference/gbm_star.html">gbm_star()</a></code>)</td>
 <td><code>gbm</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>-</td>
 <td>Random Forests (<code><a href="reference/randomForest_star.html">randomForest_star()</a></code>)</td>
 <td><code>randomForest</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Static Bayesian Regression</strong></td>
 <td>Linear regression (<code><a href="reference/blm_star.html">blm_star()</a></code>)</td>
 <td>-</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>-</td>
 <td>Additive modeling (<code><a href="reference/bam_star.html">bam_star()</a></code>)</td>
 <td><code>spikeSlabGAM</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>-</td>
 <td>Spline regression (<code><a href="reference/spline_star.html">spline_star()</a></code>)</td>
 <td><code>spikeSlabGAM</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>-</td>
 <td>Bayesian additive regression trees (<code><a href="reference/bart_star.html">bart_star()</a></code>)</td>
 <td><code>dbarts</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Time Series Modeling</strong></td>
 <td>Warped Dynamic Linear Models (<code><a href="reference/warpDLM.html">warpDLM()</a></code>)</td>
 <td><code>KFAS</code></td>
@@ -170,7 +170,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>
