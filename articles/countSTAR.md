@@ -465,7 +465,7 @@ combining the *regression* flexibility of BART with the (marginal)
 
 fit_bart <- bart_star(y = y, X = X, transformation = "np")
 #> [1] "1 sec remaining"
-#> [1] "Total time: 3 seconds"
+#> [1] "Total time: 2 seconds"
 ```
 
 Since `bnp` is not yet implemented for
@@ -609,7 +609,7 @@ library(KFAS)
 
 #Fit the model
 warpfit = warpDLM(y = discoveries, type = "trend")
-#> [1] "Time taken:  30.068  seconds"
+#> [1] "Time taken:  23.817  seconds"
 ```
 
 Once again, we can check fit using posterior predictive checks. The
