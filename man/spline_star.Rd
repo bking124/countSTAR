@@ -114,8 +114,9 @@ if (requireNamespace("spikeSlabGAM", quietly = TRUE)) {
   x = seq(0,1, length.out = n)
   y = round_floor(exp(1 + rnorm(n)/4 + poly(x, 4)\%*\%rnorm(n=4, sd = 4:1)))
 
-  # Sample from the predictive distribution of a STAR spline model:
-  fit = spline_star(y = y, x = x)
+  # Sample from the predictive distribution of a STAR spline model
+  # Using less iterations than default for testing purposes
+  fit = spline_star(y = y, x = x, nsave=200, nburn=200)
 
   # Compute 90\% prediction intervals:
   pi_y = t(apply(fit$post.pred, 2, quantile, c(0.05, .95)))

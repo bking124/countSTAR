@@ -116,26 +116,26 @@ y = sim_dat$y; X = sim_dat$X
 X_lin = as.matrix(X[,-(1:3)])
 X_nonlin = as.matrix(X[,(1:3)])
 
-# STAR: nonparametric transformation
-library(spikeSlabGAM)
-fit = bam_star(y = y, X_lin = X_lin, X_nonlin = X_nonlin)
+if (requireNamespace("spikeSlabGAM", quietly = TRUE)) {
+  # STAR: nonparametric transformation
+  fit = bam_star(y = y, X_lin = X_lin, X_nonlin = X_nonlin)
 
-# What is included:
-names(fit)
+  # What is included:
+  names(fit)
 
-# Posterior mean of each coefficient:
-coef(fit)
+  # Posterior mean of each coefficient:
+  coef(fit)
 
-# WAIC:
-fit$WAIC
+  # WAIC:
+  fit$WAIC
 
-# MCMC diagnostics:
-plot(as.ts(fit$post.coefficients[,1:3]))
+  # MCMC diagnostics:
+  plot(as.ts(fit$post.coefficients[,1:3]))
 
-# Posterior predictive check:
-hist(apply(fit$post.pred, 1,
-           function(x) mean(x==0)), main = 'Proportion of Zeros', xlab='');
-abline(v = mean(y==0), lwd=4, col ='blue')
-
+  # Posterior predictive check:
+  hist(apply(fit$post.pred, 1,
+             function(x) mean(x==0)), main = 'Proportion of Zeros', xlab='');
+  abline(v = mean(y==0), lwd=4, col ='blue')
+}
 }
 }
