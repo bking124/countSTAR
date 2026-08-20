@@ -776,24 +776,24 @@ pvals <- function(object){
 #' sim_dat = simulate_nb_friedman(n = 100, p = 5)
 #' y = sim_dat$y; X = sim_dat$X
 #'
-#' # EM algorithm for STAR (using the log-link)
-#' library(randomForest)
-#' fit_em = randomForest_star(y = y, X = X,
-#'                  transformation = 'log')
+#' if (requireNamespace("randomForest", quietly = TRUE)) {
+#'   # EM algorithm for STAR (using the log-link)
+#'   fit_em = randomForest_star(y = y, X = X,
+#'                    transformation = 'log')
 #'
-#' # Fitted values (out-of-bag)
-#' y_hat = fitted(fit_em)
-#' plot(y_hat, y);
+#'   # Fitted values (out-of-bag)
+#'   y_hat = fitted(fit_em)
+#'   plot(y_hat, y)
 #'
-#' # Residuals:
-#' plot(residuals(fit_em))
-#' qqnorm(residuals(fit_em)); qqline(residuals(fit_em))
+#'   # Residuals:
+#'   plot(residuals(fit_em))
+#'   qqnorm(residuals(fit_em)); qqline(residuals(fit_em))
 #'
-#' # Log-likelihood at MLEs (out-of-bag):
-#' fit_em$logLik
+#'   # Log-likelihood at MLEs (out-of-bag):
+#'   fit_em$logLik
+#' }
 #' }
 #'
-# #' @import randomForest
 #' @export
 randomForest_star = function(y, X, X.test = NULL,
                              transformation = 'np',
