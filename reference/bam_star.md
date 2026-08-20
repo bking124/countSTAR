@@ -186,8 +186,8 @@ if (requireNamespace("spikeSlabGAM", quietly = TRUE)) {
              function(x) mean(x==0)), main = 'Proportion of Zeros', xlab='');
   abline(v = mean(y==0), lwd=4, col ='blue')
 }
-#> [1] "12 sec remaining"
-#> [1] "Total time: 23 seconds"
+#> [1] "17 sec remaining"
+#> [1] "Total time: 33 seconds"
 
 
 # }

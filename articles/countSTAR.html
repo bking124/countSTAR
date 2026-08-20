@@ -523,7 +523,7 @@ with the (marginal) <em>distributional</em> flexibility of STAR:</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit_bart</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bart_star.html">bart_star</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">y</span>, X <span class="op">=</span> <span class="va">X</span>, transformation <span class="op">=</span> <span class="st">"np"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "1 sec remaining"</span></span>
-<span><span class="co">#&gt; [1] "Total time: 2 seconds"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "Total time: 3 seconds"</span></span></code></pre></div>
 <p>Since <code>bnp</code> is not yet implemented for
 <code><a href="../reference/bart_star.html">bart_star()</a></code>, we use <code>np</code> here. The
 transformation is still estimated nonparametrically, but then is treated
@@ -641,7 +641,7 @@ base R concerning yearly numbers of important discoveries from 1860 to
 <span></span>
 <span><span class="co">#Fit the model</span></span>
 <span><span class="va">warpfit</span> <span class="op">=</span> <span class="fu"><a href="../reference/warpDLM.html">warpDLM</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">discoveries</span>, type <span class="op">=</span> <span class="st">"trend"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "Time taken:  23.817  seconds"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "Time taken:  33.006  seconds"</span></span></code></pre></div>
 <p>Once again, we can check fit using posterior predictive checks. The
 median of the posterior predictive draws can act as a sort of
 count-valued smoother of the time series.</p>

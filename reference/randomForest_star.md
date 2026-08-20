@@ -168,26 +168,25 @@ self‐reported mental health. *Biometrics*.
 sim_dat = simulate_nb_friedman(n = 100, p = 5)
 y = sim_dat$y; X = sim_dat$X
 
-# EM algorithm for STAR (using the log-link)
-library(randomForest)
-#> randomForest 4.7-1.2
-#> Type rfNews() to see new features/changes/bug fixes.
-fit_em = randomForest_star(y = y, X = X,
-                 transformation = 'log')
+if (requireNamespace("randomForest", quietly = TRUE)) {
+  # EM algorithm for STAR (using the log-link)
+  fit_em = randomForest_star(y = y, X = X,
+                   transformation = 'log')
 
-# Fitted values (out-of-bag)
-y_hat = fitted(fit_em)
-plot(y_hat, y);
+  # Fitted values (out-of-bag)
+  y_hat = fitted(fit_em)
+  plot(y_hat, y)
+
+  # Residuals:
+  plot(residuals(fit_em))
+  qqnorm(residuals(fit_em)); qqline(residuals(fit_em))
+
+  # Log-likelihood at MLEs (out-of-bag):
+  fit_em$logLik
+}
 
 
-# Residuals:
-plot(residuals(fit_em))
 
-qqnorm(residuals(fit_em)); qqline(residuals(fit_em))
-
-
-# Log-likelihood at MLEs (out-of-bag):
-fit_em$logLik
 #> [1] -213.5684
 # }
 ```
