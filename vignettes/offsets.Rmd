@@ -1,0 +1,121 @@
+---
+title: "BART-STAR with offsets"
+author: "Mengqi Shi"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{BART-STAR with offsets}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+`bart_star()` accepts known **offsets** (exposures) $e_i > 0$ in the BART-STAR model for counts, for example survey effort or detection proportion in point-count data. The CDF-based transformations are estimated with the offsets through the `offsets` argument of `g_cdf()`.
+
+## Model
+
+Original STAR model with a BART mean:
+
+$$y_i = \lfloor y_i^\ast \rfloor, \qquad z_i = g(y_i^\ast), \qquad z_i = \mu(x_i) + \varepsilon_i, \qquad \varepsilon_i \sim N(0, \sigma^2)$$
+
+The observation $y_i = j$ corresponds to $y_i^\ast \in [a_j, a_{j+1})$, with $a_j = j$, $a_0 = -\infty$ and $a_{y_{\max}+1} = \infty$.
+
+**With offsets**, $g$ is applied to $y^\ast/e$ and nothing else changes:
+
+$$y_i = \lfloor y_i^\ast \rfloor, \qquad z_i = g(y_i^\ast/e_i), \qquad z_i = \mu(x_i) + \varepsilon_i, \qquad \varepsilon_i \sim N(0, \sigma^2)$$
+
+Since $e_i > 0$ and $g$ is increasing,
+
+$$y_i = j \iff \frac{y_i^\ast}{e_i} \in [\frac{a_j}{e_i}, \frac{a_{j+1}}{e_i}) \iff g(\frac{a_j}{e_i}) \le z_i < g(\frac{a_{j+1}}{e_i})$$
+
+with $\pm\infty/e_i = \pm\infty$. The cut points $[j, j+1)$ become $[j/e_i, (j+1)/e_i)$; the upper endpoint is $(j+1)/e_i$, not $j/e_i + 1$. The likelihood is
+
+$$\ell(\mu, \sigma) = \sum_{i=1}^n \log[\Phi(\frac{g(a_{y_i+1}/e_i) - \mu_i}{\sigma}) - \Phi(\frac{g(a_{y_i}/e_i) - \mu_i}{\sigma})]$$
+
+For $g = \log$ this is the usual log-offset: $\log y_i^\ast = \log e_i + \mu(x_i) + \varepsilon_i$.
+
+In the code, `a_y = a_j(y, y_max)/offsets`, `a_yp1 = a_j(y + 1, y_max)/offsets`, `z_lower = g(a_y)` and `z_upper = g(a_yp1)`. These are used in the $z$ sampling step (`rtruncnormRcpp`), in the $\lambda$ update for `'box-cox'`, and in the pointwise log-likelihood, so also in the WAIC. The BART step (`dbarts`) is unchanged.
+
+## Transformation
+
+**Box-Cox family (`'identity'`, `'log'`, `'sqrt'`, `'box-cox'`).** $g = g_\lambda$ is applied to $y^\ast/e$. For `'box-cox'`, $\lambda$ is sampled as in the original; its likelihood uses the intervals $[a_{y_i}/e_i, a_{y_i+1}/e_i)$.
+
+**CDF-based (`'np'`, `'pois'`, `'neg-bin'`).** As in the original, $g = \Phi^{-1}\circ F$ at a set of knots, infinite values are dropped, and the knots are joined by the same monotone spline (`splinefun(..., method = 'monoH.FC')`). With offsets, $g$ is applied to $y^\ast/e$, so $F$ must describe $y^\ast/e$. `bart_star()` calls `g_cdf(y, transformation, offsets)`.
+
+- **`'np'`**: $F$ is the empirical CDF of the observed rates $y/e$, evaluated just below each knot $t$ (the unique nonzero $y_i/e_i$):
+
+$$\Phi(g(t)) = \frac{1}{n+1}\sum_{i=1}^n \mathbb{1}\left(\frac{y_i}{e_i} < t\right)$$
+
+It is computed with one call to `ecdf()`, as `n/(n+1)*(1 - ecdf(-y/offsets)(-t))`. With $e \equiv 1$, $y_i$ and $t$ are integers, so $\mathbb{1}(y_i < t) = \mathbb{1}(y_i \le t - 1)$ and $g$ is the original `qnorm(F_y(t0 - 1))`.
+
+- **`'pois'`, `'neg-bin'`**: the offsets enter through the standard count models with exposure,
+
+$$y_i \sim \text{Pois}(e_i\mu) \quad \text{or} \quad y_i \sim \text{NB}(\text{mean } e_i\mu, \text{size } r)$$
+
+In the STAR model $z_i = g(y_i^\ast/e_i)$, and the distribution of $z_i$ does not depend on $e_i$, so $y^\ast/e$ is the latent count at unit exposure ($e = 1$). The transformation is therefore built, as in the original, from the CDF $F$ of the count at unit exposure, Pois($\mu$) or NB($\mu, r$):
+
+$$g(t) = \Phi^{-1}(F(t - 1))$$
+
+The offsets change only the estimates of $\mu$ and $r$, which solve the moment equations of the exposure model,
+
+$$\sum_i y_i = \mu\sum_i e_i, \qquad s^2 = \mu\bar e + \frac{\mu^2}{r}\overline{e^2}$$
+
+where the second is $\text{Var}(y_i) = e_i\mu + e_i^2\mu^2/r$ averaged over $i$, $s^2$ is the sample variance of $y_i - e_i\hat\mu$, $\bar e = \text{mean}(e)$ and $\overline{e^2} = \text{mean}(e^2)$. This gives
+
+$$\hat\mu = \frac{\sum_i y_i}{\sum_i e_i}, \qquad \hat r = \frac{\hat\mu^2\overline{e^2}}{s^2 - \hat\mu\bar e}$$
+
+$\hat\mu$ is also the Poisson MLE. With $e \equiv 1$, these are the original estimates.
+
+**`'ispline'`** is not available with offsets. The function stops if any `offsets` or `offsets_test` differs from 1; otherwise it calls the original `bart_star_ispline()`.
+
+## Predictions, conditional expectation, scores
+
+**Posterior predictive draws.** At each saved iteration, $\tilde z_i \sim N(\mu_i, \sigma^2)$ and
+
+$$\tilde y_i = \lfloor g^{-1}(\tilde z_i) \cdot e_i \rfloor$$
+
+computed as `round_floor(g_inv(z_tilde) * offsets, y_max)`. Test draws (`post.pred.test`) use `offsets_test`. As in the original, $g^{-1}$ is exact for the Box-Cox family and a grid approximation (`g_inv_approx()`) for `'np'`, `'pois'` and `'neg-bin'`.
+
+**Conditional expectation.**
+
+$$\mathbb{E}(y_i \mid x_i, e_i) = \sum_{j=0}^{J_i} j[\Phi(\frac{g(a_{j+1}/e_i) - \mu(x_i)}{\sigma}) - \Phi(\frac{g(a_j/e_i) - \mu(x_i)}{\sigma})]$$
+
+Here $J_i$ is the 0.9999 quantile of $y_i$, capped at $y_{\max}$. Since $a_{y_{\max}+1} = \infty$, the term $j = y_{\max}$ is $y_{\max} P(y_i = y_{\max})$. `expectation_gRcpp()` sums up to `Jmax` $- 1$, so the code uses `Jmax` $= J_i + 1$ and the cut points `a_j(., y_max)`.
+
+Without offsets, the original single call to `expectation_gRcpp()` is used. With offsets, the cut points $g(a_j/e_i)$ differ by observation, while `expectation_gRcpp()` takes one vector of cut points for all observations. To avoid a loop over observations, the same sum is computed in R for all observations at once, over one long vector of the pairs $(i, j)$, $j = J_{\min,i}, \dots, J_i$, where $J_{\min,i}$ is the 0.0001 quantile of $y_i$. This is used for every transformation. The checks of this design are in [README_check.md](https://github.com/MengqiShi249/countSTAR-bart_star-with-offsets-and-weights/blob/main/README_check.md).
+
+**Log-predictive scores** for the test data use the intervals `[a_j(y_test, y_max)/offsets_test, a_j(y_test + 1, y_max)/offsets_test)`, so a test value at $y_{\max}$ has the cell $[y_{\max}/e, \infty)$, as in the likelihood.
+
+## Initialization
+
+The original rules, applied to the scale $y/e$:
+
+| Quantity | Code |
+|---|---|
+| Initial `z_star` | `g((y + abs(rnorm(n)))/offsets)` |
+| `sigest` (when `NULL`) | `sd(g((y + 1)/offsets))` |
+| `sigest`, `'box-cox'` | the original pilot MCMC if all offsets equal 1; otherwise the rule above at the initial $\lambda$, because the pilot MCMC does not take offsets |
+| Grid for `g_inv_approx()` | 250 equally spaced points on $[0, \min(2\max(y/e), y_{\max}/\min(e))]$, plus 250 quantiles of the unique $(y+1)/e$ over $y < y_{\max}$ |
+
+## Usage
+
+```{r usage, eval = FALSE}
+library(countSTAR)
+
+fit = bart_star(y = y, X = X, offsets = e,         # e: known exposures
+                X_test = X, offsets_test = 1,
+                transformation = 'np', save_y_hat = TRUE)
+
+fit$post.pred                          # predictive draws of y at the observed exposures e
+fit$fitted.values                      # E(y | x, e) at the observed exposures e
+colMeans(fit$post.fitted.values.test)  # E(y | x, e = 1): expected count per unit exposure
+```
+
+- `offsets`: `n x 1` vector or scalar, $e > 0$; the default is 1. `offsets_test`: `n_test x 1` vector or scalar; the default is 1. Scalars are recycled, and wrong lengths or values $\le 0$ stop with an error.
+- `post.pred`, `post.log.like.point` and the fitted values are at `offsets`. `post.pred.test`, `post.fitted.values.test` and `post.log.pred.test` are at `offsets_test`.
+- `post.mu.test` and `post.sigma` are on the scale of $z = g(y^\ast/e)$. With `'np'` they do not depend on the units of $e$. With `'log'`, using $ce$ instead of $e$ is the same model with $\mu$ shifted by $-\log c$. With `'pois'` and `'neg-bin'`, $g$ is the CDF transformation at $e = 1$, so the units of $e$ define the reference exposure.
