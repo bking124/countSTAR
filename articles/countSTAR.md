@@ -609,7 +609,7 @@ library(KFAS)
 
 #Fit the model
 warpfit = warpDLM(y = discoveries, type = "trend")
-#> [1] "Time taken:  24.617  seconds"
+#> [1] "Time taken:  24.018  seconds"
 ```
 
 Once again, we can check fit using posterior predictive checks. The

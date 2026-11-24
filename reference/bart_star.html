@@ -237,26 +237,20 @@ Offsets are not available for 'ispline'.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"dbarts"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="co"># BART-STAR with log-transformation:</span></span></span>
-<span class="r-in"><span>  <span class="va">fit_log</span> <span class="op">=</span> <span class="fu">bart_star</span><span class="op">(</span>y <span class="op">=</span> <span class="va">y</span>, X <span class="op">=</span> <span class="va">X</span>, transformation <span class="op">=</span> <span class="st">'log'</span>,</span></span>
-<span class="r-in"><span>                      save_y_hat <span class="op">=</span> <span class="cn">TRUE</span>, nburn<span class="op">=</span><span class="fl">1000</span>, nskip<span class="op">=</span><span class="fl">0</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">fit_log</span> <span class="op">=</span> <span class="fu">bart_star</span><span class="op">(</span>y <span class="op">=</span> <span class="va">y</span>, X <span class="op">=</span> <span class="va">X</span>, transformation <span class="op">=</span> <span class="st">'log'</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span>  <span class="co"># Fitted values</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="plot_fitted.html">plot_fitted</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">sim_dat</span><span class="op">$</span><span class="va">Ey</span>,</span></span>
-<span class="r-in"><span>              post_y <span class="op">=</span> <span class="va">fit_log</span><span class="op">$</span><span class="va">post.fitted.values</span>,</span></span>
-<span class="r-in"><span>              main <span class="op">=</span> <span class="st">'Fitted Values: BART-STAR-log'</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="co"># What is returned?</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">fit_log</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="co"># WAIC for BART-STAR-log:</span></span></span>
 <span class="r-in"><span>  <span class="va">fit_log</span><span class="op">$</span><span class="va">WAIC</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span>  <span class="co"># MCMC diagnostics:</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/ts.html" class="external-link">as.ts</a></span><span class="op">(</span><span class="va">fit_log</span><span class="op">$</span><span class="va">post.fitted.values</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="co"># Posterior predictive check:</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/graphics/hist.html" class="external-link">hist</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">fit_log</span><span class="op">$</span><span class="va">post.pred</span>, <span class="fl">1</span>,</span></span>
 <span class="r-in"><span>             <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">x</span><span class="op">==</span><span class="fl">0</span><span class="op">)</span><span class="op">)</span>, main <span class="op">=</span> <span class="st">'Proportion of Zeros'</span>, xlab<span class="op">=</span><span class="st">''</span><span class="op">)</span>;</span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>v <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">y</span><span class="op">==</span><span class="fl">0</span><span class="op">)</span>, lwd<span class="op">=</span><span class="fl">4</span>, col <span class="op">=</span><span class="st">'blue'</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span>  <span class="co"># BART-STAR with nonparametric transformation:</span></span></span>
+<span class="r-in"><span>  <span class="co"># BART-STAR with nonparametric transformation, including fitted values:</span></span></span>
 <span class="r-in"><span>  <span class="va">fit</span> <span class="op">=</span> <span class="fu">bart_star</span><span class="op">(</span>y <span class="op">=</span> <span class="va">y</span>, X <span class="op">=</span> <span class="va">X</span>,</span></span>
 <span class="r-in"><span>                       transformation <span class="op">=</span> <span class="st">'np'</span>, save_y_hat <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
@@ -268,7 +262,7 @@ Offsets are not available for 'ispline'.</p>
 <span class="r-in"><span>  <span class="co"># WAIC for BART-STAR-np:</span></span></span>
 <span class="r-in"><span>  <span class="va">fit</span><span class="op">$</span><span class="va">WAIC</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span>  <span class="co"># MCMC diagnostics:</span></span></span>
+<span class="r-in"><span>  <span class="co"># MCMC diagnostics for fitted values:</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/ts.html" class="external-link">as.ts</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">post.fitted.values</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="co"># Posterior predictive check:</span></span></span>
@@ -277,15 +271,13 @@ Offsets are not available for 'ispline'.</p>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>v <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">y</span><span class="op">==</span><span class="fl">0</span><span class="op">)</span>, lwd<span class="op">=</span><span class="fl">4</span>, col <span class="op">=</span><span class="st">'blue'</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "1 sec remaining"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Total time: 2 seconds"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Total time: 1 seconds"</span>
 <span class="r-plt img"><img src="bart_star-1.png" alt="" width="700" height="433"></span>
-<span class="r-plt img"><img src="bart_star-2.png" alt="" width="700" height="433"></span>
-<span class="r-plt img"><img src="bart_star-3.png" alt="" width="700" height="433"></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "1 sec remaining"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Total time: 3 seconds"</span>
+<span class="r-plt img"><img src="bart_star-2.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="bart_star-3.png" alt="" width="700" height="433"></span>
 <span class="r-plt img"><img src="bart_star-4.png" alt="" width="700" height="433"></span>
-<span class="r-plt img"><img src="bart_star-5.png" alt="" width="700" height="433"></span>
-<span class="r-plt img"><img src="bart_star-6.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

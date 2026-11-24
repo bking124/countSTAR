@@ -187,7 +187,7 @@ if (requireNamespace("spikeSlabGAM", quietly = TRUE)) {
   abline(v = mean(y==0), lwd=4, col ='blue')
 }
 #> [1] "10 sec remaining"
-#> [1] "Total time: 19 seconds"
+#> [1] "Total time: 18 seconds"
 
 
 # }

@@ -6,6 +6,8 @@
 
 - **[Dan Kowal](http://www.danielrkowal.com/)**. Author.
 
+- **Mengqi Shi**. Contributor.
+
 ## Citation
 
 Source:
