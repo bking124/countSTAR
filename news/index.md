@@ -2,6 +2,8 @@
 
 ## countSTAR 1.2.1
 
+CRAN release: 2026-08-21
+
 - Added defensive checks and conditional evaluation across the package
   vignette and examples to gracefully handle failures in `Suggests`
   dependencies.

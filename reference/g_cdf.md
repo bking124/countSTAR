@@ -9,7 +9,7 @@ a fixed quantity and does not come with uncertainty quantification.
 ## Usage
 
 ``` r
-g_cdf(y, distribution = "np")
+g_cdf(y, distribution = "np", offsets = 1)
 ```
 
 ## Arguments
@@ -27,6 +27,11 @@ g_cdf(y, distribution = "np")
   - "pois" (moment-matched marginal Poisson CDF)
 
   - "neg-bin" (moment-matched marginal Negative Binomial CDF)
+
+- offsets:
+
+  `n x 1` vector (or scalar) of positive offsets for `y`; default is 1
+  (no offsets)
 
 ## Value
 

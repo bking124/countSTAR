@@ -3,7 +3,8 @@ pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
   countSTAR: countSTAR.html
-last_built: 2026-08-20T22:10Z
+  offsets: offsets.html
+last_built: 2026-11-24T02:31Z
 urls:
   reference: https://bking124.github.io/countSTAR/reference
   article: https://bking124.github.io/countSTAR/articles

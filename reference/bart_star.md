@@ -14,6 +14,8 @@ bart_star(
   y_test = NULL,
   transformation = "np",
   y_max = Inf,
+  offsets = 1,
+  offsets_test = 1,
   n.trees = 200,
   sigest = NULL,
   sigdf = 3,
@@ -73,6 +75,16 @@ bart_star(
 - y_max:
 
   a fixed and known upper bound for all observations; default is `Inf`
+
+- offsets:
+
+  `n x 1` vector (or scalar) of positive offsets for the training data;
+  default is 1 (no offsets)
+
+- offsets_test:
+
+  `n_test x 1` vector (or scalar) of positive offsets for the test data;
+  default is 1
 
 - n.trees:
 
@@ -202,6 +214,12 @@ Third, the transformation can be modeled as an unknown, monotone
 function using I-splines ('ispline'). The Robust Adaptive Metropolis
 (RAM) sampler is used for drawing the parameter of the transformation
 function.
+
+Positive `offsets` (e.g., exposures) enter through the rounding
+operation: `y = floor(y*)` with `g(y*/offsets)` modeled by BART, so the
+cut points `[j, j+1)` become `[j/offsets, (j+1)/offsets)`; the CDF-based
+transformations are estimated with the offsets (see `g_cdf`). Offsets
+are not available for 'ispline'.
 
 ## Examples
 

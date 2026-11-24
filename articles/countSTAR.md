@@ -338,7 +338,7 @@ at the MLEs, which allows for a quick comparison of model fit.
 
 #Look at -2*log-likelihood
 -2*c(fit_rf$logLik, fit_gbm$logLik)
-#> [1] 1666.783 1593.495
+#> [1] 1668.481 1594.043
 ```
 
 In general, it is preferable to compare these fits using out-of-sample
@@ -396,7 +396,7 @@ are available as follows:
 # Posterior mean of each coefficient:
 round(coef(fit_blm),3)
 #>    (Intercept)         roach1      treatment         senior log(exposure2) 
-#>          0.316          0.008         -0.388         -0.420          0.284
+#>          0.316          0.008         -0.389         -0.411          0.286
 
 # Credible intervals for regression coefficients
 ci_all_bayes = apply(fit_blm$post.beta,
@@ -406,11 +406,11 @@ ci_all_bayes = apply(fit_blm$post.beta,
 rownames(ci_all_bayes) = c('Lower', 'Upper')
 print(t(round(ci_all_bayes, 3)))
 #>                 Lower  Upper
-#> (Intercept)     0.020  0.605
+#> (Intercept)     0.050  0.593
 #> roach1          0.006  0.010
-#> treatment      -0.648 -0.122
-#> senior         -0.717 -0.127
-#> log(exposure2) -0.220  0.831
+#> treatment      -0.652 -0.133
+#> senior         -0.718 -0.105
+#> log(exposure2) -0.238  0.820
 ```
 
 We can check standard MCMC diagnostics:
@@ -431,7 +431,7 @@ plot(as.ts(fit_blm$post.beta[,-1]),
 suppressMessages(library(coda))
 getEffSize(fit_blm$post.beta[,-1])
 #>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-#>   676.2   736.1   759.6   798.8   822.3  1000.0
+#>   664.2   779.0   820.4   799.6   841.1   893.6
 ```
 
 We may further evaluate the model based on posterior diagnostics and
@@ -465,7 +465,7 @@ combining the *regression* flexibility of BART with the (marginal)
 
 fit_bart <- bart_star(y = y, X = X, transformation = "np")
 #> [1] "1 sec remaining"
-#> [1] "Total time: 3 seconds"
+#> [1] "Total time: 2 seconds"
 ```
 
 Since `bnp` is not yet implemented for
@@ -496,7 +496,7 @@ waic <- c(fit_blm$WAIC, fit_bart$WAIC)
 names(waic) <- c("STAR Linear Model", "BART-STAR")
 print(waic)
 #> STAR Linear Model         BART-STAR 
-#>          1762.281          1639.514
+#>          1762.326          1639.282
 ```
 
 ### Other Bayesian Models
@@ -609,7 +609,7 @@ library(KFAS)
 
 #Fit the model
 warpfit = warpDLM(y = discoveries, type = "trend")
-#> [1] "Time taken:  33.006  seconds"
+#> [1] "Time taken:  24.617  seconds"
 ```
 
 Once again, we can check fit using posterior predictive checks. The
