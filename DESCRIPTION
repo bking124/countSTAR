@@ -4,7 +4,8 @@ Title: Flexible Modeling of Count Data
 Version: 1.2.1
 Authors@R: c(
     person(given="Brian", family="King", email = "brianking387@gmail.com", role = c("aut", "cre")),
-    person(given="Dan", family = "Kowal", email = "daniel.r.kowal@gmail.com", role = "aut"))
+    person(given="Dan", family = "Kowal", role = "aut"),
+    person(given="Mengqi", family = "Shi", role = "ctb"))
 Description: For Bayesian and classical inference and prediction with count-valued data,
     Simultaneous Transformation and Rounding (STAR) Models provide a flexible, interpretable,
     and easy-to-use approach. STAR models the observed count data using a rounded 
@@ -37,3 +38,4 @@ Depends:
     R (>= 2.10)
 LazyData: true
 Config/roxygen2/version: 8.1.0
+RoxygenNote: 7.3.3

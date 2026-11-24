@@ -162,26 +162,20 @@ y = sim_dat$y; X = sim_dat$X
 
 if (requireNamespace("dbarts", quietly = TRUE)) {
   # BART-STAR with log-transformation:
-  fit_log = bart_star(y = y, X = X, transformation = 'log',
-                      save_y_hat = TRUE, nburn=1000, nskip=0)
+  fit_log = bart_star(y = y, X = X, transformation = 'log')
 
-  # Fitted values
-  plot_fitted(y = sim_dat$Ey,
-              post_y = fit_log$post.fitted.values,
-              main = 'Fitted Values: BART-STAR-log')
+  # What is returned?
+  names(fit_log)
 
   # WAIC for BART-STAR-log:
   fit_log$WAIC
-
-  # MCMC diagnostics:
-  plot(as.ts(fit_log$post.fitted.values[,1:10]))
 
   # Posterior predictive check:
   hist(apply(fit_log$post.pred, 1,
              function(x) mean(x==0)), main = 'Proportion of Zeros', xlab='');
   abline(v = mean(y==0), lwd=4, col ='blue')
 
-  # BART-STAR with nonparametric transformation:
+  # BART-STAR with nonparametric transformation, including fitted values:
   fit = bart_star(y = y, X = X,
                        transformation = 'np', save_y_hat = TRUE)
 
@@ -193,7 +187,7 @@ if (requireNamespace("dbarts", quietly = TRUE)) {
   # WAIC for BART-STAR-np:
   fit$WAIC
 
-  # MCMC diagnostics:
+  # MCMC diagnostics for fitted values:
   plot(as.ts(fit$post.fitted.values[,1:10]))
 
   # Posterior predictive check:
