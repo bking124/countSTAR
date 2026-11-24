@@ -78,6 +78,8 @@ g_inv_bc = function(s, lambda) {
 #' \item "pois" (moment-matched marginal Poisson CDF)
 #' \item "neg-bin" (moment-matched marginal Negative Binomial CDF)
 #' }
+#' @param offsets \code{n x 1} vector (or scalar) of positive offsets for \code{y};
+#' default is 1 (no offsets)
 #' @return A smooth monotone function which can be used for evaluations of the transformation.
 #'
 #'
@@ -101,7 +103,7 @@ g_inv_bc = function(s, lambda) {
 #' lines(t, g_negbin(t), lty = 3)
 #'
 #' @export
-g_cdf = function(y, distribution = "np") {
+g_cdf = function(y, distribution = "np", offsets = 1) {
 
   # Check: does the distribution make sense?
   distribution = tolower(distribution);
@@ -111,39 +113,51 @@ g_cdf = function(y, distribution = "np") {
   # Number of observations:
   n = length(y)
 
-  # Moments of the raw counts:
-  mu_y = mean(y); sigma_y = sd(y)
+  # Offsets (a scalar is recycled):
+  if(length(offsets) == 1) offsets = rep(offsets, n)
 
-  # CDFs:
   if(distribution == 'np') {
-    # (Scaled) empirical CDF:
-    F_y = function(t) n/(n+1)*ecdf(y)(t)
-  }
-  if(distribution == 'pois'){
-    # Poisson CDF with moment-matched parameters:
-    F_y = function(t) ppois(t,
-                            lambda = mu_y)
-  }
-  if(distribution == 'neg-bin') {
-    # Negative-binomial CDF with moment-matched parameters:
-    if(mu_y >= sigma_y^2){
-      # Check: underdispersion is incompatible with Negative-Binomial
-      warning("'neg-bin' not recommended for underdispersed data")
+    # (Scaled) empirical CDF of y/e, evaluated just below t (1 - ecdf(-x)(-t) = mean(x < t)):
+    F_y = function(t) n/(n+1)*(1 - ecdf(-y/offsets)(-t))
 
-      # Force sigma_y^2 > mu_y:
-      sigma_y = 1.1*sqrt(abs(mu_y))
+    # Input points for smoothing (offsets: unique nonzero y/e):
+    t0 = sort(unique((y/offsets)[y!=0]))
+
+    # Initial transformation:
+    g0 = qnorm(F_y(t0))
+  } else {
+    # Parametric CDFs (offsets): y_i ~ Pois(e_i*mu_y) or NB(mean e_i*mu_y, size r_y).
+    # g is applied to y*/e, the latent count at unit exposure, so F_y is the CDF at e = 1.
+
+    # Mean (offsets: E(sum y) = mu_y*sum(e); this is also the Poisson MLE):
+    mu_y = sum(y)/sum(offsets)
+
+    if(distribution == 'pois'){
+      # Poisson CDF with moment-matched parameters:
+      F_y = function(t) ppois(t, lambda = mu_y)
     }
-    F_y = function(t) pnbinom(t,
-                              size = mu_y^2/(sigma_y^2 - mu_y),
-                              prob = mu_y/sigma_y^2)
+    if(distribution == 'neg-bin') {
+      # Negative-binomial CDF with moment-matched parameters
+      # (offsets: E(y_i - e_i*mu)^2 = e_i*mu + e_i^2*mu^2/r, averaged over i):
+      sigma2_y = sum((y - offsets*mu_y)^2)/(n - 1)
+      if(mu_y*mean(offsets) >= sigma2_y){
+        # Check: underdispersion is incompatible with Negative-Binomial
+        warning("'neg-bin' not recommended for underdispersed data")
+
+        # Force sigma2_y > mu_y*mean(e):
+        sigma2_y = 1.21*mu_y*mean(offsets)
+      }
+      r_y = mu_y^2*mean(offsets^2)/(sigma2_y - mu_y*mean(offsets))
+      F_y = function(t) pnbinom(t, size = r_y, mu = mu_y)
+    }
+
+    # Input points for smoothing: all integers t up to max(y, y/e). At an integer t the latent
+    # CDF is known exactly: P(y*/e < t) = P(floor(y*/e) <= t - 1) = F_y(t - 1) at unit exposure:
+    t0 = seq_len(ceiling(max(y, y/offsets)))
+
+    # Initial transformation:
+    g0 = qnorm(F_y(t0-1))
   }
-
-  # Input points for smoothing:
-  t0 = sort(unique(y[y!=0]))
-
-  # Initial transformation:
-  g0 = qnorm(F_y(t0-1))
-  #g0 = mu_y + sigma_y*qnorm(F_y(t0-1))
 
   # Make sure we have only finite values of g0 (infinite values occur for F_y = 0 or F_y = 1)
   t0 = t0[which(is.finite(g0))]; g0 = g0[which(is.finite(g0))]

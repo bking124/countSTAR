@@ -4,7 +4,7 @@
 \alias{g_cdf}
 \title{Cumulative distribution function (CDF)-based transformation}
 \usage{
-g_cdf(y, distribution = "np")
+g_cdf(y, distribution = "np", offsets = 1)
 }
 \arguments{
 \item{y}{\code{n x 1} vector of observed counts}
@@ -15,6 +15,9 @@ g_cdf(y, distribution = "np")
 \item "pois" (moment-matched marginal Poisson CDF)
 \item "neg-bin" (moment-matched marginal Negative Binomial CDF)
 }}
+
+\item{offsets}{\code{n x 1} vector (or scalar) of positive offsets for \code{y};
+default is 1 (no offsets)}
 }
 \value{
 A smooth monotone function which can be used for evaluations of the transformation.

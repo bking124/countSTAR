@@ -524,11 +524,11 @@ genMCMC_star = function(y,
         # Conditional expectation:
         if(save_y_hat){
           Jmax = ceiling(round_floor(g_inv(
-            qnorm(0.9999, mean = params$mu, sd = params$sigma)), y_max=y_max))
+            qnorm(0.9999, mean = params$mu, sd = params$sigma)), y_max=y_max)) + 1
           Jmax[Jmax > 2*max(y)] = 2*max(y) # To avoid excessive computation times, cap at 2*max(y)
           Jmaxmax = max(Jmax)
-          post.fitted.values[isave,] = expectation_gRcpp(g_a_j = g(a_j(0:Jmaxmax)),
-                                                         g_a_jp1 = g(a_j(1:(Jmaxmax + 1))),
+          post.fitted.values[isave,] = expectation_gRcpp(g_a_j = g(a_j(0:Jmaxmax, y_max = y_max)),
+                                                         g_a_jp1 = g(a_j(1:(Jmaxmax + 1), y_max = y_max)),
                                                          mu = params$mu, sigma = rep(params$sigma, n),
                                                          Jmax = Jmax)
         }
@@ -759,6 +759,10 @@ bam_star = function(y, X_lin, X_nonlin, splinetype="orthogonal",
 #' using I-splines)
 #' }
 #' @param y_max a fixed and known upper bound for all observations; default is \code{Inf}
+#' @param offsets \code{n x 1} vector (or scalar) of positive offsets for the training data;
+#' default is 1 (no offsets)
+#' @param offsets_test \code{n_test x 1} vector (or scalar) of positive offsets for the test data;
+#' default is 1
 #' @param n.trees number of trees to use in BART; default is 200
 #' @param sigest positive numeric estimate of the residual standard deviation (see ?bart)
 #' @param sigdf  degrees of freedom for error variance prior (see ?bart)
@@ -831,7 +835,12 @@ bam_star = function(y, X_lin, X_nonlin, splinetype="orthogonal",
 #' modeled as an unknown, monotone function using I-splines ('ispline'). The
 #' Robust Adaptive Metropolis (RAM) sampler is used for drawing the parameter
 #' of the transformation function.
-
+#'
+#' Positive \code{offsets} (e.g., exposures) enter through the rounding operation:
+#' \code{y = floor(y*)} with \code{g(y*/offsets)} modeled by BART, so the cut points \code{[j, j+1)}
+#' become \code{[j/offsets, (j+1)/offsets)}; the CDF-based transformations are estimated with the offsets (see \code{g_cdf}).
+#' Offsets are not available for 'ispline'.
+#'
 #' @examples
 #' \donttest{
 #' # Simulate data with count-valued response y:
@@ -887,6 +896,7 @@ bart_star = function(y,
                     X_test = NULL, y_test = NULL,
                     transformation = 'np',
                     y_max = Inf,
+                    offsets = 1, offsets_test = 1,
                     n.trees = 200,
                     sigest = NULL, sigdf = 3, sigquant = 0.90, k = 2.0, power = 2.0, base = 0.95,
                     nsave = 1000,
@@ -909,10 +919,18 @@ bart_star = function(y,
   if(any(y > y_max))
     stop('y must not exceed y_max')
 
+  # Check: offsets must be positive (a scalar is recycled)
+  if(length(offsets) == 1) offsets = rep(offsets, length(y))
+  if(length(offsets) != length(y) || any(offsets <= 0))
+    stop('offsets must be positive with length equal to length(y)')
+
   #If transformation is ispline, call the appropriate function and return the results
   if(transformation=="ispline"){
+    if(any(offsets != 1) || any(offsets_test != 1))
+      stop("transformation = 'ispline' is not available with offsets")
     .args = as.list(match.call())[-1]
     .args[['transformation']] <- NULL
+    .args[['offsets']] <- NULL; .args[['offsets_test']] <- NULL
     return(do.call(bart_star_ispline, .args))
   }
 
@@ -950,13 +968,13 @@ bart_star = function(y,
 
   if(transform_family == 'cdf'){
 
-    # Transformation function:
-    g = g_cdf(y = y, distribution = transformation)
+    # Transformation function (offsets: estimated from y/e):
+    g = g_cdf(y = y, distribution = transformation, offsets = offsets)
 
     # Define the grid for approximations using equally-spaced + quantile points:
     t_grid = sort(unique(round(c(
-      seq(0, min(2*max(y), y_max), length.out = 250),
-      quantile(unique(y[y < y_max] + 1), seq(0, 1, length.out = 250))), 8)))
+      seq(0, min(2*max(y/offsets), y_max/min(offsets)), length.out = 250),
+      quantile(unique((y[y < y_max] + 1)/offsets[y < y_max]), seq(0, 1, length.out = 250))), 8)))
 
     # Inverse transformation function:
     g_inv = g_inv_approx(g = g, t_grid = t_grid)
@@ -965,21 +983,28 @@ bart_star = function(y,
     lambda = NULL
   }
 
-  # Random initialization for z_star:
-  z_star = g(y + abs(rnorm(n = n)))
+  # Random initialization for z_star (offsets: on the y/e scale):
+  z_star = g((y + abs(rnorm(n = n)))/offsets)
 
   # Now initialize the model: BART!
 
   # Include a test dataset:
   include_test = !is.null(X_test)
-  if(include_test) n_test = nrow(X_test) # Size of test dataset
+  if(include_test){
+    n_test = nrow(X_test) # Size of test dataset
+
+    # Check: test offsets must be positive (a scalar is recycled)
+    if(length(offsets_test) == 1) offsets_test = rep(offsets_test, n_test)
+    if(length(offsets_test) != n_test || any(offsets_test <= 0))
+      stop('offsets_test must be positive with length equal to nrow(X_test)')
+  }
 
   # Initialize the dbarts() object:
   control = dbarts::dbartsControl(n.chains = 1, n.burn = 0, n.samples = 1,
                           n.trees = n.trees)
   # Initialize the standard deviation:
   if(is.null(sigest)){
-    if(transformation == 'box-cox'){
+    if(transformation == 'box-cox' && all(offsets == 1)){ # (the pilot MCMC does not take offsets)
       # Lambda is unknown, so use pilot MCMC with mean-only model to identify sigma estimate:
       fit0 = genMCMC_star(y = y,
                        sample_params = sample_params_mean,
@@ -987,8 +1012,9 @@ bart_star = function(y,
                        transformation = 'box-cox', nburn = 1000, nsave = 100, verbose = FALSE)
       sigest = median(fit0$post.sigma)
     } else {
-      # Transformation is known, so simply transform the raw data and estimate the SD:
-      sigest = sd(g(y + 1), na.rm=TRUE)
+      # Transformation is known, so simply transform the raw data and estimate the SD
+      # (offsets: on the y/e scale; for 'box-cox' with offsets, at the initial lambda):
+      sigest = sd(g((y + 1)/offsets), na.rm=TRUE)
     }
   }
 
@@ -1005,8 +1031,8 @@ bart_star = function(y,
   params = list(mu = samp$train,
                 sigma = samp$sigma)
 
-  # Lower and upper intervals:
-  a_y = a_j(y, y_max = y_max); a_yp1 = a_j(y + 1, y_max = y_max)
+  # Lower and upper intervals (offsets: [j/e, (j+1)/e)):
+  a_y = a_j(y, y_max = y_max)/offsets; a_yp1 = a_j(y + 1, y_max = y_max)/offsets
   z_lower = g(a_y); z_upper = g(a_yp1)
 
   # Store MCMC output:
@@ -1080,41 +1106,64 @@ bart_star = function(y,
         # Increment the save index
         isave = isave + 1
 
-        # Posterior predictive distribution:
-        post.pred[isave,] = round_floor(g_inv(rnorm(n = n, mean = params$mu, sd = params$sigma)), y_max=y_max)
+        # Posterior predictive distribution (offsets: y = floor(e * g^{-1}(z))):
+        post.pred[isave,] = round_floor(g_inv(rnorm(n = n, mean = params$mu, sd = params$sigma))*offsets, y_max=y_max)
 
-        # Conditional expectation:
+        # Conditional expectation (offsets: at e_i, with cut points a_j/e_i):
         if(save_y_hat){
           Jmax = ceiling(round_floor(g_inv(
-            qnorm(0.9999, mean = params$mu, sd = params$sigma)), y_max=y_max))
+            qnorm(0.9999, mean = params$mu, sd = params$sigma))*offsets, y_max=y_max)) + 1
           Jmax[Jmax > 2*max(y)] = 2*max(y) # To avoid excessive computation times, cap at 2*max(y)
           Jmaxmax = max(Jmax)
-          post.fitted.values[isave,] = expectation_gRcpp(g_a_j = g(a_j(0:Jmaxmax)),
-                                                         g_a_jp1 = g(a_j(1:(Jmaxmax + 1))),
+          if(all(offsets == 1)){
+            post.fitted.values[isave,] = expectation_gRcpp(g_a_j = g(a_j(0:Jmaxmax, y_max = y_max)),
+                                                           g_a_jp1 = g(a_j(1:(Jmaxmax + 1), y_max = y_max)),
                                                          mu = params$mu, sigma = rep(params$sigma, n),
-                                                         Jmax = Jmax)
+                                                           Jmax = Jmax)
+          } else {
+            # Offsets: the cut points g(a_j/e_i) differ by observation, so sum over one long vector
+            # of the pairs (i, j), j = Jmin_i,...,Jmax_i - 1
+            Jmin = floor(round_floor(g_inv(
+              qnorm(1 - 0.9999, mean = params$mu, sd = params$sigma))*offsets, y_max=y_max))
+            Jmin = pmin(Jmin, Jmax - 1) # (Jmax may be capped)
+            id = rep(1:n, Jmax - Jmin); j = Jmin[id] + sequence(Jmax - Jmin) - 1
+            p = pnorm(g(a_j(j + 1, y_max = y_max)/offsets[id]), mean = params$mu[id], sd = params$sigma) -
+              pnorm(g(a_j(j, y_max = y_max)/offsets[id]), mean = params$mu[id], sd = params$sigma)
+            post.fitted.values[isave,] = rowsum(j*p, id)
+          }
         }
 
         if(include_test){
           # Conditional of the z_star at test points (useful for predictive distribution later)
           post.mu.test[isave,] = samp$test
 
-          # Posterior predictive distribution at test points:
-          post.pred.test[isave,] = round_floor(g_inv(rnorm(n = n_test, mean = samp$test, sd = params$sigma)), y_max=y_max)
-          # Conditional expectation at test points:
+          # Posterior predictive distribution at test points (offsets: at offsets_test):
+          post.pred.test[isave,] = round_floor(g_inv(rnorm(n = n_test, mean = samp$test, sd = params$sigma))*offsets_test, y_max=y_max)
+          # Conditional expectation at test points (offsets: at offsets_test, with cut points a_j/e_i):
           Jmax = ceiling(round_floor(g_inv(
-            qnorm(0.9999, mean = samp$test, sd = params$sigma)), y_max=y_max))
+            qnorm(0.9999, mean = samp$test, sd = params$sigma))*offsets_test, y_max=y_max)) + 1
           Jmax[Jmax > 2*max(y)] = 2*max(y) # To avoid excessive computation times, cap at 2*max(y)
           Jmaxmax = max(Jmax)
-          post.fitted.values.test[isave,] = expectation_gRcpp(g_a_j = g(a_j(0:Jmaxmax)),
-                                                              g_a_jp1 = g(a_j(1:(Jmaxmax + 1))),
+          if(all(offsets_test == 1)){
+            post.fitted.values.test[isave,] = expectation_gRcpp(g_a_j = g(a_j(0:Jmaxmax, y_max = y_max)),
+                                                                g_a_jp1 = g(a_j(1:(Jmaxmax + 1), y_max = y_max)),
                                                               mu = samp$test, sigma = rep(params$sigma, n_test),
-                                                              Jmax = Jmax)
+                                                                Jmax = Jmax)
+          } else {
+            Jmin = floor(round_floor(g_inv(
+              qnorm(1 - 0.9999, mean = samp$test, sd = params$sigma))*offsets_test, y_max=y_max))
+            Jmin = pmin(Jmin, Jmax - 1) # (Jmax may be capped)
+            id = rep(1:n_test, Jmax - Jmin); j = Jmin[id] + sequence(Jmax - Jmin) - 1
+            p = pnorm(g(a_j(j + 1, y_max = y_max)/offsets_test[id]), mean = samp$test[id], sd = params$sigma) -
+              pnorm(g(a_j(j, y_max = y_max)/offsets_test[id]), mean = samp$test[id], sd = params$sigma)
+            post.fitted.values.test[isave,] = rowsum(j*p, id)
+          }
 
-          # Test points for log-predictive score:
+          # Test points for log-predictive score (offsets: cut points [j/e, (j+1)/e);
+          # a_j(., y_max) gives y_test = y_max its cell [y_max/e, Inf), as for the training data):
           if(!is.null(y_test))
-            post.log.pred.test[isave,] = logLikePointRcpp(g_a_j = g(a_j(y_test)),
-                                                          g_a_jp1 = g(a_j(y_test + 1)),
+            post.log.pred.test[isave,] = logLikePointRcpp(g_a_j = g(a_j(y_test, y_max = y_max)/offsets_test),
+                                                          g_a_jp1 = g(a_j(y_test + 1, y_max = y_max)/offsets_test),
                                                           mu = samp$test,
                                                           sigma = rep(params$sigma, n_test))
         }
